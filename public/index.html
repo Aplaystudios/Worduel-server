@@ -993,9 +993,9 @@
         function selectMode(mode) {
             selectedMode = mode;
             
-            // Training mode skips betting - practice mode
+            // Training mode - practice against AI
             if (mode === 'training') {
-                alert('Training mode: Practice against AI (Coming soon!)');
+                startTrainingMode();
                 return;
             }
             
@@ -1006,6 +1006,110 @@
             
             // For competitive modes, go to bet screen
             showScreen('betScreen');
+        }
+
+        function startTrainingMode() {
+            // Training mode - no bets, no matchmaking, just practice
+            game.targetWord = getRandomWord();
+            game.isTraining = true;
+            console.log('Training mode - Target word:', game.targetWord);
+            
+            setupBattle();
+            document.getElementById('battleTimer').textContent = '∞';
+            document.getElementById('battlePot').textContent = 'TRAINING';
+            document.getElementById('opponentName').textContent = 'AI OPPONENT';
+            showScreen('battleScreen');
+            
+            // Start AI opponent
+            startAIOpponent();
+        }
+
+        function getRandomWord() {
+            const words = ['CRANE','SLATE','TRACE','STARE','RAISE','SHINE','STONE','BRAVE','GLOVE','PROVE','SHARE','SPARE','PHASE','SHAPE','GRAPE','TRADE','CHASE','HOUSE','MOUSE','PLACE','PLANT','PIANO','CRIME','PRIME','CLIMB','ROUND','SOUND','POUND','MOUNT','CLOUD','PROUD','FLOUR','WORLD','WORTH','WRITE','WRONG','WROTE','FRESH','FLESH','FLASH','TRASH','CRASH'];
+            return words[Math.floor(Math.random() * words.length)];
+        }
+
+        let aiInterval = null;
+        let aiRow = 0;
+
+        function startAIOpponent() {
+            aiRow = 0;
+            
+            const makeAIGuess = () => {
+                if (aiRow >= 6) return;
+                
+                // AI has 25% chance of guessing correctly
+                const aiWord = Math.random() < 0.25 ? game.targetWord : getRandomWord();
+                const evaluation = evaluateGuess(aiWord, game.targetWord);
+                
+                // Show AI guess
+                setTimeout(() => {
+                    revealGuess({ word: aiWord, evaluation }, aiRow, 'opponentGrid');
+                    
+                    // Check if AI won
+                    if (evaluation.every(e => e === 'correct')) {
+                        clearInterval(aiInterval);
+                        setTimeout(() => {
+                            showTrainingResult(false);
+                        }, 1500);
+                    }
+                    
+                    aiRow++;
+                }, 500);
+            };
+            
+            // AI makes a guess every 10-15 seconds
+            aiInterval = setInterval(makeAIGuess, 10000 + Math.random() * 5000);
+        }
+
+        function evaluateGuess(guess, target) {
+            const result = [];
+            const targetLetters = target.split('');
+            const used = new Array(5).fill(false);
+            
+            for (let i = 0; i < 5; i++) {
+                if (guess[i] === targetLetters[i]) {
+                    result[i] = 'correct';
+                    used[i] = true;
+                } else {
+                    result[i] = null;
+                }
+            }
+            
+            for (let i = 0; i < 5; i++) {
+                if (result[i] === null) {
+                    const idx = targetLetters.findIndex((l, j) => l === guess[i] && !used[j]);
+                    result[i] = idx !== -1 ? (used[idx] = true, 'present') : 'absent';
+                }
+            }
+            
+            return result;
+        }
+
+        function showTrainingResult(won) {
+            if (aiInterval) clearInterval(aiInterval);
+            
+            document.getElementById('resultIcon').textContent = won ? '🏆' : '💀';
+            const titleEl = document.getElementById('resultTitle');
+            titleEl.textContent = won ? 'VICTORY!' : 'DEFEAT';
+            titleEl.className = 'result-title ' + (won ? 'win' : 'lose');
+            
+            document.getElementById('resultStats').innerHTML = `
+                <div class="result-stat">
+                    <span class="result-label">SOLUTION</span>
+                    <span class="result-value">${game.targetWord}</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">YOUR GUESSES</span>
+                    <span class="result-value">${game.currentRow + 1}</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">AI GUESSES</span>
+                    <span class="result-value">${aiRow}</span>
+                </div>
+            `;
+            
+            document.getElementById('resultModal').classList.add('active');
         }
 
         function switchAuthTab(tab) {
@@ -1163,6 +1267,9 @@
             game.currentRow = 0;
             game.currentGuess = '';
             game.guesses = [];
+            if (!game.isTraining) {
+                game.isTraining = false;
+            }
             
             createGrid('yourGrid');
             createGrid('opponentGrid');
@@ -1222,7 +1329,31 @@
         }
 
         function submitGuess() {
-            socket.emit('submit_guess', { word: game.currentGuess });
+            if (game.isTraining) {
+                // Training mode - handle locally
+                const evaluation = evaluateGuess(game.currentGuess, game.targetWord);
+                
+                revealGuess({ word: game.currentGuess, evaluation }, game.currentRow, 'yourGrid');
+                updateKeyboard(game.currentGuess, evaluation);
+                
+                if (evaluation.every(e => e === 'correct')) {
+                    // Won!
+                    setTimeout(() => {
+                        showTrainingResult(true);
+                    }, 1500);
+                } else if (game.currentRow >= 5) {
+                    // Lost
+                    setTimeout(() => {
+                        showTrainingResult(false);
+                    }, 1500);
+                } else {
+                    game.currentRow++;
+                    game.currentGuess = '';
+                }
+            } else {
+                // Multiplayer mode - send to server
+                socket.emit('submit_guess', { word: game.currentGuess });
+            }
         }
 
         function revealGuess(guess, row, gridId) {
@@ -1270,7 +1401,14 @@
 
         function playAgain() {
             document.getElementById('resultModal').classList.remove('active');
-            showScreen('betScreen');
+            
+            if (game.isTraining) {
+                // Restart training mode
+                startTrainingMode();
+            } else {
+                // Go back to bet selection for multiplayer
+                showScreen('betScreen');
+            }
         }
 
         function goBackToHome() {
