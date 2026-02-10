@@ -121,73 +121,344 @@
             to { width: 100%; }
         }
 
-        /* ===== HOME SCREEN ===== */
+        /* ===== HOME SCREEN - CLASH ROYALE STYLE ===== */
         .home-container {
             max-width: 600px;
             width: 90%;
+            padding: 20px 0;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, #1a2332 0%, #2d3748 100%);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0, 217, 255, 0.2);
+        }
+
+        .profile-avatar {
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+
+        .avatar-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+        }
+
+        .rank-badge {
+            position: absolute;
+            bottom: -6px;
+            right: -6px;
+            width: 28px;
+            height: 28px;
+            background: var(--bg-primary);
+            border: 2px solid var(--neon-yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--neon-cyan);
+            margin-bottom: 4px;
+            text-shadow: 0 2px 8px rgba(0, 217, 255, 0.5);
+        }
+
+        .profile-mmr {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mmr-icon {
+            font-size: 16px;
+        }
+
+        .profile-balance {
+            text-align: right;
+        }
+
+        .balance-amount {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--neon-yellow);
+            font-family: 'JetBrains Mono', monospace;
+            text-shadow: 0 2px 8px rgba(255, 214, 10, 0.5);
+        }
+
+        .balance-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 10px;
+            padding: 12px 8px;
             text-align: center;
         }
 
-        .home-logo {
-            font-size: 72px;
-            margin-bottom: 16px;
-            filter: drop-shadow(var(--glow-green));
-        }
-
-        .home-title {
-            font-size: 48px;
+        .stat-value {
+            font-size: 20px;
             font-weight: 900;
-            letter-spacing: -1px;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--neon-green);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 4px;
         }
 
-        .home-tagline {
-            font-size: 14px;
-            color: var(--text-secondary);
+        .stat-value.online-count {
+            color: var(--neon-cyan);
+        }
+
+        .stat-label {
+            font-size: 9px;
+            color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 48px;
+            letter-spacing: 0.3px;
+        }
+
+        .modes-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-left: 4px;
         }
 
         .mode-grid {
             display: grid;
-            gap: 16px;
+            gap: 12px;
         }
 
         .mode-card {
-            background: var(--bg-secondary);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-elevated) 100%);
             border: 2px solid var(--border-primary);
             border-radius: 14px;
-            padding: 24px;
+            padding: 20px;
             cursor: pointer;
             transition: all 0.3s;
-            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .mode-card.ranked::before {
+            background: linear-gradient(90deg, transparent, var(--neon-yellow), transparent);
+        }
+
+        .mode-card.speed::before {
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+        }
+
+        .mode-card.practice::before {
+            background: linear-gradient(90deg, transparent, var(--neon-purple), transparent);
         }
 
         .mode-card:hover {
-            border-color: var(--neon-green);
             transform: translateY(-4px);
-            box-shadow: 0 0 25px rgba(0, 255, 136, 0.2);
+            border-color: var(--neon-green);
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.2);
+        }
+
+        .mode-card:hover::before {
+            opacity: 1;
+        }
+
+        .mode-card.ranked:hover {
+            border-color: var(--neon-yellow);
+            box-shadow: 0 8px 24px rgba(255, 214, 10, 0.2);
+        }
+
+        .mode-card.speed:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 8px 24px rgba(0, 217, 255, 0.2);
+        }
+
+        .mode-card.practice:hover {
+            border-color: var(--neon-purple);
+            box-shadow: 0 8px 24px rgba(168, 85, 247, 0.2);
+        }
+
+        .mode-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid var(--neon-green);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--neon-green);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .mode-card.ranked .mode-badge {
+            background: rgba(255, 214, 10, 0.2);
+            border-color: var(--neon-yellow);
+            color: var(--neon-yellow);
+        }
+
+        .mode-card.speed .mode-badge {
+            background: rgba(0, 217, 255, 0.2);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .mode-card.practice .mode-badge {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: var(--neon-purple);
+            color: var(--neon-purple);
         }
 
         .mode-icon {
-            font-size: 36px;
+            font-size: 40px;
             margin-bottom: 12px;
         }
 
         .mode-name {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 900;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .mode-desc {
             color: var(--text-secondary);
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.4;
+        }
+
+        .leaderboard-preview {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-primary);
+        }
+
+        .leaderboard-header h3 {
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--neon-yellow);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .view-all {
+            font-size: 12px;
+            color: var(--neon-cyan);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-all:hover {
+            color: var(--neon-green);
+        }
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .leaderboard-item:hover {
+            border-color: var(--neon-green);
+            transform: translateX(4px);
+        }
+
+        .rank-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 900;
+            font-size: 16px;
+            color: var(--neon-yellow);
+            min-width: 32px;
+        }
+
+        .player-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .player-mmr {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--neon-green);
+            font-weight: 700;
         }
 
         /* ===== AUTH SCREEN ===== */
@@ -742,27 +1013,95 @@
     <!-- HOME SCREEN -->
     <div class="screen" id="homeScreen">
         <div class="home-container">
-            <div class="home-logo">⚔️</div>
-            <h1 class="home-title">WORDUEL</h1>
-            <p class="home-tagline">Choose Your Battle Mode</p>
-            
-            <div class="mode-grid">
-                <div class="mode-card" onclick="selectMode('best-of-3')">
-                    <div class="mode-icon">🏆</div>
-                    <div class="mode-name">BEST OF 3</div>
-                    <div class="mode-desc">First to win 2 rounds takes the match. 3 minutes per round.</div>
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <div class="avatar-icon">⚔️</div>
+                    <div class="rank-badge" id="userRank">🥉</div>
                 </div>
-                
-                <div class="mode-card" onclick="selectMode('blitz')">
-                    <div class="mode-icon">⚡</div>
-                    <div class="mode-name">BLITZ</div>
-                    <div class="mode-desc">5-minute speed challenge. Fastest solver wins!</div>
+                <div class="profile-info">
+                    <div class="profile-name" id="profileName">PLAYER</div>
+                    <div class="profile-mmr">
+                        <span class="mmr-icon">🏆</span>
+                        <span id="profileMMR">1000</span> MMR
+                    </div>
                 </div>
+                <div class="profile-balance">
+                    <div class="balance-amount">$<span id="profileBalance">1000</span></div>
+                    <div class="balance-label">COINS</div>
+                </div>
+            </div>
 
-                <div class="mode-card" onclick="selectMode('training')">
-                    <div class="mode-icon">🎓</div>
-                    <div class="mode-name">TRAINING</div>
-                    <div class="mode-desc">Practice mode with no time limit. No bets required.</div>
+            <!-- Stats Panel -->
+            <div class="stats-panel">
+                <div class="stat-box">
+                    <div class="stat-value" id="statsWins">0</div>
+                    <div class="stat-label">WINS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statsLosses">0</div>
+                    <div class="stat-label">LOSSES</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statsWinRate">0%</div>
+                    <div class="stat-label">WIN RATE</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value online-count">12</div>
+                    <div class="stat-label">🟢 ONLINE</div>
+                </div>
+            </div>
+
+            <!-- Battle Modes -->
+            <div class="modes-section">
+                <h2 class="section-title">BATTLE MODES</h2>
+                
+                <div class="mode-grid">
+                    <div class="mode-card ranked" onclick="selectMode('best-of-3')">
+                        <div class="mode-badge">RANKED</div>
+                        <div class="mode-icon">🏆</div>
+                        <div class="mode-name">BEST OF 3</div>
+                        <div class="mode-desc">Win 2 rounds • 3 min each</div>
+                    </div>
+                    
+                    <div class="mode-card speed" onclick="selectMode('blitz')">
+                        <div class="mode-badge">SPEED</div>
+                        <div class="mode-icon">⚡</div>
+                        <div class="mode-name">BLITZ</div>
+                        <div class="mode-desc">5 minutes • Fast paced</div>
+                    </div>
+
+                    <div class="mode-card practice" onclick="selectMode('training')">
+                        <div class="mode-badge">PRACTICE</div>
+                        <div class="mode-icon">🎓</div>
+                        <div class="mode-name">TRAINING</div>
+                        <div class="mode-desc">No timer • vs AI</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Preview -->
+            <div class="leaderboard-preview">
+                <div class="leaderboard-header">
+                    <h3>🏅 TOP PLAYERS</h3>
+                    <span class="view-all">View All →</span>
+                </div>
+                <div class="leaderboard-list">
+                    <div class="leaderboard-item">
+                        <span class="rank-num">#1</span>
+                        <span class="player-name">WordMaster</span>
+                        <span class="player-mmr">2450 🏆</span>
+                    </div>
+                    <div class="leaderboard-item">
+                        <span class="rank-num">#2</span>
+                        <span class="player-name">SpeedKing</span>
+                        <span class="player-mmr">2380 🏆</span>
+                    </div>
+                    <div class="leaderboard-item">
+                        <span class="rank-num">#3</span>
+                        <span class="player-name">LetterLord</span>
+                        <span class="player-mmr">2315 🏆</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -978,12 +1317,44 @@
                 token = savedToken;
                 user = JSON.parse(savedUser);
                 connectSocket();
+                updateHomeScreen();
                 showScreen('homeScreen');
             } else {
                 // New user - show auth
                 showScreen('authScreen');
             }
         }, 2000);
+
+        function updateHomeScreen() {
+            if (!user) return;
+            
+            document.getElementById('profileName').textContent = user.username.toUpperCase();
+            document.getElementById('profileMMR').textContent = user.mmr || 1000;
+            document.getElementById('profileBalance').textContent = user.balance || 1000;
+            
+            // Update rank badge emoji
+            const mmr = user.mmr || 1000;
+            let rankEmoji = '🥉';
+            if (mmr >= 2300) rankEmoji = '👑';
+            else if (mmr >= 2100) rankEmoji = '🌟';
+            else if (mmr >= 1900) rankEmoji = '⭐';
+            else if (mmr >= 1700) rankEmoji = '💠';
+            else if (mmr >= 1500) rankEmoji = '💎';
+            else if (mmr >= 1300) rankEmoji = '🥇';
+            else if (mmr >= 1100) rankEmoji = '🥈';
+            
+            document.getElementById('userRank').textContent = rankEmoji;
+            
+            // Update stats
+            const wins = user.gamesWon || 0;
+            const played = user.gamesPlayed || 0;
+            const losses = played - wins;
+            const winRate = played > 0 ? Math.round((wins / played) * 100) : 0;
+            
+            document.getElementById('statsWins').textContent = wins;
+            document.getElementById('statsLosses').textContent = losses;
+            document.getElementById('statsWinRate').textContent = winRate + '%';
+        }
 
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1360,7 +1731,14 @@
             guess.evaluation.forEach((status, i) => {
                 setTimeout(() => {
                     const tile = document.getElementById(`${gridId}-${row}-${i}`);
-                    tile.textContent = guess.word[i];
+                    
+                    // Only show letters on YOUR grid, not opponent's
+                    if (gridId === 'yourGrid') {
+                        tile.textContent = guess.word[i];
+                    } else {
+                        tile.textContent = ''; // Hide opponent's letters!
+                    }
+                    
                     tile.classList.add(status);
                 }, i * 140);
             });
