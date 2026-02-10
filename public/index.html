@@ -3,206 +3,237 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Worduel - Competitive Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0e14">
+    <title>Worduel - Multiplayer</title>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         :root {
-            /* Competitive Color Palette */
             --bg-primary: #0a0e14;
             --bg-secondary: #151922;
-            --bg-tertiary: #1c2129;
             --bg-elevated: #222831;
-            
-            /* Neon Accents */
             --neon-green: #00ff88;
             --neon-yellow: #ffd60a;
             --neon-cyan: #00d9ff;
             --neon-red: #ff3366;
-            
-            /* Tile Colors */
             --correct: #00ff88;
             --present: #ffd60a;
             --absent: #2d3748;
-            
-            /* UI Elements */
             --border-primary: #2d3748;
-            --border-glow: rgba(0, 255, 136, 0.3);
             --text-primary: #e5e7eb;
             --text-secondary: #9ca3af;
             --text-muted: #6b7280;
-            
-            /* Shadows & Glows */
             --glow-green: 0 0 20px rgba(0, 255, 136, 0.4);
-            --glow-yellow: 0 0 20px rgba(255, 214, 10, 0.4);
             --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
+            overflow: hidden;
         }
 
-        /* Tech Background Pattern */
         body::before {
             content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: 
                 linear-gradient(90deg, rgba(0, 255, 136, 0.02) 1px, transparent 1px),
                 linear-gradient(0deg, rgba(0, 255, 136, 0.02) 1px, transparent 1px);
             background-size: 40px 40px;
             pointer-events: none;
-            z-index: 0;
         }
 
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Connection Status HUD */
-        .status-hud {
+        .screen {
+            display: none;
             position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-primary);
-            padding: 12px 20px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 10000;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--neon-red);
-            box-shadow: 0 0 10px var(--neon-red);
-            animation: pulse 2s infinite;
-        }
-
-        .status-indicator.connected {
-            background: var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        /* Auth Screen - Minimal & Clean */
-        .auth-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
+            inset: 0;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
-            background: var(--bg-primary);
         }
 
-        .auth-container {
-            width: 440px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 12px;
-            padding: 48px;
-            box-shadow: var(--shadow-lg);
-            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        .screen.active {
+            display: flex;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
+        /* ===== SPLASH SCREEN ===== */
+        .splash-screen {
+            flex-direction: column;
         }
 
-        .auth-header {
-            text-align: center;
-            margin-bottom: 40px;
+        .splash-logo {
+            font-size: 100px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(var(--glow-green));
         }
 
-        .auth-logo {
-            font-size: 48px;
-            margin-bottom: 16px;
-            text-shadow: var(--glow-green);
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
 
-        .auth-title {
-            font-size: 32px;
+        .splash-title {
+            font-size: 64px;
             font-weight: 900;
-            letter-spacing: -1px;
-            margin-bottom: 8px;
+            letter-spacing: -2px;
+            margin-bottom: 12px;
             background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .auth-subtitle {
+        .splash-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 40px;
+        }
+
+        .loading-bar {
+            width: 280px;
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+            width: 0%;
+            animation: load 2s ease forwards;
+            box-shadow: var(--glow-green);
+        }
+
+        @keyframes load {
+            to { width: 100%; }
+        }
+
+        /* ===== HOME SCREEN ===== */
+        .home-container {
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .home-logo {
+            font-size: 72px;
+            margin-bottom: 16px;
+            filter: drop-shadow(var(--glow-green));
+        }
+
+        .home-title {
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .home-tagline {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 48px;
+        }
+
+        .mode-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .mode-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-primary);
+            border-radius: 14px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .mode-card:hover {
+            border-color: var(--neon-green);
+            transform: translateY(-4px);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.2);
+        }
+
+        .mode-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .mode-name {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .mode-desc {
             color: var(--text-secondary);
             font-size: 13px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+            line-height: 1.5;
+        }
+
+        /* ===== AUTH SCREEN ===== */
+        .auth-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-title {
+            font-size: 32px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .auth-tabs {
             display: flex;
             gap: 8px;
-            margin-bottom: 32px;
-            background: var(--bg-primary);
-            padding: 4px;
-            border-radius: 8px;
+            margin-bottom: 24px;
         }
 
         .auth-tab {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             background: transparent;
-            border: none;
+            border: 1px solid var(--border-primary);
             color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
             font-weight: 600;
             font-size: 14px;
-            border-radius: 6px;
-            cursor: pointer;
             transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
         }
 
         .auth-tab.active {
-            background: var(--bg-elevated);
-            color: var(--neon-green);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            background: var(--neon-green);
+            color: var(--bg-primary);
+            border-color: var(--neon-green);
         }
 
         .auth-form {
@@ -213,656 +244,389 @@
             display: block;
         }
 
-        .input-group {
+        .form-group {
             margin-bottom: 16px;
         }
 
-        .auth-input {
-            width: 100%;
-            padding: 14px 16px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-primary);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: 'JetBrains Mono', monospace;
-            transition: all 0.2s;
-        }
-
-        .auth-input:focus {
-            outline: none;
-            border-color: var(--neon-green);
-            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
-        }
-
-        .auth-input::placeholder {
+        .form-label {
+            display: block;
+            font-size: 12px;
             color: var(--text-muted);
-        }
-
-        .auth-button {
-            width: 100%;
-            padding: 14px;
-            background: var(--neon-green);
-            border: none;
-            border-radius: 8px;
-            color: var(--bg-primary);
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: all 0.2s;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-primary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 14px;
             font-family: 'Inter', sans-serif;
         }
 
-        .auth-button:hover {
+        .form-input:focus {
+            outline: none;
+            border-color: var(--neon-green);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--neon-green);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
             transform: translateY(-2px);
             box-shadow: var(--glow-green);
         }
 
-        .auth-button:active {
-            transform: translateY(0);
-        }
-
-        .error-message {
+        .error-msg {
+            background: rgba(255, 51, 102, 0.1);
+            border: 1px solid var(--neon-red);
             color: var(--neon-red);
-            font-size: 12px;
-            margin-top: 8px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Main Game Container */
-        .game-container {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
             display: none;
         }
 
-        .game-container.active {
+        .error-msg.show {
             display: block;
-            animation: fadeIn 0.4s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-        }
-
-        /* Top Bar - Esports Dashboard Style */
-        .top-bar {
+        /* ===== BET SELECTION ===== */
+        .bet-container {
             background: var(--bg-secondary);
             border: 1px solid var(--border-primary);
-            border-radius: 12px;
-            padding: 16px 24px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
             box-shadow: var(--shadow-lg);
         }
 
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-icon {
-            font-size: 28px;
-            filter: drop-shadow(var(--glow-green));
-        }
-
-        .logo-text {
-            font-size: 24px;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .player-stats {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .stat-pill {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-primary);
-            padding: 8px 16px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-        }
-
-        .stat-pill.highlight {
-            border-color: var(--neon-green);
-            box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
-        }
-
-        .stat-label {
-            color: var(--text-muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-value {
-            color: var(--text-primary);
-            font-weight: 700;
-        }
-
-        .logout-btn {
-            padding: 8px 16px;
-            background: transparent;
-            border: 1px solid var(--border-primary);
-            color: var(--text-secondary);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .logout-btn:hover {
-            border-color: var(--neon-red);
-            color: var(--neon-red);
-        }
-
-        /* Betting Interface - Clean & Minimal */
-        .betting-screen {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 12px;
-            padding: 48px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .betting-header {
+        .bet-header {
             text-align: center;
-            margin-bottom: 48px;
+            margin-bottom: 32px;
         }
 
-        .betting-title {
+        .bet-title {
             font-size: 28px;
-            font-weight: 800;
+            font-weight: 900;
             margin-bottom: 8px;
-            letter-spacing: -0.5px;
         }
 
-        .betting-subtitle {
-            color: var(--text-secondary);
-            font-size: 14px;
+        .bet-balance {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            color: var(--neon-green);
         }
 
         .bet-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
 
         .bet-option {
             background: var(--bg-primary);
             border: 2px solid var(--border-primary);
-            padding: 24px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.2s;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .bet-option::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.05), transparent);
-            transition: left 0.5s;
+            transition: all 0.2s;
         }
 
         .bet-option:hover {
             border-color: var(--neon-green);
-            transform: translateY(-2px);
-        }
-
-        .bet-option:hover::before {
-            left: 100%;
         }
 
         .bet-option.selected {
             border-color: var(--neon-green);
-            background: rgba(0, 255, 136, 0.05);
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
+            background: rgba(0, 255, 136, 0.1);
         }
 
         .bet-amount {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: 900;
-            color: var(--neon-green);
-            margin-bottom: 4px;
             font-family: 'JetBrains Mono', monospace;
+            color: var(--neon-green);
         }
 
-        .bet-tier {
-            font-size: 11px;
+        .bet-label {
+            font-size: 10px;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            margin-top: 4px;
         }
 
-        .custom-bet {
-            text-align: center;
-            margin: 32px 0;
-        }
-
-        .custom-bet-label {
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-primary);
             color: var(--text-secondary);
-            font-size: 13px;
-            margin-bottom: 12px;
+            margin-top: 12px;
         }
 
-        .custom-bet-input {
-            width: 220px;
-            padding: 12px 16px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-primary);
-            border-radius: 8px;
+        .btn-secondary:hover {
+            border-color: var(--text-primary);
             color: var(--text-primary);
+        }
+
+        /* ===== MATCHMAKING ===== */
+        .matchmaking-container {
             text-align: center;
-            font-size: 18px;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .custom-bet-input:focus {
-            outline: none;
-            border-color: var(--neon-green);
-        }
-
-        .find-match-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--neon-green);
-            border: none;
-            border-radius: 8px;
-            color: var(--bg-primary);
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.2s;
-            margin-top: 24px;
-        }
-
-        .find-match-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: var(--glow-green);
-        }
-
-        .find-match-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        /* Matchmaking Screen */
-        .searching-screen {
-            display: none;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 12px;
-            padding: 64px 48px;
-            text-align: center;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .searching-screen.active {
-            display: block;
-        }
-
-        .search-title {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 32px;
+            max-width: 400px;
         }
 
         .radar {
-            width: 120px;
-            height: 120px;
+            width: 200px;
+            height: 200px;
             margin: 0 auto 32px;
             position: relative;
-            border: 2px solid var(--border-primary);
+            border: 2px solid var(--neon-green);
             border-radius: 50%;
+            box-shadow: var(--glow-green);
         }
 
         .radar::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 2px;
-            height: 60px;
-            background: var(--neon-green);
-            transform-origin: top;
-            animation: radar-sweep 2s linear infinite;
-            box-shadow: var(--glow-green);
+            inset: 20px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 50%;
         }
 
-        @keyframes radar-sweep {
-            from { transform: translate(-50%, 0) rotate(0deg); }
-            to { transform: translate(-50%, 0) rotate(360deg); }
+        .radar::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg,
+                rgba(0, 255, 136, 0.3) 45deg,
+                transparent 90deg
+            );
+            border-radius: 50%;
+            animation: scan 2s linear infinite;
         }
 
-        .search-info {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-primary);
-            padding: 20px;
-            border-radius: 8px;
-            margin: 24px 0;
+        @keyframes scan {
+            to { transform: rotate(360deg); }
         }
 
-        .search-info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
+        .matchmaking-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        .matchmaking-info {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .matchmaking-bet {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-        }
-
-        .search-info-label {
-            color: var(--text-muted);
-        }
-
-        .search-info-value {
             color: var(--neon-green);
             font-weight: 700;
         }
 
-        .cancel-search-btn {
-            padding: 12px 32px;
-            background: transparent;
-            border: 1px solid var(--border-primary);
-            color: var(--text-secondary);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 12px;
+        /* ===== BATTLE SCREEN ===== */
+        .battle-container {
+            width: 100%;
+            height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
 
-        .cancel-search-btn:hover {
-            border-color: var(--neon-red);
-            color: var(--neon-red);
-        }
-
-        /* Game Screen - Symmetrical Dual Display */
-        .game-screen {
-            display: none;
-        }
-
-        .game-screen.active {
-            display: block;
-        }
-
-        /* Match Header with Progress Bars */
-        .match-header {
+        .battle-header {
             background: var(--bg-secondary);
             border: 1px solid var(--border-primary);
             border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .versus-display {
+            padding: 16px 24px;
+            margin-bottom: 18px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .player-side {
-            flex: 1;
-            text-align: center;
-        }
-
-        .player-name-display {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .player-rank-display {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .vs-divider {
-            width: 60px;
-            height: 60px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-primary);
-            border-radius: 50%;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: 900;
-            color: var(--text-muted);
         }
 
-        .pot-display {
-            background: var(--bg-primary);
-            border: 1px solid var(--neon-green);
-            padding: 16px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .pot-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-
-        .pot-amount {
-            font-size: 28px;
+        .battle-timer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
             font-weight: 900;
             color: var(--neon-green);
-            font-family: 'JetBrains Mono', monospace;
-            text-shadow: var(--glow-green);
         }
 
-        /* Symmetrical Grid Layout */
+        .battle-pot {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            color: var(--neon-yellow);
+        }
+
         .battle-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 18px;
+            margin-bottom: 18px;
+            flex: 1;
         }
 
         .player-panel {
             background: var(--bg-secondary);
             border: 1px solid var(--border-primary);
             border-radius: 12px;
-            padding: 24px;
-            box-shadow: var(--shadow-lg);
-            position: relative;
+            padding: 20px;
         }
 
         .player-panel.you {
             border-color: var(--neon-green);
-            box-shadow: 0 0 24px rgba(0, 255, 136, 0.15);
-        }
-
-        .player-panel.you::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--neon-green), transparent);
-            border-radius: 12px 12px 0 0;
         }
 
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
+            padding-bottom: 12px;
             border-bottom: 1px solid var(--border-primary);
+            margin-bottom: 16px;
         }
 
-        .panel-title {
-            font-size: 14px;
+        .panel-name {
+            font-size: 13px;
             font-weight: 700;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
         }
 
-        .panel-title.you {
+        .panel-name.you {
             color: var(--neon-green);
         }
 
-        /* Word Grid - Clean Geometry */
         .word-grid {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
         }
 
         .word-row {
             display: flex;
-            gap: 6px;
+            gap: 5px;
             justify-content: center;
         }
 
         .tile {
-            width: 56px;
-            height: 56px;
+            width: 52px;
+            height: 52px;
             background: var(--bg-primary);
             border: 2px solid var(--border-primary);
-            border-radius: 8px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 900;
             font-family: 'JetBrains Mono', monospace;
-            transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
         }
 
         .tile.filled {
             border-color: var(--text-muted);
-            transform: scale(1.05);
         }
 
-        /* Tile Flip Animation */
         .tile.correct {
             background: var(--correct);
             border-color: var(--correct);
             color: var(--bg-primary);
-            box-shadow: 0 0 16px rgba(0, 255, 136, 0.4);
-            animation: tileFlip 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: flip 0.4s;
         }
 
         .tile.present {
             background: var(--present);
             border-color: var(--present);
             color: var(--bg-primary);
-            box-shadow: 0 0 16px rgba(255, 214, 10, 0.4);
-            animation: tileFlip 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: flip 0.4s;
         }
 
         .tile.absent {
             background: var(--absent);
             border-color: var(--absent);
             color: var(--text-muted);
-            animation: tileFlip 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: flip 0.4s;
         }
 
-        @keyframes tileFlip {
+        @keyframes flip {
             0% { transform: rotateX(0); }
             50% { transform: rotateX(90deg); }
             100% { transform: rotateX(0); }
         }
 
-        /* Keyboard - Refined & Minimal */
         .keyboard {
             background: var(--bg-secondary);
             border: 1px solid var(--border-primary);
             border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--shadow-lg);
+            padding: 18px;
         }
 
         .keyboard-row {
             display: flex;
-            gap: 6px;
+            gap: 5px;
             justify-content: center;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
 
         .key {
             background: var(--bg-primary);
             border: 1px solid var(--border-primary);
             color: var(--text-primary);
-            padding: 16px;
+            padding: 14px;
             border-radius: 6px;
-            min-width: 44px;
+            min-width: 42px;
             font-weight: 700;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.15s;
-            user-select: none;
             font-family: 'JetBrains Mono', monospace;
         }
 
         .key:hover {
-            background: var(--bg-tertiary);
-            border-color: var(--text-muted);
+            background: var(--bg-elevated);
             transform: translateY(-2px);
         }
 
-        .key:active {
-            transform: translateY(0);
-        }
-
         .key.wide {
-            min-width: 70px;
-            font-size: 12px;
+            min-width: 65px;
+            font-size: 11px;
         }
 
         .key.correct {
             background: var(--correct);
             border-color: var(--correct);
             color: var(--bg-primary);
-            box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
         }
 
         .key.present {
             background: var(--present);
             border-color: var(--present);
             color: var(--bg-primary);
-            box-shadow: 0 0 12px rgba(255, 214, 10, 0.3);
         }
 
         .key.absent {
@@ -871,14 +635,11 @@
             color: var(--text-muted);
         }
 
-        /* Result Modal - Esports Victory */
+        /* ===== RESULT MODAL ===== */
         .result-modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: rgba(10, 14, 20, 0.95);
             backdrop-filter: blur(8px);
             align-items: center;
@@ -888,434 +649,366 @@
 
         .result-modal.active {
             display: flex;
-            animation: fadeIn 0.3s ease;
         }
 
         .result-container {
             background: var(--bg-secondary);
             border: 1px solid var(--border-primary);
-            border-radius: 16px;
-            padding: 48px;
-            max-width: 500px;
+            border-radius: 14px;
+            padding: 40px;
+            max-width: 460px;
             text-align: center;
-            box-shadow: var(--shadow-lg);
-            animation: modalSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes modalSlide {
-            from {
-                opacity: 0;
-                transform: translateY(-40px) scale(0.9);
-            }
         }
 
         .result-icon {
-            font-size: 80px;
-            margin-bottom: 24px;
-            animation: resultPulse 0.6s ease;
-        }
-
-        @keyframes resultPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
+            font-size: 72px;
+            margin-bottom: 20px;
         }
 
         .result-title {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 900;
-            margin-bottom: 24px;
-            letter-spacing: -1px;
+            margin-bottom: 20px;
         }
 
         .result-title.win {
             color: var(--neon-green);
-            text-shadow: var(--glow-green);
         }
 
         .result-title.lose {
             color: var(--text-secondary);
         }
 
-        .result-stats-grid {
+        .result-stats {
             background: var(--bg-primary);
             border: 1px solid var(--border-primary);
-            border-radius: 12px;
-            padding: 24px;
-            margin: 24px 0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
         }
 
-        .result-stat-row {
+        .result-stat {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
+            padding: 10px 0;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .result-stat-row:not(:last-child) {
+        .result-stat:not(:last-child) {
             border-bottom: 1px solid var(--border-primary);
         }
 
-        .result-stat-label {
+        .result-label {
             color: var(--text-muted);
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .result-stat-value {
-            font-size: 18px;
+        .result-value {
+            font-size: 16px;
             font-weight: 700;
         }
 
-        .result-stat-value.positive {
+        .result-value.positive {
             color: var(--neon-green);
-        }
-
-        .result-stat-value.negative {
-            color: var(--neon-red);
         }
 
         .result-actions {
             display: flex;
-            gap: 12px;
-            margin-top: 32px;
+            gap: 10px;
+            margin-top: 26px;
         }
 
-        .result-btn {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 13px;
-        }
-
-        .result-btn.primary {
-            background: var(--neon-green);
-            color: var(--bg-primary);
-        }
-
-        .result-btn.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--glow-green);
-        }
-
-        .result-btn.secondary {
-            background: transparent;
-            border: 1px solid var(--border-primary);
-            color: var(--text-secondary);
-        }
-
-        .result-btn.secondary:hover {
-            border-color: var(--text-primary);
-            color: var(--text-primary);
-        }
-
-        /* Responsive */
         @media (max-width: 1024px) {
             .battle-grid {
                 grid-template-columns: 1fr;
             }
-
-            .bet-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .tile {
-                width: 48px;
-                height: 48px;
-                font-size: 22px;
-            }
-
-            .key {
-                padding: 12px;
-                min-width: 36px;
-                font-size: 13px;
-            }
-
-            .bet-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .hidden {
-            display: none !important;
         }
     </style>
 </head>
 <body>
-    <!-- Status HUD -->
-    <div class="status-hud">
-        <div class="status-indicator" id="statusIndicator"></div>
-        <span id="statusText">DISCONNECTED</span>
-        <div style="border-left: 1px solid var(--border-primary); height: 16px; margin: 0 4px;"></div>
-        <span><span id="onlineCount">0</span> ONLINE</span>
-    </div>
-
-    <!-- Auth Screen -->
-    <div class="auth-screen" id="authScreen">
-        <div class="auth-container">
-            <div class="auth-header">
-                <div class="auth-logo">⚔️</div>
-                <h1 class="auth-title">WORDUEL</h1>
-                <p class="auth-subtitle">Competitive Word Arena</p>
+    <!-- SPLASH SCREEN -->
+    <div class="screen active" id="splashScreen">
+        <div class="splash-screen">
+            <div class="splash-logo">⚔️</div>
+            <h1 class="splash-title">WORDUEL</h1>
+            <p class="splash-subtitle">Competitive Word Battle</p>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
             </div>
-
-            <div class="auth-tabs">
-                <button class="auth-tab active" onclick="switchTab('login')">LOGIN</button>
-                <button class="auth-tab" onclick="switchTab('register')">REGISTER</button>
-            </div>
-
-            <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
-                <div class="input-group">
-                    <input type="text" class="auth-input" id="loginUsername" placeholder="USERNAME" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" class="auth-input" id="loginPassword" placeholder="PASSWORD" required>
-                </div>
-                <button type="submit" class="auth-button">Enter Arena</button>
-                <div class="error-message" id="loginError"></div>
-            </form>
-
-            <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
-                <div class="input-group">
-                    <input type="text" class="auth-input" id="registerUsername" placeholder="USERNAME" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" class="auth-input" id="registerPassword" placeholder="PASSWORD (min 6)" required>
-                </div>
-                <button type="submit" class="auth-button">Create Account</button>
-                <div class="error-message" id="registerError"></div>
-            </form>
         </div>
     </div>
 
-    <!-- Game Container -->
-    <div class="game-container" id="gameContainer">
-        <div class="container">
-            <!-- Top Bar -->
-            <div class="top-bar">
-                <div class="logo-section">
-                    <span class="logo-icon">⚔️</span>
-                    <span class="logo-text">WORDUEL</span>
+    <!-- HOME SCREEN -->
+    <div class="screen" id="homeScreen">
+        <div class="home-container">
+            <div class="home-logo">⚔️</div>
+            <h1 class="home-title">WORDUEL</h1>
+            <p class="home-tagline">Choose Your Battle Mode</p>
+            
+            <div class="mode-grid">
+                <div class="mode-card" onclick="selectMode('best-of-3')">
+                    <div class="mode-icon">🏆</div>
+                    <div class="mode-name">BEST OF 3</div>
+                    <div class="mode-desc">First to win 2 rounds takes the match. 3 minutes per round.</div>
                 </div>
-
-                <div class="player-stats">
-                    <div class="stat-pill">
-                        <span id="username">PLAYER</span>
-                    </div>
-                    <div class="stat-pill">
-                        <span id="rankIcon">🥉</span>
-                        <span id="rankName">BRONZE</span>
-                    </div>
-                    <div class="stat-pill">
-                        <span id="mmr">1000</span> MMR
-                    </div>
-                    <div class="stat-pill highlight">
-                        <span style="color: var(--neon-green);">$<span id="balance">1000</span></span>
-                    </div>
-                    <button class="logout-btn" onclick="logout()">EXIT</button>
-                </div>
-            </div>
-
-            <!-- Betting Screen -->
-            <div class="betting-screen" id="bettingScreen">
-                <div class="betting-header">
-                    <h2 class="betting-title">SELECT WAGER</h2>
-                    <p class="betting-subtitle">Choose your stake and enter matchmaking</p>
-                </div>
-
-                <div class="bet-grid">
-                    <div class="bet-option" onclick="selectBet(10)">
-                        <div class="bet-amount">$10</div>
-                        <div class="bet-tier">BRONZE</div>
-                    </div>
-                    <div class="bet-option" onclick="selectBet(25)">
-                        <div class="bet-amount">$25</div>
-                        <div class="bet-tier">SILVER</div>
-                    </div>
-                    <div class="bet-option" onclick="selectBet(50)">
-                        <div class="bet-amount">$50</div>
-                        <div class="bet-tier">GOLD</div>
-                    </div>
-                    <div class="bet-option" onclick="selectBet(100)">
-                        <div class="bet-amount">$100</div>
-                        <div class="bet-tier">PLATINUM</div>
-                    </div>
-                    <div class="bet-option" onclick="selectBet(250)">
-                        <div class="bet-amount">$250</div>
-                        <div class="bet-tier">DIAMOND</div>
-                    </div>
-                    <div class="bet-option" onclick="selectBet(500)">
-                        <div class="bet-amount">$500</div>
-                        <div class="bet-tier">LEGEND</div>
-                    </div>
-                </div>
-
-                <div class="custom-bet">
-                    <div class="custom-bet-label">CUSTOM AMOUNT</div>
-                    <input type="number" class="custom-bet-input" id="customBetInput" placeholder="$$$" min="1">
-                </div>
-
-                <button class="find-match-btn" id="findMatchBtn" onclick="findMatch()" disabled>
-                    SELECT WAGER TO CONTINUE
-                </button>
-            </div>
-
-            <!-- Searching Screen -->
-            <div class="searching-screen" id="searchingScreen">
-                <h2 class="search-title">MATCHMAKING</h2>
                 
-                <div class="radar"></div>
-
-                <div class="search-info">
-                    <div class="search-info-row">
-                        <span class="search-info-label">WAGER</span>
-                        <span class="search-info-value">$<span id="searchBet">0</span></span>
-                    </div>
-                    <div class="search-info-row">
-                        <span class="search-info-label">YOUR MMR</span>
-                        <span class="search-info-value"><span id="searchMMR">1000</span></span>
-                    </div>
-                    <div class="search-info-row">
-                        <span class="search-info-label">RANGE</span>
-                        <span class="search-info-value"><span id="searchRange">800-1200</span></span>
-                    </div>
+                <div class="mode-card" onclick="selectMode('blitz')">
+                    <div class="mode-icon">⚡</div>
+                    <div class="mode-name">BLITZ</div>
+                    <div class="mode-desc">5-minute speed challenge. Fastest solver wins!</div>
                 </div>
 
-                <button class="cancel-search-btn" onclick="cancelSearch()">CANCEL</button>
-            </div>
-
-            <!-- Game Screen -->
-            <div class="game-screen" id="gameScreen">
-                <!-- Match Header -->
-                <div class="match-header">
-                    <div class="versus-display">
-                        <div class="player-side">
-                            <div class="player-name-display" id="yourNameDisplay">YOU</div>
-                            <div class="player-rank-display" id="yourRankDisplay">BRONZE • 1000</div>
-                        </div>
-
-                        <div class="vs-divider">VS</div>
-
-                        <div class="player-side">
-                            <div class="player-name-display" id="opponentNameDisplay">OPPONENT</div>
-                            <div class="player-rank-display" id="opponentRankDisplay">BRONZE • 1000</div>
-                        </div>
-                    </div>
-
-                    <div class="pot-display">
-                        <div class="pot-label">PRIZE POOL</div>
-                        <div class="pot-amount">$<span id="potAmount">0</span></div>
-                    </div>
-                </div>
-
-                <!-- Battle Grid -->
-                <div class="battle-grid">
-                    <div class="player-panel you">
-                        <div class="panel-header">
-                            <span class="panel-title you">YOUR BOARD</span>
-                        </div>
-                        <div class="word-grid" id="yourGrid"></div>
-                    </div>
-
-                    <div class="player-panel">
-                        <div class="panel-header">
-                            <span class="panel-title">OPPONENT</span>
-                        </div>
-                        <div class="word-grid" id="opponentGrid"></div>
-                    </div>
-                </div>
-
-                <!-- Keyboard -->
-                <div class="keyboard">
-                    <div class="keyboard-row">
-                        <div class="key" data-key="Q">Q</div>
-                        <div class="key" data-key="W">W</div>
-                        <div class="key" data-key="E">E</div>
-                        <div class="key" data-key="R">R</div>
-                        <div class="key" data-key="T">T</div>
-                        <div class="key" data-key="Y">Y</div>
-                        <div class="key" data-key="U">U</div>
-                        <div class="key" data-key="I">I</div>
-                        <div class="key" data-key="O">O</div>
-                        <div class="key" data-key="P">P</div>
-                    </div>
-                    <div class="keyboard-row">
-                        <div class="key" data-key="A">A</div>
-                        <div class="key" data-key="S">S</div>
-                        <div class="key" data-key="D">D</div>
-                        <div class="key" data-key="F">F</div>
-                        <div class="key" data-key="G">G</div>
-                        <div class="key" data-key="H">H</div>
-                        <div class="key" data-key="J">J</div>
-                        <div class="key" data-key="K">K</div>
-                        <div class="key" data-key="L">L</div>
-                    </div>
-                    <div class="keyboard-row">
-                        <div class="key wide" data-key="Enter">ENTER</div>
-                        <div class="key" data-key="Z">Z</div>
-                        <div class="key" data-key="X">X</div>
-                        <div class="key" data-key="C">C</div>
-                        <div class="key" data-key="V">V</div>
-                        <div class="key" data-key="B">B</div>
-                        <div class="key" data-key="N">N</div>
-                        <div class="key" data-key="M">M</div>
-                        <div class="key wide" data-key="Backspace">⌫</div>
-                    </div>
+                <div class="mode-card" onclick="selectMode('training')">
+                    <div class="mode-icon">🎓</div>
+                    <div class="mode-name">TRAINING</div>
+                    <div class="mode-desc">Practice mode with no time limit. No bets required.</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Result Modal -->
+    <!-- AUTH SCREEN -->
+    <div class="screen" id="authScreen">
+        <div class="auth-container">
+            <h2 class="auth-title">⚔️ WORDUEL</h2>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">LOGIN</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">REGISTER</button>
+            </div>
+
+            <div class="error-msg" id="authError"></div>
+
+            <!-- Login Form -->
+            <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn">LOGIN</button>
+            </form>
+
+            <!-- Register Form -->
+            <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="registerPassword" required minlength="6">
+                </div>
+                <button type="submit" class="btn">CREATE ACCOUNT</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- BET SELECTION -->
+    <div class="screen" id="betScreen">
+        <div class="bet-container">
+            <div class="bet-header">
+                <h2 class="bet-title">Select Your Bet</h2>
+                <p class="bet-balance">Balance: $<span id="userBalance">1000</span></p>
+            </div>
+
+            <div class="bet-grid">
+                <div class="bet-option" onclick="selectBet(10)">
+                    <div class="bet-amount">$10</div>
+                    <div class="bet-label">Bronze</div>
+                </div>
+                <div class="bet-option" onclick="selectBet(25)">
+                    <div class="bet-amount">$25</div>
+                    <div class="bet-label">Silver</div>
+                </div>
+                <div class="bet-option" onclick="selectBet(50)">
+                    <div class="bet-amount">$50</div>
+                    <div class="bet-label">Gold</div>
+                </div>
+                <div class="bet-option" onclick="selectBet(100)">
+                    <div class="bet-amount">$100</div>
+                    <div class="bet-label">Platinum</div>
+                </div>
+                <div class="bet-option" onclick="selectBet(250)">
+                    <div class="bet-amount">$250</div>
+                    <div class="bet-label">Diamond</div>
+                </div>
+                <div class="bet-option" onclick="selectBet(500)">
+                    <div class="bet-amount">$500</div>
+                    <div class="bet-label">Legend</div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="findMatch()" id="findMatchBtn" disabled>FIND MATCH</button>
+            <button class="btn btn-secondary" onclick="goBackToHome()">BACK</button>
+        </div>
+    </div>
+
+    <!-- MATCHMAKING -->
+    <div class="screen" id="matchmakingScreen">
+        <div class="matchmaking-container">
+            <div class="radar"></div>
+            <h2 class="matchmaking-title">Searching for Opponent...</h2>
+            <p class="matchmaking-info">
+                Looking for players with similar skill<br>
+                Bet: <span class="matchmaking-bet" id="matchmakingBet">$50</span>
+            </p>
+            <button class="btn btn-secondary" onclick="cancelSearch()" style="margin-top: 32px;">CANCEL</button>
+        </div>
+    </div>
+
+    <!-- BATTLE SCREEN -->
+    <div class="screen" id="battleScreen">
+        <div class="battle-container">
+            <div class="battle-header">
+                <div class="battle-timer" id="battleTimer">3:00</div>
+                <div class="battle-pot">POT: $<span id="battlePot">100</span></div>
+            </div>
+
+            <div class="battle-grid">
+                <div class="player-panel you">
+                    <div class="panel-header">
+                        <span class="panel-name you" id="yourName">YOU</span>
+                    </div>
+                    <div class="word-grid" id="yourGrid"></div>
+                </div>
+
+                <div class="player-panel">
+                    <div class="panel-header">
+                        <span class="panel-name" id="opponentName">OPPONENT</span>
+                    </div>
+                    <div class="word-grid" id="opponentGrid"></div>
+                </div>
+            </div>
+
+            <div class="keyboard">
+                <div class="keyboard-row">
+                    <div class="key" data-key="Q">Q</div>
+                    <div class="key" data-key="W">W</div>
+                    <div class="key" data-key="E">E</div>
+                    <div class="key" data-key="R">R</div>
+                    <div class="key" data-key="T">T</div>
+                    <div class="key" data-key="Y">Y</div>
+                    <div class="key" data-key="U">U</div>
+                    <div class="key" data-key="I">I</div>
+                    <div class="key" data-key="O">O</div>
+                    <div class="key" data-key="P">P</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key" data-key="A">A</div>
+                    <div class="key" data-key="S">S</div>
+                    <div class="key" data-key="D">D</div>
+                    <div class="key" data-key="F">F</div>
+                    <div class="key" data-key="G">G</div>
+                    <div class="key" data-key="H">H</div>
+                    <div class="key" data-key="J">J</div>
+                    <div class="key" data-key="K">K</div>
+                    <div class="key" data-key="L">L</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key wide" data-key="Enter">ENTER</div>
+                    <div class="key" data-key="Z">Z</div>
+                    <div class="key" data-key="X">X</div>
+                    <div class="key" data-key="C">C</div>
+                    <div class="key" data-key="V">V</div>
+                    <div class="key" data-key="B">B</div>
+                    <div class="key" data-key="N">N</div>
+                    <div class="key" data-key="M">M</div>
+                    <div class="key wide" data-key="Backspace">⌫</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULT MODAL -->
     <div class="result-modal" id="resultModal">
         <div class="result-container">
             <div class="result-icon" id="resultIcon">🏆</div>
             <h2 class="result-title" id="resultTitle">VICTORY</h2>
 
-            <div class="result-stats-grid">
-                <div class="result-stat-row">
-                    <span class="result-stat-label">WINNINGS</span>
-                    <span class="result-stat-value positive" id="resultWinnings">+$100</span>
+            <div class="result-stats" id="resultStats">
+                <div class="result-stat">
+                    <span class="result-label">WINNINGS</span>
+                    <span class="result-value positive" id="resultWinnings">+$100</span>
                 </div>
-                <div class="result-stat-row">
-                    <span class="result-stat-label">MMR CHANGE</span>
-                    <span class="result-stat-value" id="resultMMR">+25</span>
+                <div class="result-stat">
+                    <span class="result-label">NEW BALANCE</span>
+                    <span class="result-value" id="resultBalance">$1100</span>
                 </div>
-                <div class="result-stat-row">
-                    <span class="result-stat-label">SOLUTION</span>
-                    <span class="result-stat-value" id="resultWord">CRANE</span>
+                <div class="result-stat">
+                    <span class="result-label">MMR CHANGE</span>
+                    <span class="result-value" id="resultMMR">+25</span>
                 </div>
             </div>
 
             <div class="result-actions">
-                <button class="result-btn primary" onclick="playAgain()">REMATCH</button>
-                <button class="result-btn secondary" onclick="backToLobby()">LOBBY</button>
+                <button class="btn" onclick="playAgain()">PLAY AGAIN</button>
+                <button class="btn btn-secondary" onclick="goBackToHome()">HOME</button>
             </div>
         </div>
     </div>
 
     <script>
         const SERVER_URL = window.location.origin;
+        
         let socket = null;
+        let user = null;
         let token = null;
-        let currentBet = 0;
-        let gameState = {
+        let selectedMode = null;
+        let selectedBet = null;
+        let currentMatch = null;
+        let game = {
+            targetWord: '',
             currentGuess: '',
             currentRow: 0,
-            guesses: [],
-            gameOver: false
+            guesses: []
         };
 
-        // Auth functions
-        function switchTab(tab) {
+        // Splash screen - check if user already logged in
+        setTimeout(() => {
+            const savedToken = localStorage.getItem('worduel_token');
+            const savedUser = localStorage.getItem('worduel_user');
+            
+            if (savedToken && savedUser) {
+                // User already logged in
+                token = savedToken;
+                user = JSON.parse(savedUser);
+                connectSocket();
+                showScreen('homeScreen');
+            } else {
+                // New user - show auth
+                showScreen('authScreen');
+            }
+        }, 2000);
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function selectMode(mode) {
+            selectedMode = mode;
+            
+            // Training mode skips betting - practice mode
+            if (mode === 'training') {
+                alert('Training mode: Practice against AI (Coming soon!)');
+                return;
+            }
+            
+            // Update balance display before showing bet screen
+            if (user) {
+                document.getElementById('userBalance').textContent = user.balance;
+            }
+            
+            // For competitive modes, go to bet screen
+            showScreen('betScreen');
+        }
+
+        function switchAuthTab(tab) {
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
             
@@ -1326,215 +1019,150 @@
                 document.querySelectorAll('.auth-tab')[1].classList.add('active');
                 document.getElementById('registerForm').classList.add('active');
             }
-        }
-
-        async function handleRegister(e) {
-            e.preventDefault();
-            const username = document.getElementById('registerUsername').value;
-            const password = document.getElementById('registerPassword').value;
-            const errorEl = document.getElementById('registerError');
-
-            try {
-                const response = await fetch(`${SERVER_URL}/api/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    token = data.token;
-                    updateUserInfo(data.user);
-                    connectSocket();
-                } else {
-                    errorEl.textContent = data.error || 'Registration failed';
-                }
-            } catch (error) {
-                errorEl.textContent = 'Server offline. Run: node worduel-enhanced-server.js';
-            }
+            
+            document.getElementById('authError').classList.remove('show');
         }
 
         async function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
-            const errorEl = document.getElementById('loginError');
-
+            
             try {
                 const response = await fetch(`${SERVER_URL}/api/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-
+                
                 const data = await response.json();
-
+                
                 if (data.success) {
                     token = data.token;
-                    updateUserInfo(data.user);
+                    user = data.user;
+                    
+                    // Save to localStorage
+                    localStorage.setItem('worduel_token', token);
+                    localStorage.setItem('worduel_user', JSON.stringify(user));
+                    
                     connectSocket();
+                    showScreen('homeScreen');
                 } else {
-                    errorEl.textContent = data.error || 'Login failed';
+                    showError(data.error);
                 }
             } catch (error) {
-                errorEl.textContent = 'Server offline. Run: node worduel-enhanced-server.js';
+                showError('Connection failed');
             }
         }
 
-        function updateUserInfo(user) {
-            document.getElementById('username').textContent = user.username.toUpperCase();
-            document.getElementById('balance').textContent = user.balance;
-            document.getElementById('mmr').textContent = user.mmr;
-            document.getElementById('rankIcon').textContent = user.rank.icon;
-            document.getElementById('rankName').textContent = user.rank.name.toUpperCase();
-        }
-
-        function updateConnectionStatus(connected) {
-            const indicator = document.getElementById('statusIndicator');
-            const text = document.getElementById('statusText');
+        async function handleRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
             
-            if (connected) {
-                indicator.classList.add('connected');
-                text.textContent = 'CONNECTED';
-            } else {
-                indicator.classList.remove('connected');
-                text.textContent = 'DISCONNECTED';
+            try {
+                const response = await fetch(`${SERVER_URL}/api/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    token = data.token;
+                    user = data.user;
+                    
+                    // Save to localStorage
+                    localStorage.setItem('worduel_token', token);
+                    localStorage.setItem('worduel_user', JSON.stringify(user));
+                    
+                    connectSocket();
+                    showScreen('homeScreen');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Connection failed');
             }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('authError');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
         }
 
         function connectSocket() {
             socket = io(SERVER_URL);
-
+            
             socket.on('connect', () => {
-                updateConnectionStatus(true);
                 socket.emit('authenticate', { token });
             });
 
             socket.on('authenticated', (data) => {
-                document.getElementById('authScreen').style.display = 'none';
-                document.getElementById('gameContainer').classList.add('active');
-            });
-
-            socket.on('auth_error', (data) => {
-                alert(data.message);
-                logout();
-            });
-
-            socket.on('online_count', (count) => {
-                document.getElementById('onlineCount').textContent = count;
-            });
-
-            socket.on('searching', (data) => {
-                document.getElementById('searchBet').textContent = data.betAmount;
-                document.getElementById('searchMMR').textContent = data.mmrRange[0] + 200;
-                document.getElementById('searchRange').textContent = data.mmrRange[0] + '-' + data.mmrRange[1];
+                user = data.user;
             });
 
             socket.on('match_found', (data) => {
-                document.getElementById('searchingScreen').classList.remove('active');
-                document.getElementById('gameScreen').classList.add('active');
-                
-                document.getElementById('opponentNameDisplay').textContent = data.opponent.username.toUpperCase();
-                document.getElementById('opponentRankDisplay').textContent = `${data.opponent.rank.name.toUpperCase()} • ${data.opponent.mmr}`;
-                document.getElementById('potAmount').textContent = data.pot;
+                currentMatch = data;
+                document.getElementById('battlePot').textContent = data.pot;
+                showScreen('matchmakingScreen');
             });
 
             socket.on('match_start', (data) => {
-                console.log('Match starting! Target:', data.targetWord);
-                initGame();
+                game.targetWord = data.targetWord;
+                console.log('Target word:', game.targetWord);
+                setupBattle();
+                showScreen('battleScreen');
             });
 
             socket.on('guess_result', (data) => {
-                revealTiles(data.guess.evaluation, gameState.currentRow, 'yourGrid');
-                updateKeyboard(gameState.currentGuess, data.guess.evaluation);
+                revealGuess(data.guess, game.currentRow, 'yourGrid');
+                updateKeyboard(game.currentGuess, data.guess.evaluation);
                 
                 if (data.solved) {
-                    gameState.gameOver = true;
+                    // Won!
+                } else if (game.currentRow >= 5) {
+                    // Lost
+                } else {
+                    game.currentRow++;
+                    game.currentGuess = '';
                 }
-                
-                gameState.currentRow++;
-                gameState.currentGuess = '';
+            });
+
+            socket.on('opponent_guess', (data) => {
+                const oppRow = document.querySelectorAll('#opponentGrid .word-row').length - 6 + game.currentRow;
+                revealGuess(data.guess, oppRow, 'opponentGrid');
             });
 
             socket.on('match_end', (data) => {
-                updateUserInfo({
-                    username: document.getElementById('username').textContent,
-                    balance: data.newBalance,
-                    mmr: data.newMMR,
-                    rank: data.newRank
-                });
-                
                 showResult(data);
-            });
-
-            socket.on('disconnect', () => {
-                updateConnectionStatus(false);
-            });
-
-            socket.on('error', (data) => {
-                alert(data.message);
             });
         }
 
-        // Betting
         function selectBet(amount) {
-            const balance = parseInt(document.getElementById('balance').textContent);
-            
-            if (amount > balance) {
-                alert('Insufficient balance!');
-                return;
-            }
-
-            currentBet = amount;
-            
-            document.querySelectorAll('.bet-option').forEach(card => card.classList.remove('selected'));
+            selectedBet = amount;
+            document.querySelectorAll('.bet-option').forEach(opt => opt.classList.remove('selected'));
             event.target.closest('.bet-option').classList.add('selected');
-            
-            const btn = document.getElementById('findMatchBtn');
-            btn.textContent = `ENTER MATCHMAKING - $${amount}`;
-            btn.disabled = false;
+            document.getElementById('findMatchBtn').disabled = false;
         }
 
         function findMatch() {
-            if (currentBet === 0) {
-                const custom = parseInt(document.getElementById('customBetInput').value);
-                if (custom && custom > 0) {
-                    currentBet = custom;
-                }
-            }
-
-            if (currentBet === 0) {
-                alert('Please select a wager');
-                return;
-            }
-
-            const balance = parseInt(document.getElementById('balance').textContent);
-            if (currentBet > balance) {
-                alert('Insufficient balance!');
-                return;
-            }
-
-            document.getElementById('bettingScreen').style.display = 'none';
-            document.getElementById('searchingScreen').classList.add('active');
-            
-            socket.emit('find_match', { betAmount: currentBet });
+            document.getElementById('matchmakingBet').textContent = `$${selectedBet}`;
+            showScreen('matchmakingScreen');
+            socket.emit('find_match', { betAmount: selectedBet });
         }
 
         function cancelSearch() {
             socket.emit('cancel_search');
-            document.getElementById('searchingScreen').classList.remove('active');
-            document.getElementById('bettingScreen').style.display = 'block';
+            showScreen('betScreen');
         }
 
-        // Game logic
-        function initGame() {
-            gameState = {
-                currentGuess: '',
-                currentRow: 0,
-                guesses: [],
-                gameOver: false
-            };
+        function setupBattle() {
+            game.currentRow = 0;
+            game.currentGuess = '';
+            game.guesses = [];
             
             createGrid('yourGrid');
             createGrid('opponentGrid');
@@ -1567,7 +1195,6 @@
             });
             
             document.onkeydown = (e) => {
-                if (gameState.gameOver) return;
                 if (e.key === 'Enter') handleKey('Enter');
                 else if (e.key === 'Backspace') handleKey('Backspace');
                 else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
@@ -1575,33 +1202,36 @@
         }
 
         function handleKey(key) {
-            if (gameState.gameOver) return;
-            
-            if (key === 'Enter' && gameState.currentGuess.length === 5) {
-                socket.emit('submit_guess', { word: gameState.currentGuess });
-            } else if (key === 'Backspace' && gameState.currentGuess.length > 0) {
-                gameState.currentGuess = gameState.currentGuess.slice(0, -1);
+            if (key === 'Enter' && game.currentGuess.length === 5) {
+                submitGuess();
+            } else if (key === 'Backspace' && game.currentGuess.length > 0) {
+                game.currentGuess = game.currentGuess.slice(0, -1);
                 updateCurrentRow();
-            } else if (gameState.currentGuess.length < 5 && /^[A-Z]$/.test(key)) {
-                gameState.currentGuess += key;
+            } else if (game.currentGuess.length < 5 && /^[A-Z]$/.test(key)) {
+                game.currentGuess += key;
                 updateCurrentRow();
             }
         }
 
         function updateCurrentRow() {
             for (let i = 0; i < 5; i++) {
-                const tile = document.getElementById(`yourGrid-${gameState.currentRow}-${i}`);
-                tile.textContent = i < gameState.currentGuess.length ? gameState.currentGuess[i] : '';
-                tile.className = 'tile' + (i < gameState.currentGuess.length ? ' filled' : '');
+                const tile = document.getElementById(`yourGrid-${game.currentRow}-${i}`);
+                tile.textContent = i < game.currentGuess.length ? game.currentGuess[i] : '';
+                tile.className = 'tile' + (i < game.currentGuess.length ? ' filled' : '');
             }
         }
 
-        function revealTiles(evaluation, row, grid) {
-            evaluation.forEach((status, i) => {
+        function submitGuess() {
+            socket.emit('submit_guess', { word: game.currentGuess });
+        }
+
+        function revealGuess(guess, row, gridId) {
+            guess.evaluation.forEach((status, i) => {
                 setTimeout(() => {
-                    const tile = document.getElementById(`${grid}-${row}-${i}`);
+                    const tile = document.getElementById(`${gridId}-${row}-${i}`);
+                    tile.textContent = guess.word[i];
                     tile.classList.add(status);
-                }, i * 150);
+                }, i * 140);
             });
         }
 
@@ -1623,42 +1253,30 @@
         }
 
         function showResult(data) {
-            const resultTitle = document.getElementById('resultTitle');
-            
             document.getElementById('resultIcon').textContent = data.won ? '🏆' : '💀';
-            resultTitle.textContent = data.won ? 'VICTORY' : data.draw ? 'DRAW' : 'DEFEAT';
-            resultTitle.className = 'result-title ' + (data.won ? 'win' : 'lose');
+            const titleEl = document.getElementById('resultTitle');
+            titleEl.textContent = data.won ? 'VICTORY!' : 'DEFEAT';
+            titleEl.className = 'result-title ' + (data.won ? 'win' : 'lose');
             
-            document.getElementById('resultWinnings').textContent = data.won ? `+$${data.winnings}` :
-                                                                    data.draw ? '$0' : `-$${currentBet}`;
-            document.getElementById('resultWinnings').className = 'result-stat-value ' + (data.won ? 'positive' : 'negative');
+            document.getElementById('resultWinnings').textContent = data.won ? `+$${data.winnings}` : `$0`;
+            document.getElementById('resultBalance').textContent = `$${data.newBalance}`;
+            document.getElementById('resultMMR').textContent = data.mmrChange >= 0 ? `+${data.mmrChange}` : data.mmrChange;
             
-            document.getElementById('resultMMR').textContent = `${data.mmrChange > 0 ? '+' : ''}${data.mmrChange}`;
-            document.getElementById('resultMMR').className = 'result-stat-value ' + (data.mmrChange > 0 ? 'positive' : 'negative');
-            
-            document.getElementById('resultWord').textContent = data.targetWord;
+            user.balance = data.newBalance;
+            document.getElementById('userBalance').textContent = user.balance;
             
             document.getElementById('resultModal').classList.add('active');
         }
 
         function playAgain() {
             document.getElementById('resultModal').classList.remove('active');
-            document.getElementById('gameScreen').classList.remove('active');
-            document.getElementById('bettingScreen').style.display = 'block';
-            currentBet = 0;
-            document.getElementById('findMatchBtn').textContent = 'SELECT WAGER TO CONTINUE';
-            document.getElementById('findMatchBtn').disabled = true;
-            document.querySelectorAll('.bet-option').forEach(card => card.classList.remove('selected'));
+            showScreen('betScreen');
         }
 
-        function backToLobby() {
-            playAgain();
-        }
-
-        function logout() {
-            if (socket) socket.disconnect();
-            token = null;
-            location.reload();
+        function goBackToHome() {
+            document.getElementById('resultModal').classList.remove('active');
+            selectedBet = null;
+            showScreen('homeScreen');
         }
     </script>
 </body>
