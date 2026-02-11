@@ -1425,7 +1425,7 @@
                 </div>
             </div>
 
-            <button class="btn" onclick="findMatch()" id="findMatchBtn" disabled>FIND MATCH</button>
+            <button class="btn" onclick="findMatch()" id="findMatchBtn" disabled>SELECT A BET FIRST</button>
             <button class="btn btn-secondary" onclick="goBackToHome()">BACK</button>
         </div>
     </div>
@@ -1863,10 +1863,18 @@
             selectedBet = amount;
             document.querySelectorAll('.bet-option').forEach(opt => opt.classList.remove('selected'));
             event.target.closest('.bet-option').classList.add('selected');
-            document.getElementById('findMatchBtn').disabled = false;
+            
+            const btn = document.getElementById('findMatchBtn');
+            btn.disabled = false;
+            btn.textContent = `FIND MATCH ($${amount})`;
         }
 
         function findMatch() {
+            if (!selectedBet) {
+                alert('Please select a bet amount first!');
+                return;
+            }
+            
             document.getElementById('matchmakingBet').textContent = `$${selectedBet}`;
             showScreen('matchmakingScreen');
             socket.emit('find_match', { betAmount: selectedBet });
