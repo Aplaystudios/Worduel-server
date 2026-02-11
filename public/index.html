@@ -1815,22 +1815,25 @@
             socket = io(SERVER_URL);
             
             socket.on('connect', () => {
+                console.log('✅ Connected to server');
                 socket.emit('authenticate', { token });
             });
 
             socket.on('authenticated', (data) => {
+                console.log('✅ Authenticated:', data.user.username);
                 user = data.user;
             });
 
             socket.on('match_found', (data) => {
+                console.log('🎯 Match found!', data);
                 currentMatch = data;
                 document.getElementById('battlePot').textContent = data.pot;
-                showScreen('matchmakingScreen');
+                // Stay on matchmaking screen, wait for match_start
             });
 
             socket.on('match_start', (data) => {
+                console.log('🎮 Match starting! Target:', data.targetWord);
                 game.targetWord = data.targetWord;
-                console.log('Target word:', game.targetWord);
                 setupBattle();
                 showScreen('battleScreen');
             });
@@ -1857,6 +1860,15 @@
             socket.on('match_end', (data) => {
                 showResult(data);
             });
+
+            socket.on('error', (data) => {
+                console.error('❌ Server error:', data);
+                alert('Error: ' + data.message);
+            });
+
+            socket.on('disconnect', () => {
+                console.warn('⚠️ Disconnected from server');
+            });
         }
 
         function selectBet(amount) {
@@ -1875,9 +1887,19 @@
                 return;
             }
             
+            console.log('🔍 Finding match with bet:', selectedBet);
+            console.log('Socket connected?', socket && socket.connected);
+            
             document.getElementById('matchmakingBet').textContent = `$${selectedBet}`;
             showScreen('matchmakingScreen');
-            socket.emit('find_match', { betAmount: selectedBet });
+            
+            if (socket && socket.connected) {
+                socket.emit('find_match', { betAmount: selectedBet });
+                console.log('✅ Sent find_match to server');
+            } else {
+                console.error('❌ Socket not connected!');
+                alert('Not connected to server. Please refresh the page.');
+            }
         }
 
         function cancelSearch() {
