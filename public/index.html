@@ -1811,6 +1811,8 @@
             errorEl.classList.add('show');
         }
 
+        let isAuthenticated = false;
+
         function connectSocket() {
             socket = io(SERVER_URL);
             
@@ -1822,6 +1824,15 @@
             socket.on('authenticated', (data) => {
                 console.log('✅ Authenticated:', data.user.username);
                 user = data.user;
+                isAuthenticated = true;
+            });
+
+            socket.on('auth_error', (data) => {
+                console.error('❌ Authentication failed:', data.message);
+                alert('Authentication failed: ' + data.message + '\n\nPlease log in again.');
+                localStorage.removeItem('worduel_token');
+                localStorage.removeItem('worduel_user');
+                showScreen('authScreen');
             });
 
             socket.on('match_found', (data) => {
@@ -1884,6 +1895,12 @@
         function findMatch() {
             if (!selectedBet) {
                 alert('Please select a bet amount first!');
+                return;
+            }
+            
+            if (!isAuthenticated) {
+                console.error('❌ Not authenticated yet, waiting...');
+                alert('Connecting to server, please wait a moment and try again.');
                 return;
             }
             
