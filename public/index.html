@@ -717,12 +717,10 @@ body::after {
     width: 200%;
     height: 200%;
     background: radial-gradient(circle, rgba(255, 214, 10, 0.1) 0%, transparent 50%);
-    animation: leaderboardGlow 4s linear infinite;
+    /* animation removed - was annoying */
 }
 
-@keyframes leaderboardGlow {
-    to { transform: rotate(360deg); }
-}
+/* @keyframes removed */
 
 .leaderboard-header {
     display: flex;
@@ -1896,9 +1894,9 @@ h1, h2, h3, h4, h5, h6,
     <!-- SPLASH SCREEN -->
     <div class="screen active" id="splashScreen">
         <div class="splash-screen">
-            <!-- Logo at top -->
-            <div class="splash-logo-new">
-                <svg width="200" height="200" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <!-- Logo -->
+            <div style="width: 100%; text-align: center; padding-top: 100px; padding-bottom: 40px;">
+                <svg width="200" height="200" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="display: inline-block;">
                     <path d="M60 8 L100 22 L100 58 Q100 88 60 115 Q20 88 20 58 L20 22 Z" 
                           fill="url(#shieldGrad)" stroke="#ffd700" stroke-width="5"/>
                     <defs>
@@ -1919,13 +1917,17 @@ h1, h2, h3, h4, h5, h6,
                 </svg>
             </div>
             
-            <!-- Title below logo -->
-            <h1 class="splash-title">WORDUEL</h1>
+            <!-- Title -->
+            <div style="width: 100%; text-align: center; padding-bottom: 25px;">
+                <h1 style="font-family: 'Lilita One', cursive; font-size: 72px; font-weight: 400; color: #ffd700; margin: 0; padding: 0; letter-spacing: 2px; text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);">WORDUEL</h1>
+            </div>
             
-            <!-- Subtitle below title -->
-            <p class="splash-subtitle">COMPETITIVE WORD BATTLES</p>
+            <!-- Subtitle -->
+            <div style="width: 100%; text-align: center; padding-bottom: 60px;">
+                <p style="font-family: 'Barlow', sans-serif; font-size: 15px; font-weight: 700; color: rgba(255, 255, 255, 0.9); margin: 0; padding: 0; text-transform: uppercase; letter-spacing: 4px;">COMPETITIVE WORD BATTLES</p>
+            </div>
             
-            <!-- Loading bar at bottom -->
+            <!-- Loading bar -->
             <div class="loading-bar">
                 <div class="loading-progress"></div>
             </div>
@@ -2316,6 +2318,15 @@ h1, h2, h3, h4, h5, h6,
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
+            
+            // Update player name immediately when showing home screen
+            if (screenId === 'homeScreen' && user) {
+                setTimeout(() => {
+                    document.getElementById('profileName').textContent = user.username.toUpperCase();
+                    document.getElementById('profileMMR').textContent = user.mmr || 1000;
+                    document.getElementById('profileBalance').textContent = user.balance || 1000;
+                }, 100);
+            }
         }
 
         function selectMode(mode) {
