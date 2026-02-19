@@ -82,7 +82,7 @@
         .splash-logo-new {
             display: block !important;
             margin: 0 auto 30px auto !important;
-            animation: float 3s ease-in-out infinite;
+            /* animation removed */
             filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.4));
             text-align: center !important;
             position: relative !important;
@@ -947,13 +947,14 @@ body::after {
 
         /* ===== BET SELECTION ===== */
         .bet-container {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            border: 3px solid rgba(255, 215, 0, 0.6);
+            border-radius: 20px;
             padding: 40px;
             max-width: 500px;
             width: 90%;
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
         }
 
         .bet-header {
@@ -962,67 +963,80 @@ body::after {
         }
 
         .bet-title {
-            font-size: 28px;
-            font-weight: 900;
-            margin-bottom: 8px;
+            font-family: 'Lilita One', cursive;
+            font-size: 32px;
+            font-weight: 400;
+            margin-bottom: 12px;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
 
         .bet-balance {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 16px;
-            color: var(--neon-green);
+            font-size: 18px;
+            font-weight: 700;
+            color: #00cc6f;
+            text-shadow: 0 0 10px rgba(0, 204, 111, 0.4);
         }
 
         .bet-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            gap: 14px;
             margin-bottom: 24px;
         }
 
         .bet-option {
-            background: var(--bg-primary);
-            border: 2px solid var(--border-primary);
-            padding: 20px;
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            padding: 24px 16px;
+            border-radius: 14px;
             cursor: pointer;
             text-align: center;
             transition: all 0.2s;
         }
 
         .bet-option:hover {
-            border-color: var(--neon-green);
+            border-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 215, 0, 0.3);
         }
 
         .bet-option.selected {
-            border-color: var(--neon-green);
-            background: rgba(0, 255, 136, 0.1);
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
         }
 
         .bet-amount {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 900;
             font-family: 'JetBrains Mono', monospace;
-            color: var(--neon-green);
+            color: #00cc6f;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
 
         .bet-label {
-            font-size: 10px;
-            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
             text-transform: uppercase;
-            margin-top: 4px;
+            margin-top: 6px;
+            letter-spacing: 1px;
         }
 
         .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--border-primary);
-            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
             margin-top: 12px;
+            font-weight: 700;
         }
 
         .btn-secondary:hover {
-            border-color: var(--text-primary);
-            color: var(--text-primary);
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
         }
 
         /* ===== MATCHMAKING ===== */
@@ -1172,15 +1186,15 @@ body::after {
         }
 
         .tile {
-            width: 52px;
-            height: 52px;
+            width: 60px;
+            height: 60px;
             background: var(--bg-primary);
             border: 2px solid var(--border-primary);
             border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 900;
             font-family: 'JetBrains Mono', monospace;
         }
@@ -1234,12 +1248,12 @@ body::after {
             background: var(--bg-primary);
             border: 1px solid var(--border-primary);
             color: var(--text-primary);
-            padding: 14px;
-            border-radius: 6px;
-            min-width: 42px;
+            padding: 18px;
+            border-radius: 8px;
+            min-width: 48px;
             font-weight: 700;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 16px;
             transition: all 0.15s;
             font-family: 'JetBrains Mono', monospace;
         }
@@ -1250,8 +1264,8 @@ body::after {
         }
 
         .key.wide {
-            min-width: 65px;
-            font-size: 11px;
+            min-width: 75px;
+            font-size: 13px;
         }
 
         .key.correct {
@@ -2504,7 +2518,7 @@ h1, h2, h3, h4, h5, h6,
             
             document.getElementById('resultIcon').textContent = won ? '🏆' : '🛡️';
             const titleEl = document.getElementById('resultTitle');
-            titleEl.textContent = won ? 'VICTORY!' : 'TRY AGAIN';
+            titleEl.textContent = won ? 'VICTORY!' : 'DEFEAT';
             titleEl.className = 'result-title ' + (won ? 'win' : 'lose');
             
             document.getElementById('resultStats').innerHTML = `
@@ -2873,7 +2887,7 @@ h1, h2, h3, h4, h5, h6,
         function showResult(data) {
             document.getElementById('resultIcon').textContent = data.won ? '🏆' : '🛡️';
             const titleEl = document.getElementById('resultTitle');
-            titleEl.textContent = data.won ? 'VICTORY!' : 'TRY AGAIN';
+            titleEl.textContent = data.won ? 'VICTORY!' : 'DEFEAT';
             titleEl.className = 'result-title ' + (data.won ? 'win' : 'lose');
             
             document.getElementById('resultWinnings').textContent = data.won ? `+$${data.winnings}` : `$0`;
