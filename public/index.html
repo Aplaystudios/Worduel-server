@@ -1698,6 +1698,181 @@ h1, h2, h3, h4, h5, h6,
 .leaderboard-preview {
     border-width: 3px !important;
 }
+/* ================================================
+   CLASH ROYALE STYLE BATTLE SCREEN
+   Add this AFTER the battle screen CSS section
+   ================================================ */
+
+/* Battle container with grass/arena background */
+.battle-container {
+    background: linear-gradient(180deg, #87CEEB 0%, #4682B4 30%, #228B22 70%, #32CD32 100%) !important;
+    position: relative;
+}
+
+/* Add arena texture overlay */
+.battle-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 20px,
+            rgba(0,0,0,0.03) 20px,
+            rgba(0,0,0,0.03) 40px
+        );
+    pointer-events: none;
+}
+
+/* Battle header - rounded corners and shadow */
+.battle-header {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15)) !important;
+    border: 3px solid rgba(255, 215, 0, 0.6) !important;
+    border-radius: 20px !important;
+    padding: 14px 20px !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* Player panels - colorful cards */
+.player-panel {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2)) !important;
+    border: 3px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 18px !important;
+    padding: 16px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(8px);
+}
+
+.player-panel.you {
+    border-color: #00ff88 !important;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Panel header */
+.panel-header {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.2));
+    padding: 10px 12px !important;
+    border-radius: 10px;
+    margin-bottom: 14px !important;
+    border: none !important;
+}
+
+.panel-name {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.panel-name.you {
+    color: #00ff88 !important;
+}
+
+/* Tiles - more colorful and rounded */
+.tile {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(230, 230, 230, 0.9)) !important;
+    border: 3px solid rgba(100, 100, 100, 0.3) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+.tile.filled {
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    background: linear-gradient(135deg, #ffffff, #e8e8e8) !important;
+}
+
+.tile.correct {
+    background: linear-gradient(135deg, #00ff88, #00cc6f) !important;
+    border-color: #00ff88 !important;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.5), 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.tile.present {
+    background: linear-gradient(135deg, #ffd700, #ffaa00) !important;
+    border-color: #ffd700 !important;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5), 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.tile.absent {
+    background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+    border-color: #4b5563 !important;
+}
+
+/* Keyboard - Clash Royale style */
+.keyboard {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15)) !important;
+    border: 3px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 18px !important;
+    padding: 16px 12px !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(10px);
+}
+
+.key {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(230, 230, 230, 0.9)) !important;
+    border: 2px solid rgba(200, 200, 200, 0.5) !important;
+    color: #1e3a66 !important;
+    border-radius: 10px !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+.key:active {
+    transform: scale(0.95) translateY(2px) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+}
+
+.key.correct {
+    background: linear-gradient(135deg, #00ff88, #00cc6f) !important;
+    border-color: #00ff88 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.key.present {
+    background: linear-gradient(135deg, #ffd700, #ffaa00) !important;
+    border-color: #ffd700 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.key.absent {
+    background: linear-gradient(135deg, #8b8b8b, #6b7280) !important;
+    border-color: #6b7280 !important;
+    color: #d1d5db !important;
+}
+
+/* Battle timer and pot - more prominent */
+.battle-timer {
+    color: #ffffff !important;
+    font-size: 26px !important;
+    text-shadow: 0 3px 8px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 255, 136, 0.4) !important;
+}
+
+.battle-pot {
+    color: #ffd700 !important;
+    font-size: 17px !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 12px rgba(255, 215, 0, 0.4) !important;
+}
+
+/* Add decorative elements */
+.word-grid {
+    position: relative;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .battle-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+    }
+    
+    .player-panel {
+        padding: 14px !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -1705,31 +1880,39 @@ h1, h2, h3, h4, h5, h6,
     <div class="screen active" id="splashScreen">
         <div class="splash-screen">
             <div class="splash-logo-new">
-                <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-                    <polygon points="60,15 95,32 95,68 60,85 25,68 25,32" 
-                             fill="url(#hexGrad)" stroke="#ffd700" stroke-width="3.5"/>
+                <svg width="180" height="180" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Shield shape -->
+                    <path d="M60 10 L95 25 L95 60 Q95 85 60 110 Q25 85 25 60 L25 25 Z" 
+                          fill="url(#shieldGrad)" stroke="#ffd700" stroke-width="4"/>
                     <defs>
-                        <linearGradient id="hexGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:1" />
+                        <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#5aa3e8;stop-opacity:1" />
                             <stop offset="50%" style="stop-color:#3a6db5;stop-opacity:1" />
                             <stop offset="100%" style="stop-color:#1e3a66;stop-opacity:1" />
                         </linearGradient>
+                        <radialGradient id="shine">
+                            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4" />
+                            <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+                        </radialGradient>
                     </defs>
+                    <!-- Shine -->
+                    <ellipse cx="60" cy="35" rx="25" ry="20" fill="url(#shine)"/>
+                    <!-- W swords -->
                     <g>
-                        <path d="M 38 35 L 45 65" stroke="#ffd700" stroke-width="8" 
+                        <path d="M 38 38 L 45 68" stroke="#ffd700" stroke-width="9" 
                               stroke-linecap="round" fill="none"/>
-                        <path d="M 45 65 L 60 43 L 75 65" stroke="#ffffff" stroke-width="9" 
+                        <path d="M 45 68 L 60 45 L 75 68" stroke="#ffffff" stroke-width="10" 
                               stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                        <path d="M 75 65 L 82 35" stroke="#ffd700" stroke-width="8" 
+                        <path d="M 75 68 L 82 38" stroke="#ffd700" stroke-width="9" 
                               stroke-linecap="round" fill="none"/>
-                        <rect x="36" y="31" width="6" height="4" fill="#8b4513" rx="1"/>
-                        <rect x="78" y="31" width="6" height="4" fill="#8b4513" rx="1"/>
-                        <rect x="34" y="34" width="10" height="2" fill="#ffd700"/>
-                        <rect x="76" y="34" width="10" height="2" fill="#ffd700"/>
+                        <rect x="36" y="34" width="7" height="5" fill="#8b4513" rx="1"/>
+                        <rect x="77" y="34" width="7" height="5" fill="#8b4513" rx="1"/>
+                        <rect x="33" y="37" width="12" height="3" fill="#ffd700" rx="1"/>
+                        <rect x="75" y="37" width="12" height="3" fill="#ffd700" rx="1"/>
                     </g>
-                    <text x="60" y="92" font-family="Arial Black, sans-serif" font-size="13" 
+                    <text x="60" y="98" font-family="Arial Black, sans-serif" font-size="14" 
                           fill="#ffd700" text-anchor="middle" font-weight="900" 
-                          letter-spacing="1" stroke="#1e3a66" stroke-width="0.5">WORDUEL</text>
+                          letter-spacing="1.5" stroke="#1e3a66" stroke-width="0.8">WORDUEL</text>
                 </svg>
             </div>
             <h1 class="splash-title">WORDUEL</h1>
