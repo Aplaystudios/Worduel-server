@@ -72,14 +72,16 @@
 
         /* ===== SPLASH SCREEN ===== */
         .splash-screen {
+            display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
-        .splash-logo {
-            font-size: 100px;
-            margin-bottom: 20px;
+        .splash-logo-new {
+            margin-bottom: 30px;
             animation: float 3s ease-in-out infinite;
-            filter: drop-shadow(var(--glow-green));
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.4));
         }
 
         @keyframes float {
@@ -88,37 +90,43 @@
         }
 
         .splash-title {
-            font-size: 64px;
-            font-weight: 900;
-            letter-spacing: -2px;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-family: 'Lilita One', cursive;
+            font-size: 72px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            margin-top: 0;
+            color: #ffd700;
+            text-shadow: 
+                0 4px 0 #ff9500,
+                0 8px 16px rgba(0, 0, 0, 0.6);
         }
 
         .splash-subtitle {
-            font-size: 16px;
-            color: var(--text-secondary);
+            font-family: 'Barlow', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.9);
             text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 40px;
+            letter-spacing: 4px;
+            margin-bottom: 50px;
         }
 
         .loading-bar {
             width: 280px;
-            height: 4px;
-            background: var(--bg-secondary);
-            border-radius: 2px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
             overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .loading-progress {
             height: 100%;
-            background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+            background: linear-gradient(90deg, #00cc6f, #4a90e2);
             width: 0%;
             animation: load 2s ease forwards;
-            box-shadow: var(--glow-green);
+            box-shadow: 0 0 10px rgba(0, 204, 111, 0.5);
         }
 
         @keyframes load {
@@ -802,23 +810,24 @@ body::after {
 }
         /* ===== AUTH SCREEN ===== */
         .auth-container {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            border: 3px solid rgba(255, 215, 0, 0.6);
+            border-radius: 20px;
             padding: 40px;
             max-width: 400px;
             width: 90%;
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
         }
 
         .auth-title {
-            font-size: 32px;
-            font-weight: 900;
+            font-family: 'Lilita One', cursive;
+            font-size: 36px;
+            font-weight: 400;
             text-align: center;
             margin-bottom: 32px;
-            background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ffd700;
+            text-shadow: 0 3px 0 #ff9500, 0 6px 12px rgba(0, 0, 0, 0.5);
         }
 
         .auth-tabs {
@@ -829,21 +838,22 @@ body::after {
 
         .auth-tab {
             flex: 1;
-            padding: 12px;
-            background: transparent;
-            border: 1px solid var(--border-primary);
-            color: var(--text-secondary);
-            border-radius: 8px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
             transition: all 0.2s;
         }
 
         .auth-tab.active {
-            background: var(--neon-green);
-            color: var(--bg-primary);
-            border-color: var(--neon-green);
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #1e3a66;
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
         }
 
         .auth-form {
@@ -861,44 +871,56 @@ body::after {
         .form-label {
             display: block;
             font-size: 12px;
-            color: var(--text-muted);
+            color: rgba(255, 255, 255, 0.7);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .form-input {
             width: 100%;
-            padding: 12px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-primary);
-            color: var(--text-primary);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 600;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: var(--neon-green);
+            border-color: #ffd700;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
 
         .btn {
             width: 100%;
-            padding: 14px;
-            background: var(--neon-green);
-            color: var(--bg-primary);
+            padding: 16px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #1e3a66;
             border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 14px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 15px;
             cursor: pointer;
             transition: all 0.2s;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 16px rgba(255, 215, 0, 0.4);
         }
 
         .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
             transform: translateY(-2px);
             box-shadow: var(--glow-green);
         }
@@ -1622,21 +1644,24 @@ h1, h2, h3, h4, h5, h6,
 
 /* Update splash title to match Clash Royale */
 .splash-title {
-    font-size: 56px !important;
+    font-family: 'Lilita One', cursive !important;
+    font-size: 72px !important;
     font-weight: 400 !important;
     letter-spacing: 2px !important;
     text-transform: uppercase;
     color: #ffd700 !important;
+    font-style: normal !important;
     text-shadow: 
-        0 3px 0 #ff9500,
-        0 6px 12px rgba(0, 0, 0, 0.5) !important;
+        0 4px 0 #ff9500,
+        0 8px 16px rgba(0, 0, 0, 0.6) !important;
 }
 
 .splash-subtitle {
     font-family: 'Barlow', sans-serif !important;
     font-weight: 700 !important;
-    font-size: 14px !important;
-    letter-spacing: 3px !important;
+    font-size: 15px !important;
+    letter-spacing: 4px !important;
+    font-style: normal !important;
 }
 
 /* Update section titles */
@@ -1880,39 +1905,31 @@ h1, h2, h3, h4, h5, h6,
     <div class="screen active" id="splashScreen">
         <div class="splash-screen">
             <div class="splash-logo-new">
-                <svg width="180" height="180" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Shield shape -->
-                    <path d="M60 10 L95 25 L95 60 Q95 85 60 110 Q25 85 25 60 L25 25 Z" 
-                          fill="url(#shieldGrad)" stroke="#ffd700" stroke-width="4"/>
+                <svg width="200" height="200" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Clean shield -->
+                    <path d="M60 8 L100 22 L100 58 Q100 88 60 115 Q20 88 20 58 L20 22 Z" 
+                          fill="url(#shieldGrad)" stroke="#ffd700" stroke-width="5"/>
+                    
                     <defs>
                         <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" style="stop-color:#5aa3e8;stop-opacity:1" />
-                            <stop offset="50%" style="stop-color:#3a6db5;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#1e3a66;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#3578bf;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#1e4a7a;stop-opacity:1" />
                         </linearGradient>
-                        <radialGradient id="shine">
-                            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4" />
-                            <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+                        
+                        <radialGradient id="shine" cx="50%" cy="30%">
+                            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.5" />
+                            <stop offset="70%" style="stop-color:#ffffff;stop-opacity:0" />
                         </radialGradient>
                     </defs>
-                    <!-- Shine -->
-                    <ellipse cx="60" cy="35" rx="25" ry="20" fill="url(#shine)"/>
-                    <!-- W swords -->
-                    <g>
-                        <path d="M 38 38 L 45 68" stroke="#ffd700" stroke-width="9" 
-                              stroke-linecap="round" fill="none"/>
-                        <path d="M 45 68 L 60 45 L 75 68" stroke="#ffffff" stroke-width="10" 
-                              stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                        <path d="M 75 68 L 82 38" stroke="#ffd700" stroke-width="9" 
-                              stroke-linecap="round" fill="none"/>
-                        <rect x="36" y="34" width="7" height="5" fill="#8b4513" rx="1"/>
-                        <rect x="77" y="34" width="7" height="5" fill="#8b4513" rx="1"/>
-                        <rect x="33" y="37" width="12" height="3" fill="#ffd700" rx="1"/>
-                        <rect x="75" y="37" width="12" height="3" fill="#ffd700" rx="1"/>
-                    </g>
-                    <text x="60" y="98" font-family="Arial Black, sans-serif" font-size="14" 
-                          fill="#ffd700" text-anchor="middle" font-weight="900" 
-                          letter-spacing="1.5" stroke="#1e3a66" stroke-width="0.8">WORDUEL</text>
+                    
+                    <!-- Shine effect -->
+                    <ellipse cx="60" cy="35" rx="35" ry="25" fill="url(#shine)"/>
+                    
+                    <!-- Simple centered W -->
+                    <text x="60" y="75" font-family="'Lilita One', Arial Black, sans-serif" 
+                          font-size="65" fill="#ffffff" text-anchor="middle" 
+                          font-weight="400" stroke="#1e4a7a" stroke-width="3">W</text>
                 </svg>
             </div>
             <h1 class="splash-title">WORDUEL</h1>
@@ -2041,7 +2058,23 @@ h1, h2, h3, h4, h5, h6,
     <!-- AUTH SCREEN -->
     <div class="screen" id="authScreen">
         <div class="auth-container">
-            <h2 class="auth-title">⚔️ WORDUEL</h2>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 32px;">
+                <svg width="50" height="50" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M60 8 L100 22 L100 58 Q100 88 60 115 Q20 88 20 58 L20 22 Z" 
+                          fill="url(#authShieldGrad)" stroke="#ffd700" stroke-width="5"/>
+                    <defs>
+                        <linearGradient id="authShieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#5aa3e8;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#3578bf;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#1e4a7a;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <text x="60" y="75" font-family="'Lilita One', Arial Black, sans-serif" 
+                          font-size="65" fill="#ffffff" text-anchor="middle" 
+                          font-weight="400" stroke="#1e4a7a" stroke-width="3">W</text>
+                </svg>
+                <h2 class="auth-title" style="margin: 0;">WORDUEL</h2>
+            </div>
             
             <div class="auth-tabs">
                 <button class="auth-tab active" onclick="switchAuthTab('login')">LOGIN</button>
