@@ -21,11 +21,11 @@
             --bg-secondary: #151922;
             --bg-elevated: #222831;
             --neon-green: #00ff88;
-            --neon-yellow: #ffd60a;
+            --neon-yellow: #ffd700;
             --neon-cyan: #00d9ff;
             --neon-red: #ff3366;
             --correct: #00ff88;
-            --present: #ffd60a;
+            --present: #ffd700;
             --absent: #2d3748;
             --border-primary: #2d3748;
             --text-primary: #e5e7eb;
@@ -76,12 +76,16 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
         .splash-logo-new {
-            margin-bottom: 20px;
+            display: block !important;
+            margin: 0 auto 30px auto !important;
             animation: float 3s ease-in-out infinite;
             filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.4));
+            text-align: center !important;
+            position: relative !important;
         }
 
         @keyframes float {
@@ -90,43 +94,46 @@
         }
 
         .splash-title {
-            font-family: 'Barlow', cursive;
-            font-size: 72px;
-            font-weight: 400;
-            letter-spacing: 2px;
-            margin-bottom: 16px;
-            margin-top: 0;
-            color: #ffd700;
-            text-shadow: 
-                0 4px 0 #ff9500,
-                0 8px 16px rgba(0, 0, 0, 0.6);
+            font-family: 'Lilita One', cursive !important;
+            font-size: 72px !important;
+            font-weight: 400 !important;
+            letter-spacing: 2px !important;
+            margin: 0 auto 20px auto !important;
+            color: #ffd700 !important;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+            text-align: center !important;
+            display: block !important;
+            position: relative !important;
         }
 
         .splash-subtitle {
-            font-family: 'Barlow', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.9);
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            margin-bottom: 50px;
+            font-family: 'Barlow', sans-serif !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 4px !important;
+            margin: 0 auto 50px auto !important;
+            text-align: center !important;
+            display: block !important;
+            position: relative !important;
+        }
         }
 
         .loading-bar {
             width: 280px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
             overflow: hidden;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .loading-progress {
             height: 100%;
-            background: linear-gradient(90deg, #00cc6f, #4a90e2);
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
             width: 0%;
             animation: load 2s ease forwards;
-            box-shadow: 0 0 10px rgba(0, 204, 111, 0.5);
+            box-shadow: var(--glow-green);
         }
 
         @keyframes load {
@@ -194,7 +201,7 @@ body::after {
 .avatar-icon {
     width: 70px;
     height: 70px;
-    background: linear-gradient(135deg, #ff9500, #ff6b00);
+    background: linear-gradient(135deg, #ffd700, #ff6b00);
     border-radius: 50%;
     border: 4px solid #fff;
     display: flex;
@@ -210,7 +217,7 @@ body::after {
     right: -6px;
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    background: linear-gradient(135deg, #ffd700, #ffd700);
     border: 3px solid #fff;
     border-radius: 50%;
     display: flex;
@@ -399,7 +406,7 @@ body::after {
 }
 
 .mode-card.ranked .mode-badge {
-    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    background: linear-gradient(135deg, #ffd700, #ffd700);
 }
 
 .mode-card.speed .mode-badge {
@@ -827,7 +834,7 @@ body::after {
             text-align: center;
             margin-bottom: 32px;
             color: #ffd700;
-            text-shadow: 0 3px 0 #ff9500, 0 6px 12px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .auth-tabs {
@@ -850,7 +857,7 @@ body::after {
         }
 
         .auth-tab.active {
-            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            background: linear-gradient(135deg, #ffd700, #ffd700);
             color: #1e3a66;
             border-color: #ffd700;
             box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
@@ -900,7 +907,7 @@ body::after {
         .btn {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            background: linear-gradient(135deg, #ffd700, #ffd700);
             color: #1e3a66;
             border: none;
             border-radius: 12px;
@@ -1284,37 +1291,42 @@ body::after {
         }
 
         .result-container {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            border: 3px solid rgba(255, 215, 0, 0.6);
+            border-radius: 20px;
             padding: 40px;
             max-width: 460px;
             text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .result-icon {
-            font-size: 72px;
+            font-size: 80px;
             margin-bottom: 20px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
         }
 
         .result-title {
-            font-size: 32px;
-            font-weight: 900;
+            font-family: 'Lilita One', cursive;
+            font-size: 42px;
+            font-weight: 400;
             margin-bottom: 20px;
+            text-shadow: 0 3px 0 rgba(0, 0, 0, 0.3), 0 6px 12px rgba(0, 0, 0, 0.5);
         }
 
         .result-title.win {
-            color: var(--neon-green);
+            color: #ffd700;
         }
 
         .result-title.lose {
-            color: var(--text-secondary);
+            color: #4a90e2;
         }
 
         .result-stats {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-primary);
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 14px;
             padding: 20px;
             margin: 20px 0;
         }
@@ -1327,22 +1339,24 @@ body::after {
         }
 
         .result-stat:not(:last-child) {
-            border-bottom: 1px solid var(--border-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .result-label {
-            color: var(--text-muted);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 11px;
             text-transform: uppercase;
+            font-weight: 600;
         }
 
         .result-value {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 800;
+            color: #ffffff;
         }
 
         .result-value.positive {
-            color: var(--neon-green);
+            color: #00cc6f;
         }
 
         .result-actions {
@@ -1642,28 +1656,6 @@ h1, h2, h3, h4, h5, h6,
     font-family: 'JetBrains Mono', monospace !important;
 }
 
-/* Update splash title to match Clash Royale */
-.splash-title {
-    font-family: 'Lilita One', cursive !important;
-    font-size: 72px !important;
-    font-weight: 400 !important;
-    letter-spacing: 2px !important;
-    text-transform: uppercase;
-    color: #ffd700 !important;
-    font-style: normal !important;
-    text-shadow: 
-        0 4px 0 #ff9500,
-        0 8px 16px rgba(0, 0, 0, 0.6) !important;
-}
-
-.splash-subtitle {
-    font-family: 'Barlow', sans-serif !important;
-    font-weight: 700 !important;
-    font-size: 15px !important;
-    letter-spacing: 4px !important;
-    font-style: normal !important;
-}
-
 /* Update section titles */
 .section-title {
     font-size: 18px !important;
@@ -1815,7 +1807,7 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .tile.present {
-    background: linear-gradient(135deg, #ffd700, #ffaa00) !important;
+    background: linear-gradient(135deg, #ffd700, #ffd700) !important;
     border-color: #ffd700 !important;
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.5), 0 3px 8px rgba(0, 0, 0, 0.3) !important;
 }
@@ -1857,7 +1849,7 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .key.present {
-    background: linear-gradient(135deg, #ffd700, #ffaa00) !important;
+    background: linear-gradient(135deg, #ffd700, #ffd700) !important;
     border-color: #ffd700 !important;
     color: #ffffff !important;
     box-shadow: 0 0 12px rgba(255, 215, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3) !important;
@@ -1904,36 +1896,36 @@ h1, h2, h3, h4, h5, h6,
     <!-- SPLASH SCREEN -->
     <div class="screen active" id="splashScreen">
         <div class="splash-screen">
+            <!-- Logo at top -->
             <div class="splash-logo-new">
                 <svg width="200" height="200" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Clean shield -->
                     <path d="M60 8 L100 22 L100 58 Q100 88 60 115 Q20 88 20 58 L20 22 Z" 
                           fill="url(#shieldGrad)" stroke="#ffd700" stroke-width="5"/>
-                    
                     <defs>
                         <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" style="stop-color:#5aa3e8;stop-opacity:1" />
                             <stop offset="50%" style="stop-color:#3578bf;stop-opacity:1" />
                             <stop offset="100%" style="stop-color:#1e4a7a;stop-opacity:1" />
                         </linearGradient>
-                        
                         <radialGradient id="shine" cx="50%" cy="30%">
                             <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.5" />
                             <stop offset="70%" style="stop-color:#ffffff;stop-opacity:0" />
                         </radialGradient>
                     </defs>
-                    
-                    <!-- Shine effect -->
                     <ellipse cx="60" cy="35" rx="35" ry="25" fill="url(#shine)"/>
-                    
-                    <!-- Simple centered W -->
                     <text x="60" y="75" font-family="'Lilita One', Arial Black, sans-serif" 
                           font-size="65" fill="#ffffff" text-anchor="middle" 
                           font-weight="400" stroke="#1e4a7a" stroke-width="3">W</text>
                 </svg>
             </div>
+            
+            <!-- Title below logo -->
             <h1 class="splash-title">WORDUEL</h1>
+            
+            <!-- Subtitle below title -->
             <p class="splash-subtitle">COMPETITIVE WORD BATTLES</p>
+            
+            <!-- Loading bar at bottom -->
             <div class="loading-bar">
                 <div class="loading-progress"></div>
             </div>
@@ -2499,9 +2491,9 @@ h1, h2, h3, h4, h5, h6,
         function showTrainingResult(won) {
             if (aiInterval) clearInterval(aiInterval);
             
-            document.getElementById('resultIcon').textContent = won ? '🏆' : '💀';
+            document.getElementById('resultIcon').textContent = won ? '🏆' : '🛡️';
             const titleEl = document.getElementById('resultTitle');
-            titleEl.textContent = won ? 'VICTORY!' : 'DEFEAT';
+            titleEl.textContent = won ? 'VICTORY!' : 'TRY AGAIN';
             titleEl.className = 'result-title ' + (won ? 'win' : 'lose');
             
             document.getElementById('resultStats').innerHTML = `
@@ -2868,9 +2860,9 @@ h1, h2, h3, h4, h5, h6,
         }
 
         function showResult(data) {
-            document.getElementById('resultIcon').textContent = data.won ? '🏆' : '💀';
+            document.getElementById('resultIcon').textContent = data.won ? '🏆' : '🛡️';
             const titleEl = document.getElementById('resultTitle');
-            titleEl.textContent = data.won ? 'VICTORY!' : 'DEFEAT';
+            titleEl.textContent = data.won ? 'VICTORY!' : 'TRY AGAIN';
             titleEl.className = 'result-title ' + (data.won ? 'win' : 'lose');
             
             document.getElementById('resultWinnings').textContent = data.won ? `+$${data.winnings}` : `$0`;
