@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#0a0e14">
     <title>Worduel - Multiplayer</title>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Barlow:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -126,141 +126,90 @@
         }
 
 /* ========================================
-   EPIC HOME SCREEN REDESIGN
-   Replace the HOME SCREEN CSS section with this
+   CLASH ROYALE INSPIRED HOME SCREEN
+   Replace HOME SCREEN CSS with this
    ======================================== */
 
-/* Animated background with energy grid */
+/* Clean blue gradient background */
 body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background: 
-        radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 50%, rgba(0, 217, 255, 0.1) 0%, transparent 50%),
-        linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+    background: linear-gradient(180deg, #4a90e2 0%, #2c5aa0 50%, #1e3a66 100%);
     pointer-events: none;
-    animation: gridPulse 4s ease-in-out infinite;
 }
 
-@keyframes gridPulse {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
+/* Diagonal pattern overlay */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 20px,
+            rgba(255, 255, 255, 0.02) 20px,
+            rgba(255, 255, 255, 0.02) 40px
+        );
+    pointer-events: none;
 }
 
-/* Home container */
 .home-container {
     width: 100%;
-    padding: 20px 16px;
+    padding: 16px;
     overflow-y: auto;
     max-height: 100vh;
     -webkit-overflow-scrolling: touch;
 }
 
-/* Profile header - EPIC VERSION */
+/* Profile header - Clash Royale style */
 .profile-header {
-    background: linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 217, 255, 0.15) 100%);
-    border: 2px solid transparent;
-    border-radius: 24px;
-    padding: 24px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
-    gap: 18px;
-    margin-bottom: 20px;
-    position: relative;
-    overflow: hidden;
-    min-height: 120px;
+    gap: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Animated border */
-.profile-header::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    background: linear-gradient(45deg, 
-        var(--neon-green), 
-        var(--neon-cyan), 
-        var(--neon-yellow), 
-        var(--neon-green)
-    );
-    border-radius: 24px;
-    z-index: -1;
-    animation: rotateBorder 3s linear infinite;
-    opacity: 0.8;
-}
-
-@keyframes rotateBorder {
-    to { transform: rotate(360deg); }
-}
-
-.profile-header::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--bg-secondary);
-    border-radius: 22px;
-    z-index: -1;
-}
-
-/* Avatar with breathing glow */
 .profile-avatar {
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     flex-shrink: 0;
 }
 
 .avatar-icon {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
-    border-radius: 20px;
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #ff9500, #ff6b00);
+    border-radius: 50%;
+    border: 4px solid #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 42px;
-    position: relative;
-    z-index: 1;
-}
-
-.avatar-icon::before {
-    content: '';
-    position: absolute;
-    inset: -8px;
-    background: radial-gradient(circle, var(--neon-green) 0%, transparent 70%);
-    border-radius: 24px;
-    z-index: -1;
-    animation: breathe 2s ease-in-out infinite;
-}
-
-@keyframes breathe {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.1); }
+    font-size: 36px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .rank-badge {
     position: absolute;
-    bottom: -10px;
-    right: -10px;
-    width: 38px;
-    height: 38px;
-    background: linear-gradient(135deg, var(--neon-yellow), #ff9500);
-    border: 3px solid var(--bg-primary);
+    bottom: -6px;
+    right: -6px;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    border: 3px solid #fff;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    z-index: 2;
-    box-shadow: 0 0 20px rgba(255, 214, 10, 0.6);
-    animation: badgePulse 2s ease-in-out infinite;
-}
-
-@keyframes badgePulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    font-size: 16px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
 .profile-info {
@@ -269,122 +218,92 @@ body::before {
 }
 
 .profile-name {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 900;
-    color: transparent;
-    background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
-    -webkit-background-clip: text;
-    background-clip: text;
-    margin-bottom: 8px;
-    text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+    color: #fff;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    letter-spacing: -0.5px;
 }
 
 .profile-mmr {
-    font-size: 16px;
-    color: var(--text-secondary);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'JetBrains Mono', monospace;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .mmr-icon {
-    font-size: 20px;
-    animation: bounce 2s ease-in-out infinite;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+    font-size: 18px;
 }
 
 .profile-balance {
     text-align: right;
     flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 170, 0, 0.3));
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 215, 0, 0.5);
 }
 
 .balance-amount {
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 900;
-    color: var(--neon-yellow);
+    color: #ffd700;
     font-family: 'JetBrains Mono', monospace;
-    text-shadow: 0 0 20px rgba(255, 214, 10, 0.6);
-    filter: drop-shadow(0 2px 8px rgba(255, 214, 10, 0.4));
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
 .balance-label {
-    font-size: 11px;
-    color: var(--text-muted);
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 4px;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
 }
 
-/* Stats panel - More dynamic */
+/* Stats panel - Clash Royale style */
 .stats-panel {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .stat-box {
-    background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(0, 217, 255, 0.05));
-    border: 1px solid rgba(0, 255, 136, 0.2);
-    border-radius: 16px;
-    padding: 18px 12px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 14px;
+    padding: 14px 8px;
     text-align: center;
-    min-height: 85px;
+    min-height: 75px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s;
-}
-
-.stat-box::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
-    animation: shine 3s ease-in-out infinite;
-}
-
-@keyframes shine {
-    to { left: 100%; }
-}
-
-.stat-box:active {
-    transform: scale(0.95);
-    border-color: var(--neon-green);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .stat-value {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 900;
-    color: var(--neon-green);
+    color: #fff;
     font-family: 'JetBrains Mono', monospace;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     line-height: 1;
-    text-shadow: 0 2px 10px rgba(0, 255, 136, 0.5);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
 .stat-value.online-count {
-    color: var(--neon-cyan);
-    text-shadow: 0 2px 10px rgba(0, 217, 255, 0.5);
+    color: #00ff88;
 }
 
 .stat-label {
     font-size: 9px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     line-height: 1.2;
@@ -393,101 +312,245 @@ body::before {
 
 /* Battle modes section */
 .modes-section {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .section-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 900;
-    color: var(--text-primary);
+    color: #fff;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 16px;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
     padding-left: 4px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.section-title::before {
-    content: '⚔️';
-    font-size: 20px;
-    animation: swing 2s ease-in-out infinite;
-}
-
-@keyframes swing {
-    0%, 100% { transform: rotate(-5deg); }
-    50% { transform: rotate(5deg); }
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
 .mode-grid {
     display: grid;
-    gap: 16px;
+    gap: 12px;
 }
 
-/* EPIC MODE CARDS */
+/* Clash Royale style mode cards */
 .mode-card {
-    background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, rgba(0, 217, 255, 0.08) 100%);
-    border: 2px solid rgba(0, 255, 136, 0.3);
-    border-radius: 20px;
-    padding: 28px 24px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    padding: 20px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s;
     position: relative;
-    overflow: hidden;
-    min-height: 130px;
+    overflow: visible;
+    min-height: 100px;
     -webkit-tap-highlight-color: transparent;
-}
-
-/* Glowing top bar */
-.mode-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-/* Particle effect on hover */
-.mode-card::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(0, 255, 136, 0.2) 0%, transparent 70%);
-    transform: translate(-50%, -50%) scale(0);
-    transition: transform 0.5s;
-    pointer-events: none;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .mode-card:active {
     transform: scale(0.97);
-    border-color: var(--neon-green);
-    box-shadow: 
-        0 0 30px rgba(0, 255, 136, 0.3),
-        inset 0 0 20px rgba(0, 255, 136, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.mode-card:active::before {
+/* Ranked mode - gold border */
+.mode-card.ranked {
+    border-color: rgba(255, 215, 0, 0.7);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 170, 0, 0.1));
+}
+
+/* Speed mode - cyan border */
+.mode-card.speed {
+    border-color: rgba(0, 217, 255, 0.7);
+    background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(0, 191, 255, 0.1));
+}
+
+/* Practice mode - green border */
+.mode-card.practice {
+    border-color: rgba(0, 255, 136, 0.7);
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 229, 122, 0.1));
+}
+
+/* Mode badge - top right label */
+.mode-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 215, 0, 0.9);
+    border: 2px solid #fff;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.mode-card.ranked .mode-badge {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+}
+
+.mode-card.speed .mode-badge {
+    background: linear-gradient(135deg, #00d9ff, #00bfff);
+}
+
+.mode-card.practice .mode-badge {
+    background: linear-gradient(135deg, #00ff88, #00e57a);
+}
+
+/* Mode icon - circular like Clash */
+.mode-icon {
+    font-size: 42px;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.mode-content {
+    flex: 1;
+}
+
+.mode-name {
+    font-size: 18px;
+    font-weight: 900;
+    margin-bottom: 6px;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.mode-desc {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+/* Timer display */
+.mode-timer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+}
+
+.timer-icon {
+    font-size: 14px;
+}
+
+/* Leaderboard - clean Clash style */
+.leaderboard-preview {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.leaderboard-header h3 {
+    font-size: 15px;
+    font-weight: 900;
+    color: #ffd700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.view-all {
+    font-size: 12px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+}
+
+.view-all:active {
     opacity: 1;
 }
 
-.mode-card:active::after {
-    transform: translate(-50%, -50%) scale(1);
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-/* Ranked card - gold theme */
-.mode-card.ranked {
-    border-color: rgba(255, 214, 10, 0.4);
-    background: linear-gradient(135deg, rgba(255, 214, 10, 0.08) 0%, rgba(255, 159, 0, 0.08) 100%);
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 60px;
 }
 
+.leaderboard-item:active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.rank-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 900;
+    font-size: 18px;
+    color: #ffd700;
+    min-width: 36px;
+    text-align: center;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.player-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.player-mmr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: #fff;
+    font-weight: 700;
+    white-space: nowrap;
+    opacity: 0.9;
+}
 .mode-card.ranked::before {
     background: linear-gradient(90deg, transparent, var(--neon-yellow), transparent);
 }
@@ -1487,15 +1550,190 @@ body::before {
     overflow: visible !important;
 }
 
+/* ========================================
+   CLASH ROYALE FONT + LOGO UPDATE
+   Add this AFTER importing fonts in <head>
+   ======================================== */
+
+/* Import Clash Royale style fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Barlow:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap');
+
+/* Global font updates */
+body {
+    font-family: 'Barlow', sans-serif !important;
+}
+
+/* Headings use Lilita One (Clash Royale style) */
+h1, h2, h3, h4, h5, h6,
+.splash-title,
+.home-title,
+.section-title,
+.mode-name,
+.profile-name,
+.result-title,
+.auth-title,
+.bet-title,
+.matchmaking-title {
+    font-family: 'Lilita One', cursive !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Logo styles for splash and home */
+.splash-logo-new,
+.home-logo-new {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+}
+
+.splash-logo-new svg,
+.home-logo-new svg {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+/* Avatar logo (smaller version) */
+.avatar-logo {
+    width: 70px;
+    height: 70px;
+}
+
+/* Update button fonts */
+.btn,
+.key,
+.mode-badge,
+.bet-amount,
+.balance-label,
+.stat-label {
+    font-family: 'Barlow', sans-serif !important;
+    font-weight: 700 !important;
+}
+
+/* Keep monospace for numbers */
+.battle-timer,
+.battle-pot,
+.profile-mmr,
+.balance-amount,
+.stat-value,
+.bet-amount,
+.player-mmr,
+.rank-num {
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Update splash title to match Clash Royale */
+.splash-title {
+    font-size: 56px !important;
+    font-weight: 400 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase;
+    color: #ffd700 !important;
+    text-shadow: 
+        0 3px 0 #ff9500,
+        0 6px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.splash-subtitle {
+    font-family: 'Barlow', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    letter-spacing: 3px !important;
+}
+
+/* Update section titles */
+.section-title {
+    font-size: 18px !important;
+    font-weight: 400 !important;
+    letter-spacing: 2px !important;
+}
+
+/* Mode card names */
+.mode-name {
+    font-size: 20px !important;
+    font-weight: 400 !important;
+    letter-spacing: 1px !important;
+}
+
+/* Profile name */
+.profile-name {
+    font-size: 22px !important;
+    font-weight: 400 !important;
+    letter-spacing: 1px !important;
+}
+
+/* Result title */
+.result-title {
+    font-size: 36px !important;
+    font-weight: 400 !important;
+    letter-spacing: 2px !important;
+}
+
+/* Auth title */
+.auth-title {
+    font-size: 32px !important;
+    font-weight: 400 !important;
+}
+
+/* Make everything more rounded (Clash style) */
+.btn,
+.form-input,
+.key,
+.stat-box,
+.mode-card,
+.bet-option,
+.profile-header,
+.battle-header,
+.player-panel,
+.keyboard,
+.leaderboard-preview,
+.leaderboard-item,
+.auth-container,
+.bet-container {
+    border-radius: 14px !important;
+}
+
+/* Bigger borders (Clash style) */
+.mode-card,
+.profile-header,
+.stat-box,
+.leaderboard-preview {
+    border-width: 3px !important;
+}
     </style>
 </head>
 <body>
     <!-- SPLASH SCREEN -->
     <div class="screen active" id="splashScreen">
         <div class="splash-screen">
-            <div class="splash-logo">⚔️</div>
+            <div class="splash-logo-new">
+                <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="60,15 95,32 95,68 60,85 25,68 25,32" 
+                             fill="url(#hexGrad)" stroke="#ffd700" stroke-width="3.5"/>
+                    <defs>
+                        <linearGradient id="hexGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#3a6db5;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#1e3a66;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <g>
+                        <path d="M 38 35 L 45 65" stroke="#ffd700" stroke-width="8" 
+                              stroke-linecap="round" fill="none"/>
+                        <path d="M 45 65 L 60 43 L 75 65" stroke="#ffffff" stroke-width="9" 
+                              stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        <path d="M 75 65 L 82 35" stroke="#ffd700" stroke-width="8" 
+                              stroke-linecap="round" fill="none"/>
+                        <rect x="36" y="31" width="6" height="4" fill="#8b4513" rx="1"/>
+                        <rect x="78" y="31" width="6" height="4" fill="#8b4513" rx="1"/>
+                        <rect x="34" y="34" width="10" height="2" fill="#ffd700"/>
+                        <rect x="76" y="34" width="10" height="2" fill="#ffd700"/>
+                    </g>
+                    <text x="60" y="92" font-family="Arial Black, sans-serif" font-size="13" 
+                          fill="#ffd700" text-anchor="middle" font-weight="900" 
+                          letter-spacing="1" stroke="#1e3a66" stroke-width="0.5">WORDUEL</text>
+                </svg>
+            </div>
             <h1 class="splash-title">WORDUEL</h1>
-            <p class="splash-subtitle">Competitive Word Battle</p>
+            <p class="splash-subtitle">COMPETITIVE WORD BATTLES</p>
             <div class="loading-bar">
                 <div class="loading-progress"></div>
             </div>
@@ -1552,22 +1790,40 @@ body::before {
                     <div class="mode-card ranked" onclick="selectMode('best-of-3')">
                         <div class="mode-badge">RANKED</div>
                         <div class="mode-icon">🏆</div>
-                        <div class="mode-name">BEST OF 3</div>
-                        <div class="mode-desc">Win 2 rounds • 3 min each</div>
+                        <div class="mode-content">
+                            <div class="mode-name">BEST OF 3</div>
+                            <div class="mode-desc">Win 2 rounds to claim victory</div>
+                            <div class="mode-timer">
+                                <span class="timer-icon">⏱️</span>
+                                <span>3 min per round</span>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mode-card speed" onclick="selectMode('blitz')">
                         <div class="mode-badge">SPEED</div>
                         <div class="mode-icon">⚡</div>
-                        <div class="mode-name">BLITZ</div>
-                        <div class="mode-desc">5 minutes • Fast paced</div>
+                        <div class="mode-content">
+                            <div class="mode-name">BLITZ</div>
+                            <div class="mode-desc">Fast-paced word battle</div>
+                            <div class="mode-timer">
+                                <span class="timer-icon">⏱️</span>
+                                <span>5 minutes total</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mode-card practice" onclick="selectMode('training')">
                         <div class="mode-badge">PRACTICE</div>
                         <div class="mode-icon">🎓</div>
-                        <div class="mode-name">TRAINING</div>
-                        <div class="mode-desc">No timer • vs AI</div>
+                        <div class="mode-content">
+                            <div class="mode-name">TRAINING</div>
+                            <div class="mode-desc">Practice against AI</div>
+                            <div class="mode-timer">
+                                <span class="timer-icon">∞</span>
+                                <span>No time limit</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
