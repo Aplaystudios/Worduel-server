@@ -1473,29 +1473,47 @@ body::after {
         display: none !important;
     }
     
-    /* Make battle container taller since no keyboard */
+    /* Make battle container fill screen without keyboard */
     .battle-container {
-        padding: 8px !important;
+        padding: 6px !important;
         overflow-y: auto !important;
+        height: 100vh !important;
+    }
+    
+    /* Compact battle header */
+    .battle-header {
+        padding: 8px 12px !important;
+        margin-bottom: 6px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+    
+    .battle-timer {
+        font-size: 20px !important;
+    }
+    
+    .battle-pot {
+        font-size: 14px !important;
     }
     
     /* Keep both grids visible side-by-side */
     .battle-grid {
         grid-template-columns: 1fr 1fr !important;
-        gap: 6px !important;
-        margin-bottom: 10px !important;
+        gap: 4px !important;
+        margin-bottom: 6px !important;
     }
     
-    /* Make tiles MUCH smaller to fit both grids on screen */
+    /* Make tiles SMALLER to fit both grids */
     .tile {
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 5px !important;
-        font-size: 14px !important;
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 4px !important;
+        font-size: 13px !important;
         border: 2px solid rgba(100, 100, 100, 0.3) !important;
     }
     
-    /* Compact word grids */
+    /* Tighter word grids */
     .word-grid {
         gap: 2px !important;
     }
@@ -1506,31 +1524,19 @@ body::after {
     
     /* Compact player panels */
     .player-panel {
-        padding: 8px !important;
-        border-radius: 10px !important;
+        padding: 6px !important;
+        border-radius: 8px !important;
+        border-width: 2px !important;
     }
     
     .panel-header {
-        padding: 6px 8px !important;
-        margin-bottom: 8px !important;
+        padding: 5px 8px !important;
+        margin-bottom: 6px !important;
+        border-radius: 6px !important;
     }
     
     .panel-name {
-        font-size: 11px !important;
-    }
-    
-    /* Compact battle header */
-    .battle-header {
-        padding: 10px 14px !important;
-        margin-bottom: 8px !important;
-    }
-    
-    .battle-timer {
-        font-size: 18px !important;
-    }
-    
-    .battle-pot {
-        font-size: 13px !important;
+        font-size: 10px !important;
     }
 }
 }
@@ -2343,7 +2349,7 @@ h1, h2, h3, h4, h5, h6,
             </div>
 
             <div class="keyboard">
-                <!-- Hidden input for mobile native keyboard -->
+                <!-- Mobile input - positioned to be accessible -->
                 <input 
                     type="text" 
                     id="mobileInput" 
@@ -2351,8 +2357,9 @@ h1, h2, h3, h4, h5, h6,
                     autocapitalize="characters"
                     autocorrect="off"
                     spellcheck="false"
-                    style="position: fixed; top: -100px; left: 0; opacity: 0; width: 1px; height: 1px;"
-                    maxlength="1"
+                    inputmode="text"
+                    style="position: fixed; bottom: 10px; left: 10px; width: 50px; height: 50px; opacity: 0.01; z-index: 9999; font-size: 16px;"
+                    placeholder=""
                 />
                 
                 <div class="keyboard-row">
@@ -2527,7 +2534,8 @@ h1, h2, h3, h4, h5, h6,
             
             setupBattle();
             document.getElementById('battleTimer').textContent = '∞';
-            document.getElementById('battlePot').textContent = 'TRAINING';
+            // Hide pot display for training mode
+            document.getElementById('battlePot').parentElement.style.display = 'none';
             document.getElementById('opponentName').textContent = 'AI OPPONENT';
             showScreen('battleScreen');
             
@@ -2975,63 +2983,73 @@ h1, h2, h3, h4, h5, h6,
             createGrid('opponentGrid');
             setupKeyboard();
             
-            // Setup mobile native keyboard
-            if (window.innerWidth <= 768) {
+            // MOBILE KEYBOARD SETUP - Simplified and more reliable
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            
+            if (isMobile) {
                 const mobileInput = document.getElementById('mobileInput');
-                const battleContainer = document.querySelector('.battle-container');
                 
-                if (mobileInput && battleContainer) {
-                    // Focus input immediately
-                    setTimeout(() => {
-                        mobileInput.focus();
-                        console.log('Mobile keyboard should appear');
-                    }, 500);
+                if (mobileInput) {
+                    console.log('📱 Setting up mobile keyboard...');
                     
-                    // Tap anywhere on battle screen to refocus keyboard
-                    battleContainer.addEventListener('click', () => {
+                    // Make input more visible for debugging
+                    mobileInput.style.opacity = '0.01';
+                    mobileInput.style.pointerEvents = 'auto';
+                    
+                    // Focus immediately and repeatedly
+                    const focusInput = () => {
                         mobileInput.focus();
+                        mobileInput.click();
+                    };
+                    
+                    setTimeout(focusInput, 100);
+                    setTimeout(focusInput, 300);
+                    setTimeout(focusInput, 600);
+                    
+                    // Prevent blur - keep keyboard open
+                    mobileInput.addEventListener('blur', (e) => {
+                        setTimeout(() => {
+                            mobileInput.focus();
+                        }, 10);
                     });
                     
-                    // Handle input - single character at a time
-                    let lastValue = '';
+                    // Handle typing
                     mobileInput.addEventListener('input', (e) => {
                         const value = e.target.value.toUpperCase();
+                        console.log('Input:', value);
                         
-                        if (value.length > lastValue.length) {
-                            // Character added
-                            const newChar = value[value.length - 1];
-                            if (newChar.match(/[A-Z]/)) {
-                                handleKey(newChar);
+                        if (value.length > 0) {
+                            const char = value[value.length - 1];
+                            if (char.match(/[A-Z]/)) {
+                                handleKey(char);
                             }
                         }
                         
-                        lastValue = value;
-                        // Don't clear - let it accumulate to 1 char then reset
-                        if (value.length >= 1) {
-                            setTimeout(() => {
-                                e.target.value = '';
-                                lastValue = '';
-                            }, 50);
-                        }
+                        // Clear immediately
+                        setTimeout(() => {
+                            e.target.value = '';
+                        }, 10);
                     });
                     
-                    // Handle Enter and Backspace
+                    // Handle special keys
                     mobileInput.addEventListener('keydown', (e) => {
+                        console.log('Key:', e.key);
+                        
                         if (e.key === 'Enter') {
+                            e.preventDefault();
                             handleKey('Enter');
-                            e.preventDefault();
                         } else if (e.key === 'Backspace') {
-                            handleKey('Backspace');
                             e.preventDefault();
-                            mobileInput.value = '';
-                            lastValue = '';
+                            handleKey('Backspace');
                         }
                     });
                     
-                    // Keep focus on input
-                    mobileInput.addEventListener('blur', () => {
-                        setTimeout(() => mobileInput.focus(), 100);
+                    // Tap screen to refocus
+                    document.addEventListener('touchstart', () => {
+                        focusInput();
                     });
+                    
+                    console.log('✅ Mobile keyboard ready');
                 }
             }
         }
