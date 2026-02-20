@@ -1729,74 +1729,125 @@ h1, h2, h3, h4, h5, h6,
 }
 /* ================================================
    CLASH ROYALE STYLE BATTLE SCREEN
-   Add this AFTER the battle screen CSS section
+   Enhanced arena design with wood texture
    ================================================ */
 
-/* Battle container with grass/arena background */
+/* Battle container with proper arena background */
 .battle-container {
-    background: linear-gradient(180deg, #87CEEB 0%, #4682B4 30%, #228B22 70%, #32CD32 100%) !important;
+    background: 
+        linear-gradient(180deg, 
+            #87CEEB 0%,
+            #5B9BD5 15%, 
+            #8B7355 16%,
+            #A0826D 30%,
+            #8B7355 31%,
+            #6B8E23 70%, 
+            #228B22 85%,
+            #32CD32 100%) !important;
     position: relative;
 }
 
-/* Add arena texture overlay */
+/* Wood plank texture overlay for arena */
 .battle-container::before {
     content: '';
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 35%;
     background: 
         repeating-linear-gradient(
+            90deg,
+            rgba(139, 115, 85, 0.3),
+            rgba(139, 115, 85, 0.3) 100px,
+            rgba(101, 84, 63, 0.3) 100px,
+            rgba(101, 84, 63, 0.3) 200px
+        ),
+        repeating-linear-gradient(
             0deg,
-            transparent,
-            transparent 20px,
-            rgba(0,0,0,0.03) 20px,
-            rgba(0,0,0,0.03) 40px
+            rgba(0,0,0,0.05) 0px,
+            transparent 2px,
+            transparent 20px
         );
     pointer-events: none;
+    z-index: 0;
+}
+
+/* Grass texture overlay */
+.battle-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65%;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 3px,
+            rgba(0,0,0,0.02) 3px,
+            rgba(0,0,0,0.02) 6px
+        );
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* Battle header - rounded corners and shadow */
 .battle-header {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15)) !important;
-    border: 3px solid rgba(255, 215, 0, 0.6) !important;
+    background: linear-gradient(135deg, rgba(139, 115, 85, 0.95), rgba(101, 84, 63, 0.95)) !important;
+    border: 4px solid #ffd700 !important;
     border-radius: 20px !important;
-    padding: 14px 20px !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
-    backdrop-filter: blur(10px);
+    padding: 16px 24px !important;
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: none;
+    position: relative;
+    z-index: 1;
 }
 
-/* Player panels - colorful cards */
+/* Player panels - colorful cards with wood backing */
 .player-panel {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2)) !important;
-    border: 3px solid rgba(255, 255, 255, 0.5) !important;
+    background: linear-gradient(135deg, rgba(139, 115, 85, 0.9), rgba(101, 84, 63, 0.9)) !important;
+    border: 4px solid rgba(139, 115, 85, 1) !important;
     border-radius: 18px !important;
-    padding: 16px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
-    backdrop-filter: blur(8px);
+    padding: 18px !important;
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.4),
+        inset 0 2px 4px rgba(255, 255, 255, 0.15) !important;
+    position: relative;
+    z-index: 1;
 }
 
 .player-panel.you {
     border-color: #00ff88 !important;
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 
+        0 0 25px rgba(0, 255, 136, 0.5), 
+        0 10px 30px rgba(0, 0, 0, 0.4),
+        inset 0 2px 4px rgba(0, 255, 136, 0.2) !important;
 }
 
 /* Panel header */
 .panel-header {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.2));
-    padding: 10px 12px !important;
-    border-radius: 10px;
-    margin-bottom: 14px !important;
-    border: none !important;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.3));
+    padding: 12px 14px !important;
+    border-radius: 12px;
+    margin-bottom: 16px !important;
+    border: 2px solid rgba(255, 215, 0, 0.3) !important;
 }
 
 .panel-name {
-    font-size: 13px !important;
-    font-weight: 800 !important;
+    font-family: 'Lilita One', cursive !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
     color: #ffffff !important;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;
 }
 
 .panel-name.you {
     color: #00ff88 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7), 0 0 10px rgba(0, 255, 136, 0.5) !important;
 }
 
 /* Tiles - more colorful and rounded */
@@ -2660,6 +2711,42 @@ h1, h2, h3, h4, h5, h6,
                 game.targetWord = data.targetWord;
                 setupBattle();
                 showScreen('battleScreen');
+                
+                // Start timer for Best of 3 mode (3 minutes = 180 seconds)
+                if (currentMatch && currentMatch.mode === 'best_of_3') {
+                    let timeLeft = 180; // 3 minutes
+                    const timerEl = document.getElementById('battleTimer');
+                    
+                    game.timerInterval = setInterval(() => {
+                        timeLeft--;
+                        const minutes = Math.floor(timeLeft / 60);
+                        const seconds = timeLeft % 60;
+                        timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                        
+                        if (timeLeft <= 0) {
+                            clearInterval(game.timerInterval);
+                            timerEl.textContent = '0:00';
+                        }
+                    }, 1000);
+                }
+                
+                // Blitz mode timer (5 minutes = 300 seconds)
+                if (currentMatch && currentMatch.mode === 'blitz') {
+                    let timeLeft = 300;
+                    const timerEl = document.getElementById('battleTimer');
+                    
+                    game.timerInterval = setInterval(() => {
+                        timeLeft--;
+                        const minutes = Math.floor(timeLeft / 60);
+                        const seconds = timeLeft % 60;
+                        timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                        
+                        if (timeLeft <= 0) {
+                            clearInterval(game.timerInterval);
+                            timerEl.textContent = '0:00';
+                        }
+                    }, 1000);
+                }
             });
 
             socket.on('guess_result', (data) => {
@@ -2686,6 +2773,11 @@ h1, h2, h3, h4, h5, h6,
             });
 
             socket.on('match_end', (data) => {
+                // Clear timer
+                if (game.timerInterval) {
+                    clearInterval(game.timerInterval);
+                    game.timerInterval = null;
+                }
                 showResult(data);
             });
 
