@@ -1444,6 +1444,30 @@ body::after {
    ======================================== */
 
 @media (max-width: 768px) {
+    /* Bet selection screen mobile fixes */
+    .bet-container {
+        width: 95% !important;
+        padding: 24px !important;
+        max-width: 100% !important;
+    }
+    
+    .bet-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+    
+    .bet-option {
+        padding: 18px 12px !important;
+    }
+    
+    .bet-amount {
+        font-size: 24px !important;
+    }
+    
+    .bet-title {
+        font-size: 28px !important;
+    }
+    
     /* Hide on-screen keyboard on mobile - use native keyboard */
     .keyboard {
         display: none !important;
@@ -2083,7 +2107,7 @@ h1, h2, h3, h4, h5, h6,
                     <div class="profile-name" id="profileName">PLAYER</div>
                     <div class="profile-mmr">
                         <span class="mmr-icon">🏆</span>
-                        <span id="profileMMR">1000</span> MMR
+                        <span id="profileMMR">1000</span> WMR
                     </div>
                 </div>
                 <div class="profile-balance">
@@ -2325,8 +2349,10 @@ h1, h2, h3, h4, h5, h6,
                     id="mobileInput" 
                     autocomplete="off" 
                     autocapitalize="characters"
-                    style="position: absolute; opacity: 0; pointer-events: none;"
-                    maxlength="5"
+                    autocorrect="off"
+                    spellcheck="false"
+                    style="position: fixed; top: -100px; left: 0; opacity: 0; width: 1px; height: 1px;"
+                    maxlength="1"
                 />
                 
                 <div class="keyboard-row">
@@ -2793,10 +2819,24 @@ h1, h2, h3, h4, h5, h6,
                 setupBattle();
                 showScreen('battleScreen');
                 
-                // Start timer for Best of 3 mode (3 minutes = 180 seconds)
-                if (currentMatch && currentMatch.mode === 'best_of_3') {
-                    let timeLeft = 180; // 3 minutes
-                    const timerEl = document.getElementById('battleTimer');
+                console.log('Match started with mode:', currentMatch?.mode, 'isTraining:', game.isTraining);
+                
+                // Clear any existing timer
+                if (game.timerInterval) {
+                    clearInterval(game.timerInterval);
+                }
+                
+                // Start timer based on mode
+                const timerEl = document.getElementById('battleTimer');
+                
+                // Training mode - no timer
+                if (game.isTraining) {
+                    timerEl.textContent = '∞';
+                }
+                // Best of 3 mode (3 minutes = 180 seconds)
+                else if (currentMatch && currentMatch.mode === 'best_of_3') {
+                    let timeLeft = 180;
+                    timerEl.textContent = '3:00';
                     
                     game.timerInterval = setInterval(() => {
                         timeLeft--;
@@ -2810,11 +2850,10 @@ h1, h2, h3, h4, h5, h6,
                         }
                     }, 1000);
                 }
-                
-                // Blitz mode timer (5 minutes = 300 seconds)
-                if (currentMatch && currentMatch.mode === 'blitz') {
+                // Blitz mode (5 minutes = 300 seconds)
+                else if (currentMatch && currentMatch.mode === 'blitz') {
                     let timeLeft = 300;
-                    const timerEl = document.getElementById('battleTimer');
+                    timerEl.textContent = '5:00';
                     
                     game.timerInterval = setInterval(() => {
                         timeLeft--;
@@ -2939,24 +2978,44 @@ h1, h2, h3, h4, h5, h6,
             // Setup mobile native keyboard
             if (window.innerWidth <= 768) {
                 const mobileInput = document.getElementById('mobileInput');
-                if (mobileInput) {
-                    // Focus input to bring up keyboard
-                    setTimeout(() => mobileInput.focus(), 300);
+                const battleContainer = document.querySelector('.battle-container');
+                
+                if (mobileInput && battleContainer) {
+                    // Focus input immediately
+                    setTimeout(() => {
+                        mobileInput.focus();
+                        console.log('Mobile keyboard should appear');
+                    }, 500);
                     
-                    // Handle input
-                    mobileInput.addEventListener('input', (e) => {
-                        const value = e.target.value.toUpperCase();
-                        if (value.length > 0) {
-                            const lastChar = value[value.length - 1];
-                            if (lastChar.match(/[A-Z]/)) {
-                                handleKey(lastChar);
-                            }
-                        }
-                        // Clear input for next character
-                        e.target.value = '';
+                    // Tap anywhere on battle screen to refocus keyboard
+                    battleContainer.addEventListener('click', () => {
+                        mobileInput.focus();
                     });
                     
-                    // Handle Enter key
+                    // Handle input - single character at a time
+                    let lastValue = '';
+                    mobileInput.addEventListener('input', (e) => {
+                        const value = e.target.value.toUpperCase();
+                        
+                        if (value.length > lastValue.length) {
+                            // Character added
+                            const newChar = value[value.length - 1];
+                            if (newChar.match(/[A-Z]/)) {
+                                handleKey(newChar);
+                            }
+                        }
+                        
+                        lastValue = value;
+                        // Don't clear - let it accumulate to 1 char then reset
+                        if (value.length >= 1) {
+                            setTimeout(() => {
+                                e.target.value = '';
+                                lastValue = '';
+                            }, 50);
+                        }
+                    });
+                    
+                    // Handle Enter and Backspace
                     mobileInput.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') {
                             handleKey('Enter');
@@ -2964,7 +3023,14 @@ h1, h2, h3, h4, h5, h6,
                         } else if (e.key === 'Backspace') {
                             handleKey('Backspace');
                             e.preventDefault();
+                            mobileInput.value = '';
+                            lastValue = '';
                         }
+                    });
+                    
+                    // Keep focus on input
+                    mobileInput.addEventListener('blur', () => {
+                        setTimeout(() => mobileInput.focus(), 100);
                     });
                 }
             }
@@ -3098,10 +3164,21 @@ h1, h2, h3, h4, h5, h6,
             
             document.getElementById('resultWinnings').textContent = data.won ? `+$${data.winnings}` : `$0`;
             document.getElementById('resultBalance').textContent = `$${data.newBalance}`;
-            document.getElementById('resultMMR').textContent = data.mmrChange >= 0 ? `+${data.mmrChange}` : data.mmrChange;
+            document.getElementById('resultWMR').textContent = data.mmrChange >= 0 ? `+${data.mmrChange}` : data.mmrChange;
             
+            // Update user object
             user.balance = data.newBalance;
+            if (data.newMMR !== undefined) {
+                user.mmr = data.newMMR;
+            } else if (data.mmrChange !== undefined) {
+                user.mmr = (user.mmr || 1000) + data.mmrChange;
+            }
+            
+            // Update balance display
             document.getElementById('userBalance').textContent = user.balance;
+            
+            // Update home screen with new WMR
+            updateHomeScreen();
             
             document.getElementById('resultModal').classList.add('active');
         }
