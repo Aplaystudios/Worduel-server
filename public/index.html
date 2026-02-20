@@ -1026,18 +1026,31 @@ body::after {
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            padding: 16px;
+            background: rgba(60, 60, 60, 0.9);
+            border: 2px solid rgba(100, 100, 100, 0.8);
             border-radius: 12px;
             color: #ffffff;
-            margin-top: 12px;
-            font-weight: 700;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
         }
 
         .btn-secondary:hover {
             border-color: #ffd700;
-            background: rgba(255, 215, 0, 0.1);
+            background: rgba(80, 80, 80, 0.9);
             color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .btn-secondary:active {
+            transform: translateY(0);
         }
 
         /* ===== MATCHMAKING ===== */
@@ -1376,6 +1389,48 @@ body::after {
             display: flex;
             gap: 10px;
             margin-top: 26px;
+        }
+        
+        /* Result screen buttons - both styled identically */
+        .result-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 16px 24px !important;
+            border-radius: 12px !important;
+            font-family: 'Lilita One', cursive !important;
+            font-size: 15px !important;
+            font-weight: 400 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            border: none !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+        }
+        
+        .result-btn-primary {
+            background: linear-gradient(135deg, #ffd700, #ffaa00) !important;
+            color: #1e3a66 !important;
+        }
+        
+        .result-btn-primary:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5) !important;
+        }
+        
+        .result-btn-secondary {
+            background: linear-gradient(135deg, #5a5a5a, #3a3a3a) !important;
+            color: #ffffff !important;
+        }
+        
+        .result-btn-secondary:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6) !important;
+            background: linear-gradient(135deg, #6a6a6a, #4a4a4a) !important;
+        }
+        
+        .result-btn:active {
+            transform: translateY(0) !important;
         }
 
         @media (max-width: 1024px) {
@@ -2314,8 +2369,8 @@ h1, h2, h3, h4, h5, h6,
             </div>
 
             <div class="result-actions">
-                <button class="btn" onclick="playAgain()">PLAY AGAIN</button>
-                <button class="btn btn-secondary" onclick="goBackToHome()">HOME</button>
+                <button class="btn result-btn result-btn-primary" onclick="playAgain()">PLAY AGAIN</button>
+                <button class="btn result-btn result-btn-secondary" onclick="goBackToHome()">HOME</button>
             </div>
         </div>
     </div>
