@@ -1440,65 +1440,75 @@ body::after {
         }
 /* ========================================
    MOBILE OPTIMIZATION PATCH
-   Add this CSS at the end of your <style> section
+   Make grids fit on screen + use native keyboard
    ======================================== */
 
-/* Keep both grids visible side-by-side on mobile */
-.battle-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
+@media (max-width: 768px) {
+    /* Hide on-screen keyboard on mobile - use native keyboard */
+    .keyboard {
+        display: none !important;
+    }
+    
+    /* Make battle container taller since no keyboard */
+    .battle-container {
+        padding: 8px !important;
+        overflow-y: auto !important;
+    }
+    
+    /* Keep both grids visible side-by-side */
+    .battle-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Make tiles MUCH smaller to fit both grids on screen */
+    .tile {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 5px !important;
+        font-size: 14px !important;
+        border: 2px solid rgba(100, 100, 100, 0.3) !important;
+    }
+    
+    /* Compact word grids */
+    .word-grid {
+        gap: 2px !important;
+    }
+    
+    .word-row {
+        gap: 2px !important;
+    }
+    
+    /* Compact player panels */
+    .player-panel {
+        padding: 8px !important;
+        border-radius: 10px !important;
+    }
+    
+    .panel-header {
+        padding: 6px 8px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .panel-name {
+        font-size: 11px !important;
+    }
+    
+    /* Compact battle header */
+    .battle-header {
+        padding: 10px 14px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .battle-timer {
+        font-size: 18px !important;
+    }
+    
+    .battle-pot {
+        font-size: 13px !important;
+    }
 }
-
-/* Make tiles smaller to fit both grids */
-.tile {
-    width: calc((100vw - 60px) / 10) !important;
-    height: calc((100vw - 60px) / 10) !important;
-    max-width: 42px !important;
-    max-height: 42px !important;
-    border-radius: 6px !important;
-    font-size: 18px !important;
-}
-
-/* Compact word grids */
-.word-grid {
-    gap: 3px !important;
-}
-
-.word-row {
-    gap: 3px !important;
-}
-
-/* Compact player panels */
-.player-panel {
-    padding: 10px !important;
-    border-radius: 12px !important;
-}
-
-.panel-header {
-    padding-bottom: 8px !important;
-    margin-bottom: 10px !important;
-}
-
-.panel-name {
-    font-size: 10px !important;
-}
-
-/* Larger keyboard keys for better touch */
-.key {
-    min-height: 48px !important;
-    padding: 16px 6px !important;
-    font-size: 15px !important;
-    border-radius: 8px !important;
-}
-
-.key.wide {
-    min-width: 64px !important;
-    font-size: 12px !important;
-}
-
-/* Better spacing on battle container */
-.battle-container {
-    padding: 10px !important;
 }
 
 .battle-header {
@@ -2309,6 +2319,16 @@ h1, h2, h3, h4, h5, h6,
             </div>
 
             <div class="keyboard">
+                <!-- Hidden input for mobile native keyboard -->
+                <input 
+                    type="text" 
+                    id="mobileInput" 
+                    autocomplete="off" 
+                    autocapitalize="characters"
+                    style="position: absolute; opacity: 0; pointer-events: none;"
+                    maxlength="5"
+                />
+                
                 <div class="keyboard-row">
                     <div class="key" data-key="Q">Q</div>
                     <div class="key" data-key="W">W</div>
@@ -2915,6 +2935,39 @@ h1, h2, h3, h4, h5, h6,
             createGrid('yourGrid');
             createGrid('opponentGrid');
             setupKeyboard();
+            
+            // Setup mobile native keyboard
+            if (window.innerWidth <= 768) {
+                const mobileInput = document.getElementById('mobileInput');
+                if (mobileInput) {
+                    // Focus input to bring up keyboard
+                    setTimeout(() => mobileInput.focus(), 300);
+                    
+                    // Handle input
+                    mobileInput.addEventListener('input', (e) => {
+                        const value = e.target.value.toUpperCase();
+                        if (value.length > 0) {
+                            const lastChar = value[value.length - 1];
+                            if (lastChar.match(/[A-Z]/)) {
+                                handleKey(lastChar);
+                            }
+                        }
+                        // Clear input for next character
+                        e.target.value = '';
+                    });
+                    
+                    // Handle Enter key
+                    mobileInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            handleKey('Enter');
+                            e.preventDefault();
+                        } else if (e.key === 'Backspace') {
+                            handleKey('Backspace');
+                            e.preventDefault();
+                        }
+                    });
+                }
+            }
         }
 
         function createGrid(id) {
