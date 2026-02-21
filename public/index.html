@@ -2350,21 +2350,21 @@ h1, h2, h3, h4, h5, h6,
             </div>
 
             <div class="keyboard">
-                <!-- Mobile keyboard trigger button -->
-                <div id="mobileKeyboardTrigger" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #1e3a66; padding: 12px 24px; border-radius: 25px; font-weight: 800; font-size: 14px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: 'Lilita One', cursive;">
-                    TAP TO TYPE
+                <!-- Subtle hint shown on mobile when native keyboard is dismissed -->
+                <div id="mobileTypingHint" style="display: none; position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,255,136,0.12); border: 1px solid rgba(0,255,136,0.35); color: #00ff88; padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; z-index: 10000; letter-spacing: 1px; font-family: 'Barlow', sans-serif; pointer-events: none;">
+                    TAP ANYWHERE TO TYPE
                 </div>
-                
-                <!-- Hidden input for mobile native keyboard -->
-                <input 
-                    type="text" 
-                    id="mobileInput" 
-                    autocomplete="off" 
+
+                <!-- Hidden input captures native keyboard on mobile -->
+                <input
+                    type="text"
+                    id="mobileInput"
+                    autocomplete="off"
                     autocapitalize="characters"
                     autocorrect="off"
                     spellcheck="false"
                     inputmode="text"
-                    style="position: absolute; left: -9999px; opacity: 0;"
+                    style="position: fixed; top: -100px; left: 0; width: 100%; height: 1px; opacity: 0; border: none; outline: none; background: transparent;"
                 />
                 
                 <div class="keyboard-row">
@@ -2997,49 +2997,14 @@ h1, h2, h3, h4, h5, h6,
             createGrid('opponentGrid');
             setupKeyboard();
             
-            // MOBILE KEYBOARD - Show button on mobile
+            // MOBILE: auto-focus the hidden input so the native keyboard appears.
+            // Works immediately on Android; for iOS the touchstart handler in
+            // initMobileInput() covers re-focus after the keyboard is dismissed.
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
-            
             if (isMobile) {
-                const mobileInput = document.getElementById('mobileInput');
-                const triggerButton = document.getElementById('mobileKeyboardTrigger');
-                
-                // Show the tap button
-                triggerButton.style.display = 'block';
-                
-                // Click button to open keyboard
-                triggerButton.addEventListener('click', () => {
-                    mobileInput.focus();
-                    triggerButton.textContent = 'TYPING...';
-                });
-                
-                // Handle input
-                mobileInput.addEventListener('input', (e) => {
-                    const value = e.target.value.toUpperCase();
-                    if (value.length > 0) {
-                        const char = value[value.length - 1];
-                        if (char.match(/[A-Z]/)) {
-                            handleKey(char);
-                        }
-                    }
-                    e.target.value = '';
-                });
-                
-                // Handle Enter and Backspace
-                mobileInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleKey('Enter');
-                    } else if (e.key === 'Backspace') {
-                        e.preventDefault();
-                        handleKey('Backspace');
-                    }
-                });
-                
-                // Update button when keyboard closes
-                mobileInput.addEventListener('blur', () => {
-                    triggerButton.textContent = 'TAP TO TYPE';
-                });
+                setTimeout(() => {
+                    document.getElementById('mobileInput').focus();
+                }, 300);
             }
         }
 
@@ -3207,6 +3172,62 @@ h1, h2, h3, h4, h5, h6,
             selectedBet = null;
             showScreen('homeScreen');
         }
+
+        // ── Mobile native keyboard setup ──────────────────────────────────────
+        // Called ONCE on page load. Attaches all listeners to the hidden input
+        // and makes the battle screen a tap-to-focus zone.
+        function initMobileInput() {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            if (!isMobile) return;
+
+            const mobileInput = document.getElementById('mobileInput');
+            const hint        = document.getElementById('mobileTypingHint');
+            const battleScreen = document.getElementById('battleScreen');
+
+            // Letters typed on native keyboard
+            mobileInput.addEventListener('input', (e) => {
+                const value = e.target.value.toUpperCase();
+                if (value.length > 0) {
+                    const char = value[value.length - 1];
+                    if (/[A-Z]/.test(char)) handleKey(char);
+                }
+                e.target.value = '';
+            });
+
+            // Enter & Backspace from native keyboard
+            mobileInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleKey('Enter');
+                } else if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    handleKey('Backspace');
+                }
+            });
+
+            // Show hint when native keyboard is dismissed
+            mobileInput.addEventListener('blur', () => {
+                if (battleScreen.classList.contains('active')) {
+                    hint.style.display = 'block';
+                }
+            });
+
+            // Hide hint when keyboard is open
+            mobileInput.addEventListener('focus', () => {
+                hint.style.display = 'none';
+            });
+
+            // Tap anywhere on the battle screen → re-open native keyboard
+            // This is the key mechanism for iOS (focus() must be in a gesture handler)
+            battleScreen.addEventListener('touchstart', (e) => {
+                // Let on-screen keyboard key taps pass through normally
+                if (e.target.classList.contains('key')) return;
+                mobileInput.focus();
+            }, { passive: true });
+        }
+
+        // Initialise once the DOM is ready
+        initMobileInput();
     </script>
 </body>
 </html>

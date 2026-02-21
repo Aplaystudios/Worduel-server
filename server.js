@@ -11,7 +11,10 @@ const io = socketIo(server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
-    }
+    },
+    transports: ['websocket', 'polling'],
+    pingTimeout: 60000,
+    pingInterval: 25000
 });
 
 const PORT = process.env.PORT || 3000;
@@ -387,7 +390,11 @@ io.on('connection', (socket) => {
             }
             
             // Check if match should end
-            if (solved || player.guesses.length >= 6) {
+            if (solved) {
+                // First to solve wins immediately
+                endMatch(socket.matchId);
+            } else if (player.guesses.length >= 6) {
+                // This player exhausted all guesses — end only when both are done
                 const bothFinished = match.players.every(p => p.solved || p.guesses.length >= 6);
                 if (bothFinished) {
                     endMatch(socket.matchId);
@@ -399,12 +406,15 @@ io.on('connection', (socket) => {
         }
     });
     
-    socket.on('cancel_matchmaking', () => {
+    // Handle both names (frontend uses 'cancel_search')
+    function handleCancelMatchmaking() {
         const index = matchmakingQueue.findIndex(p => p.socketId === socket.id);
         if (index !== -1) {
             matchmakingQueue.splice(index, 1);
         }
-    });
+    }
+    socket.on('cancel_search', handleCancelMatchmaking);
+    socket.on('cancel_matchmaking', handleCancelMatchmaking);
     
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
@@ -502,11 +512,13 @@ function endMatch(matchId, forfeitWinner = null) {
     if (winnerUser && loserUser) {
         const mmrChange = calculateMMRChange(winner.mmr, loser.mmr, true);
         
-        winnerUser.balance += match.pot;
+        // Each player's bet was never deducted upfront, so the winner earns
+        // the opponent's bet and the loser loses their own bet.
+        winnerUser.balance += loser.betAmount;
         winnerUser.mmr += mmrChange;
         winnerUser.gamesPlayed++;
         winnerUser.gamesWon++;
-        
+
         loserUser.balance -= loser.betAmount;
         loserUser.mmr -= mmrChange;
         loserUser.gamesPlayed++;
@@ -522,7 +534,7 @@ function endMatch(matchId, forfeitWinner = null) {
                 won: true,
                 draw: false,
                 targetWord: match.targetWord,
-                winnings: match.pot,
+                winnings: loser.betAmount,
                 mmrChange: mmrChange,
                 newMMR: winnerUser.mmr,
                 newRank: getRank(winnerUser.mmr),
