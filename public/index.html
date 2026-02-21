@@ -2945,15 +2945,18 @@ h1, h2, h3, h4, h5, h6,
                 return;
             }
             
-            console.log('🔍 Finding match with bet:', selectedBet);
+            console.log('🔍 Finding match with bet:', selectedBet, 'mode:', selectedMode);
             console.log('Socket connected?', socket && socket.connected);
             
             document.getElementById('matchmakingBet').textContent = `$${selectedBet}`;
             showScreen('matchmakingScreen');
             
             if (socket && socket.connected) {
-                socket.emit('find_match', { betAmount: selectedBet });
-                console.log('✅ Sent find_match to server');
+                socket.emit('find_match', { 
+                    betAmount: selectedBet,
+                    mode: selectedMode  // FIXED: Send mode to server
+                });
+                console.log('✅ Sent find_match to server with mode:', selectedMode);
             } else {
                 console.error('❌ Socket not connected!');
                 alert('Not connected to server. Please refresh the page.');
