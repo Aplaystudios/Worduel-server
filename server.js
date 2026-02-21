@@ -99,12 +99,12 @@ app.post('/api/register', async (req, res) => {
         };
         
         users.set(username.toLowerCase(), user);
-        
-        const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '30d' });
         const rank = getRank(user.mmr);
         
-        res.json({
-            success: true,
+        const token = jwt.sign({ username: user.username }, JWT_SECRET);
+        
+        res.json({ 
+            success: true, 
             token,
             user: {
                 username: user.username,
@@ -116,7 +116,6 @@ app.post('/api/register', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Registration error:', error);
         res.json({ success: false, error: 'Registration failed' });
     }
 });
@@ -135,11 +134,11 @@ app.post('/api/login', async (req, res) => {
             return res.json({ success: false, error: 'Invalid credentials' });
         }
         
-        const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '30d' });
         const rank = getRank(user.mmr);
+        const token = jwt.sign({ username: user.username }, JWT_SECRET);
         
-        res.json({
-            success: true,
+        res.json({ 
+            success: true, 
             token,
             user: {
                 username: user.username,
@@ -151,51 +150,46 @@ app.post('/api/login', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Login error:', error);
         res.json({ success: false, error: 'Login failed' });
     }
 });
 
-// WebSocket Connection
+// Socket.IO Connection
 io.on('connection', (socket) => {
-    console.log('New connection:', socket.id);
+    console.log('Client connected:', socket.id);
     
     socket.on('authenticate', (data) => {
         try {
-            const { token } = data;
-            const decoded = jwt.verify(token, JWT_SECRET);
+            const decoded = jwt.verify(data.token, JWT_SECRET);
             const user = users.get(decoded.username.toLowerCase());
             
-            if (!user) {
-                socket.emit('auth_error', { message: 'User not found' });
-                return;
-            }
-            
-            socket.username = user.username;
-            socket.user = user;
-            activeSockets.set(socket.username, socket);
-            
-            socket.emit('authenticated', {
-                user: {
+            if (user) {
+                socket.username = user.username;
+                socket.user = user;
+                activeSockets.set(user.username, socket);
+                
+                socket.emit('authenticated', {
                     username: user.username,
                     balance: user.balance,
                     mmr: user.mmr,
                     rank: getRank(user.mmr),
                     gamesPlayed: user.gamesPlayed,
                     gamesWon: user.gamesWon
-                }
-            });
-            
-            io.emit('online_count', activeSockets.size);
+                });
+                
+                console.log(`User authenticated: ${user.username}`);
+            } else {
+                socket.emit('error', { message: 'Authentication failed' });
+            }
         } catch (error) {
-            console.error('Auth error:', error);
-            socket.emit('auth_error', { message: 'Authentication failed' });
+            socket.emit('error', { message: 'Invalid token' });
         }
     });
     
+    // FIXED: Added mode parameter
     socket.on('find_match', (data) => {
         try {
-            const { betAmount } = data;
+            const { betAmount, mode } = data;
             const user = socket.user;
             
             if (!user) {
@@ -213,6 +207,13 @@ io.on('connection', (socket) => {
                 return;
             }
             
+            // FIXED: Validate mode
+            const validModes = ['best_of_3', 'blitz'];
+            if (!mode || !validModes.includes(mode)) {
+                socket.emit('error', { message: 'Invalid game mode' });
+                return;
+            }
+            
             // Check if already in queue
             const alreadyInQueue = matchmakingQueue.find(p => p.username === user.username);
             if (alreadyInQueue) {
@@ -222,9 +223,10 @@ io.on('connection', (socket) => {
             
             const mmrRange = [user.mmr - 200, user.mmr + 200];
             
-            // Try to find a match
+            // FIXED: Match only with same mode
             const matchIndex = matchmakingQueue.findIndex(p => 
                 p.betAmount === betAmount &&
+                p.mode === mode &&
                 p.mmr >= mmrRange[0] &&
                 p.mmr <= mmrRange[1] &&
                 p.username !== user.username
@@ -237,6 +239,7 @@ io.on('connection', (socket) => {
                 
                 const match = {
                     id: matchId,
+                    mode: mode,  // FIXED: Store mode in match
                     players: [
                         { 
                             username: user.username, 
@@ -274,6 +277,7 @@ io.on('connection', (socket) => {
                 // Notify both players
                 const player1Data = {
                     matchId,
+                    mode: mode,  // FIXED: Include mode
                     opponent: {
                         username: opponent.username,
                         mmr: opponent.mmr,
@@ -284,6 +288,7 @@ io.on('connection', (socket) => {
                 
                 const player2Data = {
                     matchId,
+                    mode: mode,  // FIXED: Include mode
                     opponent: {
                         username: user.username,
                         mmr: user.mmr,
@@ -299,9 +304,15 @@ io.on('connection', (socket) => {
                 
                 // Start match after brief delay
                 setTimeout(() => {
-                    socket.emit('match_start', { targetWord: match.targetWord });
+                    socket.emit('match_start', { 
+                        targetWord: match.targetWord,
+                        mode: mode  // FIXED: Send mode to client
+                    });
                     if (opponentSocket) {
-                        opponentSocket.emit('match_start', { targetWord: match.targetWord });
+                        opponentSocket.emit('match_start', { 
+                            targetWord: match.targetWord,
+                            mode: mode  // FIXED: Send mode to client
+                        });
                     }
                 }, 1000);
                 
@@ -310,14 +321,16 @@ io.on('connection', (socket) => {
                 matchmakingQueue.push({
                     username: user.username,
                     socketId: socket.id,
-                    mmr: user.mmr,
                     betAmount,
-                    timestamp: Date.now()
+                    mode: mode,  // FIXED: Store mode in queue
+                    mmr: user.mmr,
+                    rank: getRank(user.mmr),
+                    mmrRange
                 });
                 
-                socket.emit('searching', {
-                    betAmount,
-                    mmrRange
+                socket.emit('matchmaking', { 
+                    message: 'Searching for opponent...',
+                    mode: mode  // FIXED: Echo mode back
                 });
             }
         } catch (error) {
@@ -326,50 +339,30 @@ io.on('connection', (socket) => {
         }
     });
     
-    socket.on('cancel_search', () => {
-        const index = matchmakingQueue.findIndex(p => p.username === socket.username);
-        if (index !== -1) {
-            matchmakingQueue.splice(index, 1);
-        }
-    });
-    
     socket.on('submit_guess', (data) => {
         try {
-            const { word } = data;
-            const matchId = socket.matchId;
-            
-            if (!matchId) {
-                socket.emit('error', { message: 'Not in a match' });
-                return;
-            }
-            
-            const match = activeMatches.get(matchId);
+            const match = activeMatches.get(socket.matchId);
             if (!match || match.status !== 'active') {
-                socket.emit('error', { message: 'Match not found or ended' });
+                socket.emit('error', { message: 'No active match' });
                 return;
             }
             
             const player = match.players.find(p => p.username === socket.username);
-            if (!player) {
-                socket.emit('error', { message: 'Player not found in match' });
-                return;
-            }
+            if (!player || player.solved) return;
             
-            if (player.solved) {
-                socket.emit('error', { message: 'Already solved' });
-                return;
-            }
+            const guess = data.word.toUpperCase();
             
-            if (word.length !== 5) {
-                socket.emit('error', { message: 'Word must be 5 letters' });
+            // Validate guess
+            if (guess.length !== 5) {
+                socket.emit('error', { message: 'Guess must be 5 letters' });
                 return;
             }
             
             // Evaluate guess
-            const evaluation = evaluateGuess(word.toUpperCase(), match.targetWord);
-            const guess = { word: word.toUpperCase(), evaluation };
-            player.guesses.push(guess);
+            const evaluation = evaluateGuess(guess, match.targetWord);
+            player.guesses.push({ word: guess, evaluation });
             
+            // Check if solved
             const solved = evaluation.every(e => e === 'correct');
             if (solved) {
                 player.solved = true;
@@ -377,24 +370,28 @@ io.on('connection', (socket) => {
             }
             
             // Send result to player
-            socket.emit('guess_result', { guess, solved });
+            socket.emit('guess_result', {
+                guess: { word: guess, evaluation },
+                solved
+            });
             
-            // Notify opponent
-            const opponent = match.players.find(p => p.username !== socket.username);
-            const opponentSocket = activeSockets.get(opponent.username);
+            // Send to opponent
+            const opponentSocket = activeSockets.get(
+                match.players.find(p => p.username !== socket.username).username
+            );
             if (opponentSocket) {
-                opponentSocket.emit('opponent_guess', { 
-                    guess,
+                opponentSocket.emit('opponent_guess', {
+                    guess: { word: guess, evaluation },
                     solved
                 });
             }
             
-            // Check if match is over
-            const bothSolved = match.players.every(p => p.solved);
-            const maxGuesses = match.players.some(p => p.guesses.length >= 6);
-            
-            if (bothSolved || maxGuesses) {
-                endMatch(matchId);
+            // Check if match should end
+            if (solved || player.guesses.length >= 6) {
+                const bothFinished = match.players.every(p => p.solved || p.guesses.length >= 6);
+                if (bothFinished) {
+                    endMatch(socket.matchId);
+                }
             }
         } catch (error) {
             console.error('Submit guess error:', error);
@@ -402,64 +399,60 @@ io.on('connection', (socket) => {
         }
     });
     
+    socket.on('cancel_matchmaking', () => {
+        const index = matchmakingQueue.findIndex(p => p.socketId === socket.id);
+        if (index !== -1) {
+            matchmakingQueue.splice(index, 1);
+        }
+    });
+    
     socket.on('disconnect', () => {
-        console.log('Disconnected:', socket.id);
+        console.log('Client disconnected:', socket.id);
+        
+        // Remove from queue
+        const queueIndex = matchmakingQueue.findIndex(p => p.socketId === socket.id);
+        if (queueIndex !== -1) {
+            matchmakingQueue.splice(queueIndex, 1);
+        }
+        
+        // Handle active match
+        if (socket.matchId) {
+            const match = activeMatches.get(socket.matchId);
+            if (match && match.status === 'active') {
+                const opponent = match.players.find(p => p.username !== socket.username);
+                if (opponent) {
+                    endMatch(socket.matchId, opponent.username);
+                }
+            }
+        }
         
         if (socket.username) {
             activeSockets.delete(socket.username);
-            
-            // Remove from queue
-            const queueIndex = matchmakingQueue.findIndex(p => p.username === socket.username);
-            if (queueIndex !== -1) {
-                matchmakingQueue.splice(queueIndex, 1);
-            }
-            
-            // Handle active match
-            if (socket.matchId) {
-                const match = activeMatches.get(socket.matchId);
-                if (match && match.status === 'active') {
-                    const opponent = match.players.find(p => p.username !== socket.username);
-                    const opponentSocket = activeSockets.get(opponent.username);
-                    
-                    if (opponentSocket) {
-                        opponentSocket.emit('opponent_disconnected');
-                        // Award win to remaining player
-                        endMatch(socket.matchId, opponent.username);
-                    }
-                }
-            }
-            
-            io.emit('online_count', activeSockets.size);
         }
     });
 });
 
 function evaluateGuess(guess, target) {
-    const result = [];
+    const result = new Array(5).fill('absent');
     const targetLetters = target.split('');
-    const used = new Array(5).fill(false);
+    const guessLetters = guess.split('');
     
     // First pass: mark correct positions
     for (let i = 0; i < 5; i++) {
-        if (guess[i] === targetLetters[i]) {
+        if (guessLetters[i] === targetLetters[i]) {
             result[i] = 'correct';
-            used[i] = true;
-        } else {
-            result[i] = null;
+            targetLetters[i] = null;
+            guessLetters[i] = null;
         }
     }
     
     // Second pass: mark present letters
     for (let i = 0; i < 5; i++) {
-        if (result[i] === null) {
-            const idx = targetLetters.findIndex((letter, j) => 
-                letter === guess[i] && !used[j]
-            );
-            if (idx !== -1) {
+        if (guessLetters[i] !== null) {
+            const targetIndex = targetLetters.indexOf(guessLetters[i]);
+            if (targetIndex !== -1) {
                 result[i] = 'present';
-                used[idx] = true;
-            } else {
-                result[i] = 'absent';
+                targetLetters[targetIndex] = null;
             }
         }
     }
@@ -518,6 +511,8 @@ function endMatch(matchId, forfeitWinner = null) {
         loserUser.mmr -= mmrChange;
         loserUser.gamesPlayed++;
         
+        console.log(`Match ended: ${winner.username} defeats ${loser.username} (+${mmrChange} WMR)`);
+        
         // Notify players
         const winnerSocket = activeSockets.get(winner.username);
         const loserSocket = activeSockets.get(loser.username);
@@ -560,15 +555,14 @@ function endMatch(matchId, forfeitWinner = null) {
 // Health check
 app.get('/health', (req, res) => {
     res.json({ 
-        status: 'ok', 
+        status: 'ok',
         users: users.size,
-        online: activeSockets.size,
-        queue: matchmakingQueue.length,
-        matches: activeMatches.size
+        activeMatches: activeMatches.size,
+        queueSize: matchmakingQueue.length
     });
 });
 
 server.listen(PORT, () => {
     console.log(`🎮 Worduel Server running on port ${PORT}`);
-    console.log(`📊 Dashboard: http://localhost:${PORT}`);
+    console.log(`📊 Dashboard: http://localhost:${PORT}/health`);
 });
