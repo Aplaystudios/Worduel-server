@@ -2364,7 +2364,7 @@ h1, h2, h3, h4, h5, h6,
                     autocorrect="off"
                     spellcheck="false"
                     inputmode="text"
-                    style="position: fixed; top: -100px; left: 0; width: 100%; height: 1px; opacity: 0; border: none; outline: none; background: transparent;"
+                    style="position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; border: none; outline: none; background: transparent; font-size: 16px;"
                 />
                 
                 <div class="keyboard-row">
@@ -2624,7 +2624,7 @@ h1, h2, h3, h4, h5, h6,
         ]);
 
         function isValidWord(word) {
-            return VALID_WORDS.has(word.toUpperCase());
+            return /^[A-Za-z]{5}$/.test(word);
         }
 
         let aiInterval = null;
@@ -3194,24 +3194,26 @@ h1, h2, h3, h4, h5, h6,
             const hint        = document.getElementById('mobileTypingHint');
             const battleScreen = document.getElementById('battleScreen');
 
-            // Letters typed on native keyboard
+            // Letters and Backspace from native keyboard
+            // Uses e.inputType for reliable Backspace detection on mobile
+            // (keydown does not reliably fire for Backspace on mobile browsers)
             mobileInput.addEventListener('input', (e) => {
-                const value = e.target.value.toUpperCase();
-                if (value.length > 0) {
-                    const char = value[value.length - 1];
-                    if (/[A-Z]/.test(char)) handleKey(char);
+                if (e.inputType === 'deleteContentBackward') {
+                    handleKey('Backspace');
+                } else if (e.data) {
+                    const chars = e.data.toUpperCase();
+                    for (const char of chars) {
+                        if (/[A-Z]/.test(char)) handleKey(char);
+                    }
                 }
                 e.target.value = '';
             });
 
-            // Enter & Backspace from native keyboard
+            // Enter key from native keyboard (keydown is reliable for Enter)
             mobileInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     handleKey('Enter');
-                } else if (e.key === 'Backspace') {
-                    e.preventDefault();
-                    handleKey('Backspace');
                 }
             });
 
