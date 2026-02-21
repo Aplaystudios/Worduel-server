@@ -1039,6 +1039,7 @@ body::after {
             text-transform: uppercase;
             letter-spacing: 1px;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+            margin-top: 16px;  /* Added spacing between buttons */
         }
 
         .btn-secondary:hover {
@@ -2147,7 +2148,7 @@ h1, h2, h3, h4, h5, h6,
                 <h2 class="section-title">BATTLE MODES</h2>
                 
                 <div class="mode-grid">
-                    <div class="mode-card ranked" onclick="selectMode('best-of-3')">
+                    <div class="mode-card ranked" onclick="selectMode('best_of_3')">
                         <div class="mode-badge">RANKED</div>
                         <div class="mode-icon">🏆</div>
                         <div class="mode-content">
@@ -2936,6 +2937,12 @@ h1, h2, h3, h4, h5, h6,
         function findMatch() {
             if (!selectedBet) {
                 alert('Please select a bet amount first!');
+                return;
+            }
+            
+            if (!selectedMode) {
+                alert('Please select a game mode first!');
+                showScreen('homeScreen');
                 return;
             }
             
