@@ -2349,7 +2349,12 @@ h1, h2, h3, h4, h5, h6,
             </div>
 
             <div class="keyboard">
-                <!-- Mobile input - positioned to be accessible -->
+                <!-- Mobile keyboard trigger button -->
+                <div id="mobileKeyboardTrigger" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #1e3a66; padding: 12px 24px; border-radius: 25px; font-weight: 800; font-size: 14px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: 'Lilita One', cursive;">
+                    TAP TO TYPE
+                </div>
+                
+                <!-- Hidden input for mobile native keyboard -->
                 <input 
                     type="text" 
                     id="mobileInput" 
@@ -2358,8 +2363,7 @@ h1, h2, h3, h4, h5, h6,
                     autocorrect="off"
                     spellcheck="false"
                     inputmode="text"
-                    style="position: fixed; bottom: 10px; left: 10px; width: 50px; height: 50px; opacity: 0.01; z-index: 9999; font-size: 16px;"
-                    placeholder=""
+                    style="position: absolute; left: -9999px; opacity: 0;"
                 />
                 
                 <div class="keyboard-row">
@@ -2983,74 +2987,49 @@ h1, h2, h3, h4, h5, h6,
             createGrid('opponentGrid');
             setupKeyboard();
             
-            // MOBILE KEYBOARD SETUP - Simplified and more reliable
+            // MOBILE KEYBOARD - Show button on mobile
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
             
             if (isMobile) {
                 const mobileInput = document.getElementById('mobileInput');
+                const triggerButton = document.getElementById('mobileKeyboardTrigger');
                 
-                if (mobileInput) {
-                    console.log('📱 Setting up mobile keyboard...');
-                    
-                    // Make input more visible for debugging
-                    mobileInput.style.opacity = '0.01';
-                    mobileInput.style.pointerEvents = 'auto';
-                    
-                    // Focus immediately and repeatedly
-                    const focusInput = () => {
-                        mobileInput.focus();
-                        mobileInput.click();
-                    };
-                    
-                    setTimeout(focusInput, 100);
-                    setTimeout(focusInput, 300);
-                    setTimeout(focusInput, 600);
-                    
-                    // Prevent blur - keep keyboard open
-                    mobileInput.addEventListener('blur', (e) => {
-                        setTimeout(() => {
-                            mobileInput.focus();
-                        }, 10);
-                    });
-                    
-                    // Handle typing
-                    mobileInput.addEventListener('input', (e) => {
-                        const value = e.target.value.toUpperCase();
-                        console.log('Input:', value);
-                        
-                        if (value.length > 0) {
-                            const char = value[value.length - 1];
-                            if (char.match(/[A-Z]/)) {
-                                handleKey(char);
-                            }
+                // Show the tap button
+                triggerButton.style.display = 'block';
+                
+                // Click button to open keyboard
+                triggerButton.addEventListener('click', () => {
+                    mobileInput.focus();
+                    triggerButton.textContent = 'TYPING...';
+                });
+                
+                // Handle input
+                mobileInput.addEventListener('input', (e) => {
+                    const value = e.target.value.toUpperCase();
+                    if (value.length > 0) {
+                        const char = value[value.length - 1];
+                        if (char.match(/[A-Z]/)) {
+                            handleKey(char);
                         }
-                        
-                        // Clear immediately
-                        setTimeout(() => {
-                            e.target.value = '';
-                        }, 10);
-                    });
-                    
-                    // Handle special keys
-                    mobileInput.addEventListener('keydown', (e) => {
-                        console.log('Key:', e.key);
-                        
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleKey('Enter');
-                        } else if (e.key === 'Backspace') {
-                            e.preventDefault();
-                            handleKey('Backspace');
-                        }
-                    });
-                    
-                    // Tap screen to refocus
-                    document.addEventListener('touchstart', () => {
-                        focusInput();
-                    });
-                    
-                    console.log('✅ Mobile keyboard ready');
-                }
+                    }
+                    e.target.value = '';
+                });
+                
+                // Handle Enter and Backspace
+                mobileInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleKey('Enter');
+                    } else if (e.key === 'Backspace') {
+                        e.preventDefault();
+                        handleKey('Backspace');
+                    }
+                });
+                
+                // Update button when keyboard closes
+                mobileInput.addEventListener('blur', () => {
+                    triggerButton.textContent = 'TAP TO TYPE';
+                });
             }
         }
 
