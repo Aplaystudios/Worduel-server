@@ -170,7 +170,7 @@ io.on('connection', (socket) => {
                 socket.username = user.username;
                 socket.user = user;
                 activeSockets.set(user.username, socket);
-                
+
                 socket.emit('authenticated', {
                     username: user.username,
                     balance: user.balance,
@@ -179,10 +179,11 @@ io.on('connection', (socket) => {
                     gamesPlayed: user.gamesPlayed,
                     gamesWon: user.gamesWon
                 });
-                
+
                 console.log(`User authenticated: ${user.username}`);
             } else {
-                socket.emit('error', { message: 'Authentication failed' });
+                // Use auth_error so the client knows to redirect to login
+                socket.emit('auth_error', { message: 'Session expired. Please log in again.' });
             }
         } catch (error) {
             socket.emit('error', { message: 'Invalid token' });

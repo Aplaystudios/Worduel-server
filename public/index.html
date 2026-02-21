@@ -2806,17 +2806,32 @@ h1, h2, h3, h4, h5, h6,
             });
 
             socket.on('authenticated', (data) => {
-                console.log('✅ Authenticated:', data.user.username);
-                user = data.user;
+                console.log('✅ Authenticated:', data.username);
+                // Server sends { username, balance, mmr, rank, ... } directly
+                user = data;
                 isAuthenticated = true;
+                updateHomeScreen();
             });
 
-            socket.on('auth_error', (data) => {
-                console.error('❌ Authentication failed:', data.message);
-                alert('Authentication failed: ' + data.message + '\n\nPlease log in again.');
+            function handleAuthFailure(msg) {
+                console.error('❌ Authentication failed:', msg);
+                isAuthenticated = false;
                 localStorage.removeItem('worduel_token');
                 localStorage.removeItem('worduel_user');
+                token = null;
+                user = null;
                 showScreen('authScreen');
+            }
+
+            socket.on('auth_error', (data) => handleAuthFailure(data.message));
+
+            socket.on('error', (data) => {
+                if (data.message && data.message.toLowerCase().includes('auth')) {
+                    handleAuthFailure(data.message);
+                } else {
+                    console.error('Server error:', data.message);
+                    alert('Error: ' + data.message);
+                }
             });
 
             socket.on('match_found', (data) => {
@@ -2912,11 +2927,6 @@ h1, h2, h3, h4, h5, h6,
                     game.timerInterval = null;
                 }
                 showResult(data);
-            });
-
-            socket.on('error', (data) => {
-                console.error('❌ Server error:', data);
-                alert('Error: ' + data.message);
             });
 
             socket.on('disconnect', () => {
