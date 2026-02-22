@@ -1509,16 +1509,33 @@ body::after {
         font-size: 28px !important;
     }
     
-    /* Hide on-screen keyboard on mobile - use native keyboard */
+    /* Show on-screen keyboard on mobile with compact sizing */
     .keyboard {
-        display: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 5px 4px 3px !important;
+        flex-shrink: 0 !important;
     }
-    
-    /* Make battle container fill screen without keyboard */
+    .keyboard-row { gap: 4px !important; margin-bottom: 4px !important; }
+    .key {
+        flex: 1 !important;
+        min-width: 0 !important;
+        max-width: 34px !important;
+        height: 38px !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+        border-radius: 5px !important;
+    }
+    .key.wide { flex: 1.5 !important; max-width: 52px !important; font-size: 9px !important; }
+
+    /* Battle container: full-height flex column */
     .battle-container {
-        padding: 6px !important;
-        overflow-y: auto !important;
-        height: 100vh !important;
+        padding: 6px 6px 2px !important;
+        overflow: hidden !important;
+        height: 100dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
     }
     
     /* Compact battle header */
@@ -1538,11 +1555,14 @@ body::after {
         font-size: 14px !important;
     }
     
-    /* Keep both grids visible side-by-side */
+    /* Battle grid takes remaining space */
     .battle-grid {
         grid-template-columns: 1fr 1fr !important;
         gap: 4px !important;
-        margin-bottom: 6px !important;
+        margin-bottom: 4px !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
     }
     
     /* Make tiles SMALLER to fit both grids */
@@ -1580,29 +1600,9 @@ body::after {
         font-size: 10px !important;
     }
 
-    /* Prevent scrolling — everything must fit in the viewport */
-    .battle-container {
-        overflow: hidden !important;
-        height: 100dvh !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-start !important;
-    }
-
-    /* Mobile letter tracker — fixed at top of screen */
-    #mobileLetterTracker {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 3px !important;
-        padding: 6px 0 4px !important;
-        margin: 0 !important;
-    }
-
-    /* Push battle content below the fixed tracker (~60px tall) */
-    #battleScreen .battle-container {
-        padding-top: 62px !important;
-    }
+    /* Letter tracker is redundant — on-screen keyboard shows colors */
+    #mobileLetterTracker { display: none !important; }
+    #battleScreen .battle-container { padding-top: 6px !important; }
 
     .ml-row {
         display: flex !important;
@@ -1657,14 +1657,14 @@ body::after {
     font-size: 14px !important;
 }
 
-/* Keyboard more compact */
+/* Keyboard default sizing (mobile overrides via @media) */
 .keyboard {
-    padding: 12px 8px !important;
+    padding: 12px 8px;
 }
 
 .keyboard-row {
-    gap: 3px !important;
-    margin-bottom: 4px !important;
+    gap: 3px;
+    margin-bottom: 4px;
 }
 
 /* Optimize home screen for mobile */
@@ -2431,6 +2431,8 @@ h1, h2, h3, h4, h5, h6,
         <div class="battle-container">
             <div class="battle-header">
                 <div class="battle-timer" id="battleTimer">3:00</div>
+                <div id="roundScore" style="display:none; font-family:'Barlow',sans-serif; font-weight:900; font-size:16px; color:#ffd700; letter-spacing:2px;"></div>
+                <div id="blitzScore" style="display:none; font-family:'Barlow',sans-serif; font-weight:900; font-size:14px; color:#00ff88; letter-spacing:1px;"></div>
                 <div class="battle-pot">POT: $<span id="battlePot">100</span></div>
             </div>
 
@@ -2500,29 +2502,22 @@ h1, h2, h3, h4, h5, h6,
                 </div>
             </div>
 
-            <!-- Mobile keyboard elements — OUTSIDE .keyboard so the CSS
-                 display:none !important on mobile does not hide them -->
-            <label
-                id="mobileKeyboardBtn"
-                for="mobileInput"
-                style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #1e3a66; padding: 14px 32px; border-radius: 30px; font-size: 16px; font-weight: 800; font-family: 'Barlow', sans-serif; letter-spacing: 1px; cursor: pointer; z-index: 10001; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
-                ⌨️ TAP TO TYPE
-            </label>
-            <input
-                type="text"
-                id="mobileInput"
-                autocomplete="off"
-                autocapitalize="characters"
-                autocorrect="off"
-                spellcheck="false"
-                inputmode="text"
-                style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 160px; height: 52px; opacity: 0.01; border: none; outline: none; background: transparent; font-size: 16px; z-index: 10000;"
-            />
+            <!-- Native keyboard elements kept for fallback but hidden — on-screen keyboard is used instead -->
+            <label id="mobileKeyboardBtn" for="mobileInput" style="display:none !important;"></label>
+            <input type="text" id="mobileInput" style="display:none !important;" tabindex="-1" aria-hidden="true" />
         </div>
     </div>
 
-    <!-- Toast for invalid words -->
+    <!-- Toast for invalid words / solved flash -->
     <div id="wordToast">NOT IN WORD LIST</div>
+
+    <!-- Round end overlay (best-of-3) -->
+    <div id="roundOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9000; flex-direction:column; align-items:center; justify-content:center; gap:14px;">
+        <div id="roundOverlayTitle" style="font-family:'Barlow',sans-serif; font-weight:900; font-size:26px; letter-spacing:3px;"></div>
+        <div id="roundOverlayScore" style="font-family:'JetBrains Mono',monospace; font-weight:900; font-size:52px; color:#fff; letter-spacing:4px;"></div>
+        <div id="roundOverlayWord" style="font-family:'Barlow',sans-serif; font-size:13px; color:#9ca3af; letter-spacing:1px;"></div>
+        <div style="font-family:'Barlow',sans-serif; font-size:11px; color:#4a5568; margin-top:4px;">NEXT ROUND STARTING...</div>
+    </div>
 
     <!-- RESULT MODAL -->
     <div class="result-modal" id="resultModal">
@@ -2967,12 +2962,19 @@ h1, h2, h3, h4, h5, h6,
             });
 
             socket.on('match_start', (data) => {
-                console.log('🎮 Match starting! Target:', data.targetWord);
+                console.log('🎮 Match starting! Target:', data.targetWord, 'Mode:', data.mode || currentMatch?.mode);
                 game.targetWord = data.targetWord;
                 setupBattle();
                 showScreen('battleScreen');
-                
-                console.log('Match started with mode:', currentMatch?.mode, 'isTraining:', game.isTraining);
+
+                // Show/hide mode-specific score displays
+                const mode = data.mode || (currentMatch && currentMatch.mode);
+                const roundScoreEl = document.getElementById('roundScore');
+                const blitzScoreEl = document.getElementById('blitzScore');
+                roundScoreEl.style.display = mode === 'best_of_3' ? 'block' : 'none';
+                blitzScoreEl.style.display = mode === 'blitz' ? 'block' : 'none';
+                if (mode === 'best_of_3') roundScoreEl.textContent = 'R1 · 0 – 0';
+                if (mode === 'blitz') blitzScoreEl.textContent = '0 – 0 SOLVED';
                 
                 // Clear any existing timer
                 if (game.timerInterval) {
@@ -3050,12 +3052,64 @@ h1, h2, h3, h4, h5, h6,
             });
 
             socket.on('match_end', (data) => {
-                // Clear timer
-                if (game.timerInterval) {
-                    clearInterval(game.timerInterval);
-                    game.timerInterval = null;
-                }
+                if (game.timerInterval) { clearInterval(game.timerInterval); game.timerInterval = null; }
+                // Hide any round overlay
+                document.getElementById('roundOverlay').style.display = 'none';
                 showResult(data);
+            });
+
+            // Best-of-3: round finished, show score overlay
+            socket.on('round_end', (data) => {
+                document.getElementById('roundScore').textContent = `R${data.roundNumber} · ${data.yourScore} – ${data.opponentScore}`;
+                const overlay = document.getElementById('roundOverlay');
+                const titleEl = document.getElementById('roundOverlayTitle');
+                titleEl.textContent = data.roundWon ? 'YOU WON THE ROUND!' : 'OPPONENT WON THE ROUND';
+                titleEl.style.color = data.roundWon ? '#00ff88' : '#ff3366';
+                document.getElementById('roundOverlayScore').textContent = `${data.yourScore} – ${data.opponentScore}`;
+                document.getElementById('roundOverlayWord').textContent = `The word was: ${data.targetWord}`;
+                overlay.style.display = 'flex';
+            });
+
+            // Best-of-3: new round starting
+            socket.on('round_start', (data) => {
+                document.getElementById('roundOverlay').style.display = 'none';
+                game.targetWord = data.targetWord;
+                game.currentRow = 0; game.opponentRow = 0; game.currentGuess = '';
+                createGrid('yourGrid'); createGrid('opponentGrid');
+                document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
+                document.querySelectorAll('.ml').forEach(k => k.classList.remove('correct', 'present', 'absent'));
+                document.getElementById('roundScore').textContent = `R${data.round} · ${data.yourScore} – ${data.opponentScore}`;
+            });
+
+            // Blitz: you solved a word — reset your grid with new word
+            socket.on('blitz_word_solved', (data) => {
+                const toast = document.getElementById('wordToast');
+                toast.textContent = 'SOLVED! +1';
+                toast.style.background = '#00ff88'; toast.style.color = '#000';
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    toast.textContent = 'NOT IN WORD LIST';
+                    toast.style.background = '#ff3366'; toast.style.color = '#fff';
+                }, 1400);
+                game.targetWord = data.newWord;
+                game.currentRow = 0; game.currentGuess = '';
+                createGrid('yourGrid');
+                document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
+                document.getElementById('blitzScore').textContent = `${data.yourSolves} – ${data.opponentSolves} SOLVED`;
+            });
+
+            // Blitz: you failed a word (6 guesses used) — new word assigned
+            socket.on('blitz_word_failed', (data) => {
+                game.targetWord = data.newWord;
+                game.currentRow = 0; game.currentGuess = '';
+                createGrid('yourGrid');
+                document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
+            });
+
+            // Blitz: opponent solved a word
+            socket.on('blitz_opponent_solved', (data) => {
+                document.getElementById('blitzScore').textContent = `${data.yourSolves} – ${data.opponentSolves} SOLVED`;
             });
 
             socket.on('disconnect', () => {
@@ -3140,19 +3194,6 @@ h1, h2, h3, h4, h5, h6,
                 el.classList.remove('correct', 'present', 'absent');
             });
             setupKeyboard();
-            
-            // MOBILE: show the TAP TO TYPE button immediately.
-            // On Android, also try auto-focus (works there without a gesture).
-            // On iOS, focus() from a socket event is blocked, so the button is the trigger.
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
-            if (isMobile) {
-                document.getElementById('mobileKeyboardBtn').style.display = 'block';
-                // Android can focus without a gesture; try it as a convenience
-                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-                if (!isIOS) {
-                    setTimeout(() => document.getElementById('mobileInput').focus(), 300);
-                }
-            }
         }
 
         function createGrid(id) {

@@ -244,32 +244,48 @@ io.on('connection', (socket) => {
                 
                 const match = {
                     id: matchId,
-                    mode: mode,  // FIXED: Store mode in match
+                    mode: mode,
                     players: [
-                        { 
-                            username: user.username, 
-                            socketId: socket.id, 
+                        {
+                            username: user.username,
+                            socketId: socket.id,
                             mmr: user.mmr,
                             betAmount,
                             guesses: [],
                             solved: false,
-                            solveTime: null
+                            solveTime: null,
+                            solves: 0,        // blitz: words solved count
+                            currentWord: null  // blitz: per-player word
                         },
-                        { 
-                            username: opponent.username, 
-                            socketId: opponent.socketId, 
+                        {
+                            username: opponent.username,
+                            socketId: opponent.socketId,
                             mmr: opponent.mmr,
                             betAmount,
                             guesses: [],
                             solved: false,
-                            solveTime: null
+                            solveTime: null,
+                            solves: 0,
+                            currentWord: null
                         }
                     ],
                     targetWord: getRandomWord(),
                     pot: betAmount * 2,
                     startTime: Date.now(),
-                    status: 'active'
+                    status: 'active',
+                    // best_of_3 fields
+                    scores: { [user.username]: 0, [opponent.username]: 0 },
+                    currentRound: 1,
+                    // blitz fields
+                    blitzTimeout: null
                 };
+
+                // Blitz: assign per-player words and start 5-min server timer
+                if (mode === 'blitz') {
+                    match.players[0].currentWord = getRandomWord();
+                    match.players[1].currentWord = getRandomWord();
+                    match.blitzTimeout = setTimeout(() => endBlitz(matchId), 5 * 60 * 1000);
+                }
                 
                 activeMatches.set(matchId, match);
                 socket.matchId = matchId;
@@ -309,15 +325,11 @@ io.on('connection', (socket) => {
                 
                 // Start match after brief delay
                 setTimeout(() => {
-                    socket.emit('match_start', { 
-                        targetWord: match.targetWord,
-                        mode: mode  // FIXED: Send mode to client
-                    });
+                    const p1Word = mode === 'blitz' ? match.players[0].currentWord : match.targetWord;
+                    const p2Word = mode === 'blitz' ? match.players[1].currentWord : match.targetWord;
+                    socket.emit('match_start', { targetWord: p1Word, mode });
                     if (opponentSocket) {
-                        opponentSocket.emit('match_start', { 
-                            targetWord: match.targetWord,
-                            mode: mode  // FIXED: Send mode to client
-                        });
+                        opponentSocket.emit('match_start', { targetWord: p2Word, mode });
                     }
                 }, 1000);
                 
@@ -369,43 +381,73 @@ io.on('connection', (socket) => {
                 return;
             }
             
+            // Use per-player word for blitz, shared word for other modes
+            const targetWord = match.mode === 'blitz' ? player.currentWord : match.targetWord;
+
             // Evaluate guess
-            const evaluation = evaluateGuess(guess, match.targetWord);
+            const evaluation = evaluateGuess(guess, targetWord);
             player.guesses.push({ word: guess, evaluation });
-            
+
             // Check if solved
             const solved = evaluation.every(e => e === 'correct');
             if (solved) {
                 player.solved = true;
                 player.solveTime = Date.now() - match.startTime;
             }
-            
+
             // Send result to player
             socket.emit('guess_result', {
                 guess: { word: guess, evaluation },
                 solved
             });
-            
+
             // Send to opponent
-            const opponentSocket = activeSockets.get(
-                match.players.find(p => p.username !== socket.username).username
-            );
+            const opponentPlayer = match.players.find(p => p.username !== socket.username);
+            const opponentSocket = activeSockets.get(opponentPlayer.username);
             if (opponentSocket) {
                 opponentSocket.emit('opponent_guess', {
                     guess: { word: guess, evaluation },
                     solved
                 });
             }
-            
-            // Check if match should end
+
+            // --- BLITZ MODE: independent grid reset on solve or 6-guess fail ---
+            if (match.mode === 'blitz') {
+                if (solved) {
+                    player.solves++;
+                    player.currentWord = getRandomWord();
+                    player.guesses = [];
+                    player.solved = false;
+                    player.solveTime = null;
+                    socket.emit('blitz_word_solved', {
+                        newWord: player.currentWord,
+                        yourSolves: player.solves,
+                        opponentSolves: opponentPlayer.solves
+                    });
+                    if (opponentSocket) {
+                        opponentSocket.emit('blitz_opponent_solved', {
+                            opponentSolves: player.solves,
+                            yourSolves: opponentPlayer.solves
+                        });
+                    }
+                } else if (player.guesses.length >= 6) {
+                    player.currentWord = getRandomWord();
+                    player.guesses = [];
+                    player.solved = false;
+                    socket.emit('blitz_word_failed', { newWord: player.currentWord });
+                }
+                return; // blitz never ends via guess — only by timer
+            }
+
+            // --- BEST_OF_3 / default mode end logic ---
             if (solved) {
-                // First to solve wins immediately
-                endMatch(socket.matchId);
+                if (match.mode === 'best_of_3') endRound(socket.matchId);
+                else endMatch(socket.matchId);
             } else if (player.guesses.length >= 6) {
-                // This player exhausted all guesses — end only when both are done
                 const bothFinished = match.players.every(p => p.solved || p.guesses.length >= 6);
                 if (bothFinished) {
-                    endMatch(socket.matchId);
+                    if (match.mode === 'best_of_3') endRound(socket.matchId);
+                    else endMatch(socket.matchId);
                 }
             }
         } catch (error) {
@@ -436,7 +478,9 @@ io.on('connection', (socket) => {
         // Handle active match
         if (socket.matchId) {
             const match = activeMatches.get(socket.matchId);
-            if (match && match.status === 'active') {
+            if (match && (match.status === 'active' || match.status === 'between_rounds')) {
+                // Cancel blitz timer if running
+                if (match.blitzTimeout) clearTimeout(match.blitzTimeout);
                 const opponent = match.players.find(p => p.username !== socket.username);
                 if (opponent) {
                     endMatch(socket.matchId, opponent.username);
@@ -478,10 +522,89 @@ function evaluateGuess(guess, target) {
     return result;
 }
 
+function endRound(matchId) {
+    const match = activeMatches.get(matchId);
+    if (!match || match.status !== 'active') return;
+    match.status = 'between_rounds';
+
+    const [p1, p2] = match.players;
+    const solver = match.players.find(p => p.solved);
+
+    let roundWinnerName = null;
+    if (solver) {
+        roundWinnerName = solver.username;
+    } else {
+        if (p1.guesses.length < p2.guesses.length) roundWinnerName = p1.username;
+        else if (p2.guesses.length < p1.guesses.length) roundWinnerName = p2.username;
+        // tie → no score change
+    }
+    if (roundWinnerName) match.scores[roundWinnerName]++;
+
+    const s1 = match.scores[p1.username];
+    const s2 = match.scores[p2.username];
+    const p1Sock = activeSockets.get(p1.username);
+    const p2Sock = activeSockets.get(p2.username);
+
+    if (p1Sock) p1Sock.emit('round_end', {
+        roundNumber: match.currentRound,
+        roundWon: roundWinnerName === p1.username,
+        yourScore: s1, opponentScore: s2,
+        targetWord: match.targetWord
+    });
+    if (p2Sock) p2Sock.emit('round_end', {
+        roundNumber: match.currentRound,
+        roundWon: roundWinnerName === p2.username,
+        yourScore: s2, opponentScore: s1,
+        targetWord: match.targetWord
+    });
+
+    console.log(`Round ${match.currentRound} ended: scores ${p1.username}=${s1} ${p2.username}=${s2}`);
+
+    if (s1 >= 2 || s2 >= 2) {
+        // Series over
+        const seriesWinner = s1 >= 2 ? p1.username : p2.username;
+        setTimeout(() => endMatch(matchId, seriesWinner), 4000);
+    } else {
+        // Start next round
+        match.currentRound++;
+        match.targetWord = getRandomWord();
+        match.players.forEach(p => { p.guesses = []; p.solved = false; p.solveTime = null; });
+        setTimeout(() => {
+            match.status = 'active';
+            if (p1Sock) p1Sock.emit('round_start', {
+                round: match.currentRound, targetWord: match.targetWord,
+                yourScore: s1, opponentScore: s2
+            });
+            if (p2Sock) p2Sock.emit('round_start', {
+                round: match.currentRound, targetWord: match.targetWord,
+                yourScore: s2, opponentScore: s1
+            });
+        }, 3500);
+    }
+}
+
+function endBlitz(matchId) {
+    const match = activeMatches.get(matchId);
+    if (!match || match.status === 'ended') return;
+    const [p1, p2] = match.players;
+    let winnerUsername;
+    if (p1.solves > p2.solves) winnerUsername = p1.username;
+    else if (p2.solves > p1.solves) winnerUsername = p2.username;
+    else winnerUsername = p1.username; // tie → p1 wins (arbitrary)
+    console.log(`Blitz ended: ${p1.username}=${p1.solves} ${p2.username}=${p2.solves} → winner: ${winnerUsername}`);
+    endMatch(matchId, winnerUsername);
+}
+
 function endMatch(matchId, forfeitWinner = null) {
     const match = activeMatches.get(matchId);
     if (!match) return;
-    
+
+    // Cancel blitz timer if still running
+    if (match.blitzTimeout) {
+        clearTimeout(match.blitzTimeout);
+        match.blitzTimeout = null;
+    }
+
     match.status = 'ended';
     
     const [player1, player2] = match.players;
