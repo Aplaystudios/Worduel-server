@@ -2145,15 +2145,145 @@ h1, h2, h3, h4, h5, h6,
     position: relative;
 }
 
-/* Mobile optimizations */
+/* ===================================================
+   MOBILE BATTLE LAYOUT — authoritative final block
+   Uses #battleScreen selectors for highest specificity
+   Layout: [header 36px] [grids flex:1] [keyboard ~130px]
+   =================================================== */
 @media (max-width: 768px) {
-    .battle-grid {
-        grid-template-columns: 1fr !important;
-        gap: 14px !important;
+
+    /* Battle container fills the viewport */
+    #battleScreen .battle-container {
+        position: fixed !important;
+        inset: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        padding: 0 !important;
     }
-    
-    .player-panel {
-        padding: 14px !important;
+
+    /* Tiny header — just timer and bet */
+    #battleScreen .battle-header {
+        flex-shrink: 0 !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+        padding: 0 10px !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-top: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        z-index: 2 !important;
+        position: relative !important;
+    }
+    #battleScreen .battle-timer { font-size: 14px !important; }
+    #battleScreen #roundScore, #battleScreen #blitzScore { font-size: 12px !important; }
+    #battleScreen .battle-pot  { font-size: 11px !important; }
+
+    /* Grid area: two columns, fills remaining space */
+    #battleScreen .battle-grid {
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 3px !important;
+        padding: 3px !important;
+        margin: 0 !important;
+    }
+
+    /* Each player panel is a flex column */
+    #battleScreen .player-panel {
+        overflow: hidden !important;
+        padding: 4px !important;
+        border-radius: 8px !important;
+        border-width: 2px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    #battleScreen .panel-header {
+        flex-shrink: 0 !important;
+        padding: 2px 4px !important;
+        margin-bottom: 3px !important;
+        border-radius: 5px !important;
+    }
+    #battleScreen .panel-name { font-size: 9px !important; }
+
+    /* Word grid: flex column so rows share the height */
+    #battleScreen .word-grid {
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+        position: static !important;
+    }
+
+    /* Each row is a flex row */
+    #battleScreen .word-row {
+        flex: 1 !important;
+        display: flex !important;
+        gap: 2px !important;
+        min-height: 0 !important;
+    }
+
+    /* Tiles are flexible — scale to fill available space */
+    #battleScreen .tile {
+        flex: 1 !important;
+        width: auto !important;
+        height: auto !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        font-size: 10px !important;
+        border-radius: 3px !important;
+        border: 1.5px solid rgba(100,100,100,0.35) !important;
+        padding: 0 !important;
+    }
+
+    /* Keyboard: fixed height, always at bottom, above overlays */
+    #battleScreen .keyboard {
+        flex-shrink: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 4px 3px 3px !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        border-bottom: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        position: relative !important;
+        z-index: 10 !important;
+    }
+    #battleScreen .keyboard-row { gap: 3px !important; margin-bottom: 3px !important; }
+    #battleScreen .key {
+        flex: 1 !important;
+        min-width: 0 !important;
+        max-width: 36px !important;
+        height: 36px !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+        border-radius: 4px !important;
+        position: relative !important;
+        z-index: 10 !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: rgba(255,255,255,0.1) !important;
+        touch-action: manipulation !important;
+    }
+    #battleScreen .key.wide {
+        flex: 1.5 !important;
+        max-width: 54px !important;
+        font-size: 9px !important;
     }
 }
     </style>
