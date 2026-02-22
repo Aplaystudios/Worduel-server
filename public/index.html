@@ -3049,6 +3049,9 @@ h1, h2, h3, h4, h5, h6,
             });
             
             document.onkeydown = (e) => {
+                // If the event came from mobileInput, skip it —
+                // the input event listener already called handleKey.
+                if (e.target && e.target.id === 'mobileInput') return;
                 if (e.key === 'Enter') handleKey('Enter');
                 else if (e.key === 'Backspace') handleKey('Backspace');
                 else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
