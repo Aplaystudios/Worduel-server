@@ -1539,7 +1539,54 @@ body::after {
     .panel-name {
         font-size: 10px !important;
     }
+
+    /* Prevent scrolling — everything must fit in the viewport */
+    .battle-container {
+        overflow: hidden !important;
+        height: 100dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+    }
+
+    /* Mobile letter tracker */
+    #mobileLetterTracker {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 3px !important;
+        margin: 4px 0 !important;
+    }
+
+    .ml-row {
+        display: flex !important;
+        gap: 3px !important;
+    }
+
+    .ml {
+        width: 24px !important;
+        height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        border-radius: 4px !important;
+        background: #2d3748 !important;
+        color: #9ca3af !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        transition: background 0.2s !important;
+    }
+
+    .ml.correct { background: var(--correct) !important; color: #000 !important; }
+    .ml.present { background: var(--present) !important; color: #000 !important; }
+    .ml.absent  { background: #1a202c !important; color: #4a5568 !important; }
 }
+}
+
+/* Hide letter tracker on desktop — the on-screen keyboard already shows colours */
+#mobileLetterTracker {
+    display: none;
 }
 
 .battle-header {
@@ -2349,6 +2396,19 @@ h1, h2, h3, h4, h5, h6,
                 </div>
             </div>
 
+            <!-- Mobile letter tracker: shows used-letter colours when on-screen keyboard is hidden -->
+            <div id="mobileLetterTracker">
+                <div class="ml-row">
+                    <span class="ml" data-key="Q">Q</span><span class="ml" data-key="W">W</span><span class="ml" data-key="E">E</span><span class="ml" data-key="R">R</span><span class="ml" data-key="T">T</span><span class="ml" data-key="Y">Y</span><span class="ml" data-key="U">U</span><span class="ml" data-key="I">I</span><span class="ml" data-key="O">O</span><span class="ml" data-key="P">P</span>
+                </div>
+                <div class="ml-row">
+                    <span class="ml" data-key="A">A</span><span class="ml" data-key="S">S</span><span class="ml" data-key="D">D</span><span class="ml" data-key="F">F</span><span class="ml" data-key="G">G</span><span class="ml" data-key="H">H</span><span class="ml" data-key="J">J</span><span class="ml" data-key="K">K</span><span class="ml" data-key="L">L</span>
+                </div>
+                <div class="ml-row">
+                    <span class="ml" data-key="Z">Z</span><span class="ml" data-key="X">X</span><span class="ml" data-key="C">C</span><span class="ml" data-key="V">V</span><span class="ml" data-key="B">B</span><span class="ml" data-key="N">N</span><span class="ml" data-key="M">M</span>
+                </div>
+            </div>
+
             <div class="keyboard">
                 <div class="keyboard-row">
                     <div class="key" data-key="Q">Q</div>
@@ -3007,6 +3067,11 @@ h1, h2, h3, h4, h5, h6,
             
             createGrid('yourGrid');
             createGrid('opponentGrid');
+
+            // Reset mobile letter tracker colours for new game
+            document.querySelectorAll('.ml').forEach(el => {
+                el.classList.remove('correct', 'present', 'absent');
+            });
             setupKeyboard();
             
             // MOBILE: show the TAP TO TYPE button immediately.
@@ -3131,17 +3196,34 @@ h1, h2, h3, h4, h5, h6,
 
         function updateKeyboard(guess, evaluation) {
             guess.split('').forEach((letter, i) => {
-                const key = document.querySelector(`[data-key="${letter}"]`);
                 const status = evaluation[i];
-                
-                if (status === 'correct') {
-                    key.classList.remove('present', 'absent');
-                    key.classList.add('correct');
-                } else if (status === 'present' && !key.classList.contains('correct')) {
-                    key.classList.remove('absent');
-                    key.classList.add('present');
-                } else if (status === 'absent' && !key.classList.contains('correct') && !key.classList.contains('present')) {
-                    key.classList.add('absent');
+
+                // Update on-screen keyboard key
+                const key = document.querySelector(`.key[data-key="${letter}"]`);
+                if (key) {
+                    if (status === 'correct') {
+                        key.classList.remove('present', 'absent');
+                        key.classList.add('correct');
+                    } else if (status === 'present' && !key.classList.contains('correct')) {
+                        key.classList.remove('absent');
+                        key.classList.add('present');
+                    } else if (status === 'absent' && !key.classList.contains('correct') && !key.classList.contains('present')) {
+                        key.classList.add('absent');
+                    }
+                }
+
+                // Update mobile letter tracker
+                const ml = document.querySelector(`.ml[data-key="${letter}"]`);
+                if (ml) {
+                    if (status === 'correct') {
+                        ml.classList.remove('present', 'absent');
+                        ml.classList.add('correct');
+                    } else if (status === 'present' && !ml.classList.contains('correct')) {
+                        ml.classList.remove('absent');
+                        ml.classList.add('present');
+                    } else if (status === 'absent' && !ml.classList.contains('correct') && !ml.classList.contains('present')) {
+                        ml.classList.add('absent');
+                    }
                 }
             });
         }
@@ -3202,8 +3284,11 @@ h1, h2, h3, h4, h5, h6,
             const btn          = document.getElementById('mobileKeyboardBtn');
             const battleScreen = document.getElementById('battleScreen');
 
-            // Letters + Backspace via input event (keydown is unreliable for
-            // Backspace on mobile; e.inputType is the correct detection method)
+            // Keep a sentinel space so backspace always has a character to delete.
+            // Without it the input is empty and browsers skip the input event
+            // entirely when backspace is pressed.
+            mobileInput.value = ' ';
+
             mobileInput.addEventListener('input', (e) => {
                 if (e.inputType === 'deleteContentBackward') {
                     handleKey('Backspace');
@@ -3212,7 +3297,8 @@ h1, h2, h3, h4, h5, h6,
                         if (/[A-Z]/.test(char)) handleKey(char);
                     }
                 }
-                e.target.value = '';
+                // Reset sentinel so next backspace also fires
+                e.target.value = ' ';
             });
 
             // Enter key (keydown IS reliable for Enter on mobile)
