@@ -140,6 +140,46 @@
             to { width: 100%; }
         }
 
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            15%  { transform: translateX(-6px); }
+            30%  { transform: translateX( 6px); }
+            45%  { transform: translateX(-5px); }
+            60%  { transform: translateX( 5px); }
+            75%  { transform: translateX(-3px); }
+            90%  { transform: translateX( 3px); }
+        }
+
+        .row-shake {
+            animation: shake 0.45s ease;
+        }
+
+        /* Toast notification */
+        #wordToast {
+            position: fixed;
+            top: 72px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: #ff3366;
+            color: #fff;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 1.5px;
+            padding: 10px 24px;
+            border-radius: 24px;
+            z-index: 99999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            white-space: nowrap;
+        }
+
+        #wordToast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
 /* ========================================
    CLASH ROYALE INSPIRED HOME SCREEN
    Replace HOME SCREEN CSS with this
@@ -1549,13 +1589,19 @@ body::after {
         justify-content: flex-start !important;
     }
 
-    /* Mobile letter tracker */
+    /* Mobile letter tracker — fixed at top of screen */
     #mobileLetterTracker {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         gap: 3px !important;
-        margin: 4px 0 !important;
+        padding: 6px 0 4px !important;
+        margin: 0 !important;
+    }
+
+    /* Push battle content below the fixed tracker (~60px tall) */
+    #battleScreen .battle-container {
+        padding-top: 62px !important;
     }
 
     .ml-row {
@@ -1587,6 +1633,14 @@ body::after {
 /* Hide letter tracker on desktop — the on-screen keyboard already shows colours */
 #mobileLetterTracker {
     display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9998;
+    background: rgba(10, 14, 20, 0.92);
+    padding: 6px 0 4px;
+    border-bottom: 1px solid #2d3748;
 }
 
 .battle-header {
@@ -2467,6 +2521,9 @@ h1, h2, h3, h4, h5, h6,
         </div>
     </div>
 
+    <!-- Toast for invalid words -->
+    <div id="wordToast">NOT IN WORD LIST</div>
+
     <!-- RESULT MODAL -->
     <div class="result-modal" id="resultModal">
         <div class="result-container">
@@ -2686,7 +2743,13 @@ h1, h2, h3, h4, h5, h6,
         ]);
 
         function isValidWord(word) {
-            return /^[A-Za-z]{5}$/.test(word);
+            if (!word || word.length !== 5) return false;
+            // For multiplayer the server validates; for training use client-side list.
+            // This function is called before submitGuess so just check length here —
+            // server emits invalid_word if not in dictionary for multiplayer,
+            // and training mode uses the same check via VALID_WORDS below.
+            if (game.isTraining) return VALID_WORDS.has(word.toUpperCase());
+            return true; // length-only check; server validates word in multiplayer
         }
 
         let aiInterval = null;
@@ -2959,6 +3022,10 @@ h1, h2, h3, h4, h5, h6,
                 }
             });
 
+            socket.on('invalid_word', () => {
+                showInvalidWord();
+            });
+
             socket.on('guess_result', (data) => {
                 revealGuess(data.guess, game.currentRow, 'yourGrid');
                 updateKeyboard(game.currentGuess, data.guess.evaluation);
@@ -3143,10 +3210,29 @@ h1, h2, h3, h4, h5, h6,
             }
         }
 
+        let toastTimer = null;
+        function showInvalidWord() {
+            // Shake current row
+            const rowEls = document.querySelectorAll(`#yourGrid-${game.currentRow}-0, #yourGrid-${game.currentRow}-1, #yourGrid-${game.currentRow}-2, #yourGrid-${game.currentRow}-3, #yourGrid-${game.currentRow}-4`);
+            rowEls.forEach(el => {
+                if (el) {
+                    el.classList.remove('row-shake');
+                    void el.offsetWidth; // force reflow
+                    el.classList.add('row-shake');
+                    el.addEventListener('animationend', () => el.classList.remove('row-shake'), { once: true });
+                }
+            });
+            // Show toast
+            const toast = document.getElementById('wordToast');
+            if (toastTimer) clearTimeout(toastTimer);
+            toast.classList.add('show');
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+        }
+
         function submitGuess() {
-            // Validate word first
+            // Client-side: only check length; server validates the word
             if (!isValidWord(game.currentGuess)) {
-                alert('NOT A WORD');
+                showInvalidWord();
                 return;
             }
             

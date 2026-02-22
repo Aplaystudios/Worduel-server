@@ -4,6 +4,7 @@ const socketIo = require('socket.io');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const VALID_WORDS = require('./words');
 
 const app = express();
 const server = http.createServer(app);
@@ -355,10 +356,16 @@ io.on('connection', (socket) => {
             if (!player || player.solved) return;
             
             const guess = data.word.toUpperCase();
-            
-            // Validate guess
+
+            // Validate guess length
             if (guess.length !== 5) {
                 socket.emit('error', { message: 'Guess must be 5 letters' });
+                return;
+            }
+
+            // Validate guess is a real word
+            if (!VALID_WORDS.has(guess)) {
+                socket.emit('invalid_word', { word: guess });
                 return;
             }
             
