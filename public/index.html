@@ -2350,28 +2350,6 @@ h1, h2, h3, h4, h5, h6,
             </div>
 
             <div class="keyboard">
-                <!-- label natively focuses mobileInput when tapped — no JS needed,
-                     guaranteed to open the keyboard on every mobile browser -->
-                <label
-                    id="mobileKeyboardBtn"
-                    for="mobileInput"
-                    style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #1e3a66; padding: 14px 32px; border-radius: 30px; font-size: 16px; font-weight: 800; font-family: 'Barlow', sans-serif; letter-spacing: 1px; cursor: pointer; z-index: 10001; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
-                    ⌨️ TAP TO TYPE
-                </label>
-
-                <!-- opacity:0.01 not 0 — iOS blocks the keyboard for fully invisible inputs.
-                     Sized and positioned so it sits behind the label as a real tap target. -->
-                <input
-                    type="text"
-                    id="mobileInput"
-                    autocomplete="off"
-                    autocapitalize="characters"
-                    autocorrect="off"
-                    spellcheck="false"
-                    inputmode="text"
-                    style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 160px; height: 52px; opacity: 0.01; border: none; outline: none; background: transparent; font-size: 16px; z-index: 10000;"
-                />
-                
                 <div class="keyboard-row">
                     <div class="key" data-key="Q">Q</div>
                     <div class="key" data-key="W">W</div>
@@ -2407,6 +2385,25 @@ h1, h2, h3, h4, h5, h6,
                     <div class="key wide" data-key="Backspace">⌫</div>
                 </div>
             </div>
+
+            <!-- Mobile keyboard elements — OUTSIDE .keyboard so the CSS
+                 display:none !important on mobile does not hide them -->
+            <label
+                id="mobileKeyboardBtn"
+                for="mobileInput"
+                style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #1e3a66; padding: 14px 32px; border-radius: 30px; font-size: 16px; font-weight: 800; font-family: 'Barlow', sans-serif; letter-spacing: 1px; cursor: pointer; z-index: 10001; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+                ⌨️ TAP TO TYPE
+            </label>
+            <input
+                type="text"
+                id="mobileInput"
+                autocomplete="off"
+                autocapitalize="characters"
+                autocorrect="off"
+                spellcheck="false"
+                inputmode="text"
+                style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 160px; height: 52px; opacity: 0.01; border: none; outline: none; background: transparent; font-size: 16px; z-index: 10000;"
+            />
         </div>
     </div>
 
