@@ -2350,17 +2350,17 @@ h1, h2, h3, h4, h5, h6,
             </div>
 
             <div class="keyboard">
-                <!-- Button shown on mobile to open native keyboard.
-                     inline onclick is required — iOS only opens the keyboard
-                     from a direct user gesture handler. -->
-                <button
+                <!-- label natively focuses mobileInput when tapped — no JS needed,
+                     guaranteed to open the keyboard on every mobile browser -->
+                <label
                     id="mobileKeyboardBtn"
-                    onclick="document.getElementById('mobileInput').focus()"
-                    style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #1e3a66; padding: 14px 32px; border-radius: 30px; font-size: 16px; font-weight: 800; font-family: 'Barlow', sans-serif; letter-spacing: 1px; border: none; cursor: pointer; z-index: 10000; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
+                    for="mobileInput"
+                    style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #1e3a66; padding: 14px 32px; border-radius: 30px; font-size: 16px; font-weight: 800; font-family: 'Barlow', sans-serif; letter-spacing: 1px; cursor: pointer; z-index: 10001; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
                     ⌨️ TAP TO TYPE
-                </button>
+                </label>
 
-                <!-- Hidden input that receives native keyboard input on mobile -->
+                <!-- opacity:0.01 not 0 — iOS blocks the keyboard for fully invisible inputs.
+                     Sized and positioned so it sits behind the label as a real tap target. -->
                 <input
                     type="text"
                     id="mobileInput"
@@ -2369,7 +2369,7 @@ h1, h2, h3, h4, h5, h6,
                     autocorrect="off"
                     spellcheck="false"
                     inputmode="text"
-                    style="position: fixed; top: 50%; left: 50%; width: 2px; height: 2px; opacity: 0; border: none; outline: none; background: transparent; font-size: 16px; transform: translate(-50%,-50%);"
+                    style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 160px; height: 52px; opacity: 0.01; border: none; outline: none; background: transparent; font-size: 16px; z-index: 10000;"
                 />
                 
                 <div class="keyboard-row">
