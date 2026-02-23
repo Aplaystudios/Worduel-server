@@ -3367,12 +3367,17 @@ h1, h2, h3, h4, h5, h6,
 
         function setupKeyboard() {
             document.querySelectorAll('.key').forEach(key => {
-                // pointerdown fires instantly on first touch — no 300ms delay,
-                // no stacking-context blocks. preventDefault stops ghost clicks.
-                key.addEventListener('pointerdown', (e) => {
+                // onclick uses = assignment so it replaces any previous handler —
+                // safe to call setupKeyboard() multiple times (once per match).
+                key.onclick = () => handleKey(key.dataset.key);
+
+                // ontouchstart fires instantly on mobile (no 300ms click delay).
+                // preventDefault stops the browser firing onclick afterwards (no double-fire).
+                key.ontouchstart = (e) => {
                     e.preventDefault();
                     handleKey(key.dataset.key);
-                });
+                };
+
                 key.classList.remove('correct', 'present', 'absent');
             });
             
