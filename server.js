@@ -1,96 +1,49 @@
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const path = require('path');
-const VALID_WORDS = require('./words');
+'use strict';
 
-const app = express();
+const express   = require('express');
+const http      = require('http');
+const socketIo  = require('socket.io');
+const bcrypt    = require('bcryptjs');
+const jwt       = require('jsonwebtoken');
+
+const { getRank, getRandomWord, evaluateGuess, calculateMMRChange } = require('./src/game');
+const VALID_WORDS = require('./src/words');
+
+// ── Server setup ────────────────────────────────────────────────────────────
+const app    = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    },
+const io     = socketIo(server, {
+    cors: { origin: '*', methods: ['GET', 'POST'] },
     transports: ['websocket', 'polling'],
-    pingTimeout: 60000,
+    pingTimeout:  60000,
     pingInterval: 25000
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT       = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'worduel-secret-key-change-in-production';
 
-// In-memory database (use real DB in production)
-const users = new Map();
-const activeSockets = new Map();
+// ── In-memory store (replace with a real DB before production) ──────────────
+const users           = new Map(); // username.toLowerCase() → user object
+const activeSockets   = new Map(); // username → socket
 const matchmakingQueue = [];
-const activeMatches = new Map();
+const activeMatches   = new Map(); // matchId → match object
 
-// Word list
-const WORDS = [
-    'CRANE', 'SLATE', 'TRACE', 'STARE', 'RAISE', 'SHINE', 'STONE', 'BRAVE',
-    'GLOVE', 'PROVE', 'SHARE', 'SPARE', 'PHASE', 'SHAPE', 'GRAPE', 'TRADE',
-    'CHASE', 'HOUSE', 'MOUSE', 'PLACE', 'PLANT', 'PIANO', 'CRIME', 'PRIME',
-    'CLIMB', 'ROUND', 'SOUND', 'POUND', 'MOUNT', 'CLOUD', 'PROUD', 'FLOUR',
-    'WORLD', 'WORTH', 'WRITE', 'WRONG', 'WROTE', 'FRESH', 'FLESH', 'FLASH',
-    'TRASH', 'CRASH', 'STACK', 'TRACK', 'TRICK', 'TRUCK', 'TRUNK', 'TRUST'
-];
-
-// Rank system
-const RANKS = [
-    { name: 'Bronze', icon: '🥉', minMMR: 0 },
-    { name: 'Silver', icon: '🥈', minMMR: 1100 },
-    { name: 'Gold', icon: '🥇', minMMR: 1300 },
-    { name: 'Platinum', icon: '💎', minMMR: 1500 },
-    { name: 'Diamond', icon: '💠', minMMR: 1700 },
-    { name: 'Master', icon: '⭐', minMMR: 1900 },
-    { name: 'Grandmaster', icon: '🌟', minMMR: 2100 },
-    { name: 'Legend', icon: '👑', minMMR: 2300 }
-];
-
-// Middleware
+// ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.static('public'));
 
-// Helper Functions
-function getRank(mmr) {
-    for (let i = RANKS.length - 1; i >= 0; i--) {
-        if (mmr >= RANKS[i].minMMR) {
-            return RANKS[i];
-        }
-    }
-    return RANKS[0];
-}
+// ── REST API ─────────────────────────────────────────────────────────────────
 
-function getRandomWord() {
-    return WORDS[Math.floor(Math.random() * WORDS.length)];
-}
-
-function calculateMMRChange(playerMMR, opponentMMR, won) {
-    const K = 32;
-    const expectedScore = 1 / (1 + Math.pow(10, (opponentMMR - playerMMR) / 400));
-    const actualScore = won ? 1 : 0;
-    return Math.round(K * (actualScore - expectedScore));
-}
-
-// REST API Endpoints
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
-        if (!username || !password) {
+        if (!username || !password)
             return res.json({ success: false, error: 'Username and password required' });
-        }
-        
-        if (password.length < 6) {
+        if (password.length < 6)
             return res.json({ success: false, error: 'Password must be at least 6 characters' });
-        }
-        
-        if (users.has(username.toLowerCase())) {
+        if (users.has(username.toLowerCase()))
             return res.json({ success: false, error: 'Username already exists' });
-        }
-        
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = {
             username,
@@ -101,25 +54,11 @@ app.post('/api/register', async (req, res) => {
             gamesWon: 0,
             createdAt: Date.now()
         };
-        
         users.set(username.toLowerCase(), user);
-        const rank = getRank(user.mmr);
-        
+
         const token = jwt.sign({ username: user.username }, JWT_SECRET);
-        
-        res.json({ 
-            success: true, 
-            token,
-            user: {
-                username: user.username,
-                balance: user.balance,
-                mmr: user.mmr,
-                rank,
-                gamesPlayed: user.gamesPlayed,
-                gamesWon: user.gamesWon
-            }
-        });
-    } catch (error) {
+        res.json({ success: true, token, user: publicProfile(user) });
+    } catch {
         res.json({ success: false, error: 'Registration failed' });
     }
 });
@@ -127,399 +66,237 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
         const user = users.get(username.toLowerCase());
-        if (!user) {
-            return res.json({ success: false, error: 'Invalid credentials' });
-        }
-        
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-            return res.json({ success: false, error: 'Invalid credentials' });
-        }
-        
-        const rank = getRank(user.mmr);
+        if (!user) return res.json({ success: false, error: 'Invalid credentials' });
+
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) return res.json({ success: false, error: 'Invalid credentials' });
+
         const token = jwt.sign({ username: user.username }, JWT_SECRET);
-        
-        res.json({ 
-            success: true, 
-            token,
-            user: {
-                username: user.username,
-                balance: user.balance,
-                mmr: user.mmr,
-                rank,
-                gamesPlayed: user.gamesPlayed,
-                gamesWon: user.gamesWon
-            }
-        });
-    } catch (error) {
+        res.json({ success: true, token, user: publicProfile(user) });
+    } catch {
         res.json({ success: false, error: 'Login failed' });
     }
 });
 
-// Socket.IO Connection
+app.get('/health', (_req, res) => {
+    res.json({
+        status: 'ok',
+        users:        users.size,
+        activeMatches: activeMatches.size,
+        queueSize:    matchmakingQueue.length
+    });
+});
+
+// ── Socket.IO ────────────────────────────────────────────────────────────────
+
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
-    
+
+    // ── authenticate ──────────────────────────────────────────────────────
     socket.on('authenticate', (data) => {
         try {
             const decoded = jwt.verify(data.token, JWT_SECRET);
-            const user = users.get(decoded.username.toLowerCase());
-            
-            if (user) {
-                socket.username = user.username;
-                socket.user = user;
-                activeSockets.set(user.username, socket);
-
-                socket.emit('authenticated', {
-                    username: user.username,
-                    balance: user.balance,
-                    mmr: user.mmr,
-                    rank: getRank(user.mmr),
-                    gamesPlayed: user.gamesPlayed,
-                    gamesWon: user.gamesWon
-                });
-
-                console.log(`User authenticated: ${user.username}`);
-            } else {
-                // Use auth_error so the client knows to redirect to login
+            const user    = users.get(decoded.username.toLowerCase());
+            if (!user) {
                 socket.emit('auth_error', { message: 'Session expired. Please log in again.' });
+                return;
             }
-        } catch (error) {
+            socket.username = user.username;
+            socket.user     = user;
+            activeSockets.set(user.username, socket);
+            socket.emit('authenticated', publicProfile(user));
+            console.log('User authenticated:', user.username);
+        } catch {
             socket.emit('error', { message: 'Invalid token' });
         }
     });
-    
-    // FIXED: Added mode parameter
+
+    // ── find_match ────────────────────────────────────────────────────────
     socket.on('find_match', (data) => {
         try {
             const { betAmount, mode } = data;
             const user = socket.user;
-            
-            if (!user) {
-                socket.emit('error', { message: 'Not authenticated' });
-                return;
-            }
-            
-            if (betAmount < 10 || betAmount > 500) {
-                socket.emit('error', { message: 'Bet must be between $10 and $500' });
-                return;
-            }
-            
-            if (user.balance < betAmount) {
-                socket.emit('error', { message: 'Insufficient balance' });
-                return;
-            }
-            
-            // FIXED: Validate mode
-            const validModes = ['best_of_3', 'blitz'];
-            if (!mode || !validModes.includes(mode)) {
-                socket.emit('error', { message: 'Invalid game mode' });
-                return;
-            }
-            
-            // Check if already in queue
-            const alreadyInQueue = matchmakingQueue.find(p => p.username === user.username);
-            if (alreadyInQueue) {
-                socket.emit('error', { message: 'Already in matchmaking' });
-                return;
-            }
-            
-            const mmrRange = [user.mmr - 200, user.mmr + 200];
-            
-            // FIXED: Match only with same mode
-            const matchIndex = matchmakingQueue.findIndex(p => 
-                p.betAmount === betAmount &&
-                p.mode === mode &&
-                p.mmr >= mmrRange[0] &&
-                p.mmr <= mmrRange[1] &&
-                p.username !== user.username
-            );
-            
-            if (matchIndex !== -1) {
-                // Match found!
-                const opponent = matchmakingQueue.splice(matchIndex, 1)[0];
-                const matchId = `match_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                
-                const match = {
-                    id: matchId,
-                    mode: mode,
-                    players: [
-                        {
-                            username: user.username,
-                            socketId: socket.id,
-                            mmr: user.mmr,
-                            betAmount,
-                            guesses: [],
-                            solved: false,
-                            solveTime: null,
-                            solves: 0,        // blitz: words solved count
-                            currentWord: null  // blitz: per-player word
-                        },
-                        {
-                            username: opponent.username,
-                            socketId: opponent.socketId,
-                            mmr: opponent.mmr,
-                            betAmount,
-                            guesses: [],
-                            solved: false,
-                            solveTime: null,
-                            solves: 0,
-                            currentWord: null
-                        }
-                    ],
-                    targetWord: getRandomWord(),
-                    pot: betAmount * 2,
-                    startTime: Date.now(),
-                    status: 'active',
-                    // best_of_3 fields
-                    scores: { [user.username]: 0, [opponent.username]: 0 },
-                    currentRound: 1,
-                    // blitz fields
-                    blitzTimeout: null
-                };
 
-                // Blitz: assign per-player words and start 5-min server timer
-                if (mode === 'blitz') {
-                    match.players[0].currentWord = getRandomWord();
-                    match.players[1].currentWord = getRandomWord();
-                    match.blitzTimeout = setTimeout(() => endBlitz(matchId), 5 * 60 * 1000);
-                }
-                
-                activeMatches.set(matchId, match);
-                socket.matchId = matchId;
-                
-                const opponentSocket = activeSockets.get(opponent.username);
-                if (opponentSocket) {
-                    opponentSocket.matchId = matchId;
-                }
-                
-                // Notify both players
-                const player1Data = {
-                    matchId,
-                    mode: mode,  // FIXED: Include mode
-                    opponent: {
-                        username: opponent.username,
-                        mmr: opponent.mmr,
-                        rank: getRank(opponent.mmr)
-                    },
-                    pot: match.pot
-                };
-                
-                const player2Data = {
-                    matchId,
-                    mode: mode,  // FIXED: Include mode
-                    opponent: {
-                        username: user.username,
-                        mmr: user.mmr,
-                        rank: getRank(user.mmr)
-                    },
-                    pot: match.pot
-                };
-                
-                socket.emit('match_found', player1Data);
-                if (opponentSocket) {
-                    opponentSocket.emit('match_found', player2Data);
-                }
-                
-                // Start match after brief delay
-                setTimeout(() => {
-                    const p1Word = mode === 'blitz' ? match.players[0].currentWord : match.targetWord;
-                    const p2Word = mode === 'blitz' ? match.players[1].currentWord : match.targetWord;
-                    socket.emit('match_start', { targetWord: p1Word, mode });
-                    if (opponentSocket) {
-                        opponentSocket.emit('match_start', { targetWord: p2Word, mode });
-                    }
-                }, 1000);
-                
+            if (!user)                                return socket.emit('error', { message: 'Not authenticated' });
+            if (betAmount < 10 || betAmount > 500)    return socket.emit('error', { message: 'Bet must be between $10 and $500' });
+            if (user.balance < betAmount)             return socket.emit('error', { message: 'Insufficient balance' });
+            if (!['best_of_3', 'blitz'].includes(mode)) return socket.emit('error', { message: 'Invalid game mode' });
+            if (matchmakingQueue.find(p => p.username === user.username))
+                return socket.emit('error', { message: 'Already in matchmaking' });
+
+            const mmrRange   = [user.mmr - 200, user.mmr + 200];
+            const matchIndex = matchmakingQueue.findIndex(p =>
+                p.betAmount === betAmount &&
+                p.mode      === mode      &&
+                p.mmr >= mmrRange[0] && p.mmr <= mmrRange[1] &&
+                p.username  !== user.username
+            );
+
+            if (matchIndex !== -1) {
+                const opponent = matchmakingQueue.splice(matchIndex, 1)[0];
+                createMatch(socket, user, opponent, betAmount, mode);
             } else {
-                // No match found, add to queue
                 matchmakingQueue.push({
                     username: user.username,
                     socketId: socket.id,
-                    betAmount,
-                    mode: mode,  // FIXED: Store mode in queue
-                    mmr: user.mmr,
+                    betAmount, mode,
+                    mmr:  user.mmr,
                     rank: getRank(user.mmr),
                     mmrRange
                 });
-                
-                socket.emit('matchmaking', { 
-                    message: 'Searching for opponent...',
-                    mode: mode  // FIXED: Echo mode back
-                });
+                socket.emit('matchmaking', { message: 'Searching for opponent...', mode });
             }
-        } catch (error) {
-            console.error('Find match error:', error);
+        } catch (err) {
+            console.error('find_match error:', err);
             socket.emit('error', { message: 'Matchmaking failed' });
         }
     });
-    
+
+    // ── submit_guess ──────────────────────────────────────────────────────
     socket.on('submit_guess', (data) => {
         try {
             const match = activeMatches.get(socket.matchId);
-            if (!match || match.status !== 'active') {
-                socket.emit('error', { message: 'No active match' });
-                return;
-            }
-            
+            if (!match || match.status !== 'active')
+                return socket.emit('error', { message: 'No active match' });
+
             const player = match.players.find(p => p.username === socket.username);
             if (!player || player.solved) return;
-            
+
             const guess = data.word.toUpperCase();
+            if (guess.length !== 5)      return socket.emit('error', { message: 'Guess must be 5 letters' });
+            if (!VALID_WORDS.has(guess)) return socket.emit('invalid_word', { word: guess });
 
-            // Validate guess length
-            if (guess.length !== 5) {
-                socket.emit('error', { message: 'Guess must be 5 letters' });
-                return;
-            }
-
-            // Validate guess is a real word
-            if (!VALID_WORDS.has(guess)) {
-                socket.emit('invalid_word', { word: guess });
-                return;
-            }
-            
-            // Use per-player word for blitz, shared word for other modes
             const targetWord = match.mode === 'blitz' ? player.currentWord : match.targetWord;
-
-            // Evaluate guess
             const evaluation = evaluateGuess(guess, targetWord);
             player.guesses.push({ word: guess, evaluation });
 
-            // Check if solved
             const solved = evaluation.every(e => e === 'correct');
             if (solved) {
-                player.solved = true;
+                player.solved    = true;
                 player.solveTime = Date.now() - match.startTime;
             }
 
-            // Send result to player
-            socket.emit('guess_result', {
-                guess: { word: guess, evaluation },
-                solved
-            });
+            socket.emit('guess_result', { guess: { word: guess, evaluation }, solved });
 
-            // Send to opponent
-            const opponentPlayer = match.players.find(p => p.username !== socket.username);
-            const opponentSocket = activeSockets.get(opponentPlayer.username);
-            if (opponentSocket) {
-                opponentSocket.emit('opponent_guess', {
-                    guess: { word: guess, evaluation },
-                    solved
-                });
-            }
+            const opp     = match.players.find(p => p.username !== socket.username);
+            const oppSock = activeSockets.get(opp.username);
+            if (oppSock) oppSock.emit('opponent_guess', { guess: { word: guess, evaluation }, solved });
 
-            // --- BLITZ MODE: independent grid reset on solve or 6-guess fail ---
+            // Blitz: independent per-player resets
             if (match.mode === 'blitz') {
                 if (solved) {
                     player.solves++;
-                    player.currentWord = getRandomWord();
-                    player.guesses = [];
-                    player.solved = false;
-                    player.solveTime = null;
+                    Object.assign(player, { currentWord: getRandomWord(), guesses: [], solved: false, solveTime: null });
                     socket.emit('blitz_word_solved', {
-                        newWord: player.currentWord,
-                        yourSolves: player.solves,
-                        opponentSolves: opponentPlayer.solves
+                        newWord:        player.currentWord,
+                        yourSolves:     player.solves,
+                        opponentSolves: opp.solves
                     });
-                    if (opponentSocket) {
-                        opponentSocket.emit('blitz_opponent_solved', {
-                            opponentSolves: player.solves,
-                            yourSolves: opponentPlayer.solves
-                        });
-                    }
+                    if (oppSock) oppSock.emit('blitz_opponent_solved', {
+                        opponentSolves: player.solves,
+                        yourSolves:     opp.solves
+                    });
                 } else if (player.guesses.length >= 6) {
-                    player.currentWord = getRandomWord();
-                    player.guesses = [];
-                    player.solved = false;
+                    Object.assign(player, { currentWord: getRandomWord(), guesses: [], solved: false });
                     socket.emit('blitz_word_failed', { newWord: player.currentWord });
                 }
-                return; // blitz never ends via guess — only by timer
+                return;
             }
 
-            // --- BEST_OF_3 / default mode end logic ---
+            // Best-of-3 / standard end logic
             if (solved) {
                 if (match.mode === 'best_of_3') endRound(socket.matchId);
                 else endMatch(socket.matchId);
             } else if (player.guesses.length >= 6) {
-                const bothFinished = match.players.every(p => p.solved || p.guesses.length >= 6);
-                if (bothFinished) {
+                const bothDone = match.players.every(p => p.solved || p.guesses.length >= 6);
+                if (bothDone) {
                     if (match.mode === 'best_of_3') endRound(socket.matchId);
                     else endMatch(socket.matchId);
                 }
             }
-        } catch (error) {
-            console.error('Submit guess error:', error);
+        } catch (err) {
+            console.error('submit_guess error:', err);
             socket.emit('error', { message: 'Failed to submit guess' });
         }
     });
-    
-    // Handle both names (frontend uses 'cancel_search')
-    function handleCancelMatchmaking() {
-        const index = matchmakingQueue.findIndex(p => p.socketId === socket.id);
-        if (index !== -1) {
-            matchmakingQueue.splice(index, 1);
-        }
+
+    // ── cancel_search / cancel_matchmaking ────────────────────────────────
+    function handleCancel() {
+        const i = matchmakingQueue.findIndex(p => p.socketId === socket.id);
+        if (i !== -1) matchmakingQueue.splice(i, 1);
     }
-    socket.on('cancel_search', handleCancelMatchmaking);
-    socket.on('cancel_matchmaking', handleCancelMatchmaking);
-    
+    socket.on('cancel_search',      handleCancel);
+    socket.on('cancel_matchmaking', handleCancel);
+
+    // ── disconnect ────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
-        
-        // Remove from queue
-        const queueIndex = matchmakingQueue.findIndex(p => p.socketId === socket.id);
-        if (queueIndex !== -1) {
-            matchmakingQueue.splice(queueIndex, 1);
-        }
-        
-        // Handle active match
+        handleCancel();
+
         if (socket.matchId) {
             const match = activeMatches.get(socket.matchId);
             if (match && (match.status === 'active' || match.status === 'between_rounds')) {
-                // Cancel blitz timer if running
                 if (match.blitzTimeout) clearTimeout(match.blitzTimeout);
-                const opponent = match.players.find(p => p.username !== socket.username);
-                if (opponent) {
-                    endMatch(socket.matchId, opponent.username);
-                }
+                const opp = match.players.find(p => p.username !== socket.username);
+                if (opp) endMatch(socket.matchId, opp.username);
             }
         }
-        
-        if (socket.username) {
-            activeSockets.delete(socket.username);
-        }
+
+        if (socket.username) activeSockets.delete(socket.username);
     });
 });
 
-function evaluateGuess(guess, target) {
-    const result = new Array(5).fill('absent');
-    const targetLetters = target.split('');
-    const guessLetters = guess.split('');
-    
-    // First pass: mark correct positions
-    for (let i = 0; i < 5; i++) {
-        if (guessLetters[i] === targetLetters[i]) {
-            result[i] = 'correct';
-            targetLetters[i] = null;
-            guessLetters[i] = null;
-        }
+// ── Game flow helpers ────────────────────────────────────────────────────────
+
+function createMatch(socket, user, opponent, betAmount, mode) {
+    const matchId      = `match_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const oppSocket    = activeSockets.get(opponent.username);
+
+    const makePlayer = (u, sockId) => ({
+        username: u.username, socketId: sockId,
+        mmr: u.mmr, betAmount,
+        guesses: [], solved: false, solveTime: null,
+        solves: 0, currentWord: null
+    });
+
+    const match = {
+        id: matchId, mode,
+        players: [
+            makePlayer(user,     socket.id),
+            makePlayer(opponent, opponent.socketId)
+        ],
+        targetWord:   getRandomWord(),
+        pot:          betAmount * 2,
+        startTime:    Date.now(),
+        status:       'active',
+        scores:       { [user.username]: 0, [opponent.username]: 0 },
+        currentRound: 1,
+        blitzTimeout: null
+    };
+
+    if (mode === 'blitz') {
+        match.players[0].currentWord = getRandomWord();
+        match.players[1].currentWord = getRandomWord();
+        match.blitzTimeout = setTimeout(() => endBlitz(matchId), 5 * 60 * 1000);
     }
-    
-    // Second pass: mark present letters
-    for (let i = 0; i < 5; i++) {
-        if (guessLetters[i] !== null) {
-            const targetIndex = targetLetters.indexOf(guessLetters[i]);
-            if (targetIndex !== -1) {
-                result[i] = 'present';
-                targetLetters[targetIndex] = null;
-            }
-        }
-    }
-    
-    return result;
+
+    activeMatches.set(matchId, match);
+    socket.matchId = matchId;
+    if (oppSocket) oppSocket.matchId = matchId;
+
+    const oppProfile = { username: opponent.username, mmr: opponent.mmr, rank: getRank(opponent.mmr) };
+    const myProfile  = { username: user.username,     mmr: user.mmr,     rank: getRank(user.mmr)     };
+
+    socket.emit('match_found',    { matchId, mode, opponent: oppProfile, pot: match.pot });
+    if (oppSocket) oppSocket.emit('match_found', { matchId, mode, opponent: myProfile,  pot: match.pot });
+
+    setTimeout(() => {
+        const p1Word = mode === 'blitz' ? match.players[0].currentWord : match.targetWord;
+        const p2Word = mode === 'blitz' ? match.players[1].currentWord : match.targetWord;
+        socket.emit('match_start',    { targetWord: p1Word, mode });
+        if (oppSocket) oppSocket.emit('match_start', { targetWord: p2Word, mode });
+    }, 1000);
 }
 
 function endRound(matchId) {
@@ -527,58 +304,39 @@ function endRound(matchId) {
     if (!match || match.status !== 'active') return;
     match.status = 'between_rounds';
 
-    const [p1, p2] = match.players;
-    const solver = match.players.find(p => p.solved);
+    const [p1, p2]   = match.players;
+    const solver      = match.players.find(p => p.solved);
+    let roundWinner   = null;
 
-    let roundWinnerName = null;
     if (solver) {
-        roundWinnerName = solver.username;
+        roundWinner = solver.username;
     } else {
-        if (p1.guesses.length < p2.guesses.length) roundWinnerName = p1.username;
-        else if (p2.guesses.length < p1.guesses.length) roundWinnerName = p2.username;
-        // tie → no score change
+        if      (p1.guesses.length < p2.guesses.length) roundWinner = p1.username;
+        else if (p2.guesses.length < p1.guesses.length) roundWinner = p2.username;
+        // tie → no point awarded
     }
-    if (roundWinnerName) match.scores[roundWinnerName]++;
+    if (roundWinner) match.scores[roundWinner]++;
 
-    const s1 = match.scores[p1.username];
-    const s2 = match.scores[p2.username];
-    const p1Sock = activeSockets.get(p1.username);
-    const p2Sock = activeSockets.get(p2.username);
+    const s1    = match.scores[p1.username];
+    const s2    = match.scores[p2.username];
+    const s1Sok = activeSockets.get(p1.username);
+    const s2Sok = activeSockets.get(p2.username);
 
-    if (p1Sock) p1Sock.emit('round_end', {
-        roundNumber: match.currentRound,
-        roundWon: roundWinnerName === p1.username,
-        yourScore: s1, opponentScore: s2,
-        targetWord: match.targetWord
-    });
-    if (p2Sock) p2Sock.emit('round_end', {
-        roundNumber: match.currentRound,
-        roundWon: roundWinnerName === p2.username,
-        yourScore: s2, opponentScore: s1,
-        targetWord: match.targetWord
-    });
+    if (s1Sok) s1Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p1.username, yourScore: s1, opponentScore: s2, targetWord: match.targetWord });
+    if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p2.username, yourScore: s2, opponentScore: s1, targetWord: match.targetWord });
 
-    console.log(`Round ${match.currentRound} ended: scores ${p1.username}=${s1} ${p2.username}=${s2}`);
+    console.log(`Round ${match.currentRound}: ${p1.username}=${s1} ${p2.username}=${s2}`);
 
     if (s1 >= 2 || s2 >= 2) {
-        // Series over
-        const seriesWinner = s1 >= 2 ? p1.username : p2.username;
-        setTimeout(() => endMatch(matchId, seriesWinner), 4000);
+        setTimeout(() => endMatch(matchId, s1 >= 2 ? p1.username : p2.username), 4000);
     } else {
-        // Start next round
         match.currentRound++;
         match.targetWord = getRandomWord();
         match.players.forEach(p => { p.guesses = []; p.solved = false; p.solveTime = null; });
         setTimeout(() => {
             match.status = 'active';
-            if (p1Sock) p1Sock.emit('round_start', {
-                round: match.currentRound, targetWord: match.targetWord,
-                yourScore: s1, opponentScore: s2
-            });
-            if (p2Sock) p2Sock.emit('round_start', {
-                round: match.currentRound, targetWord: match.targetWord,
-                yourScore: s2, opponentScore: s1
-            });
+            if (s1Sok) s1Sok.emit('round_start', { round: match.currentRound, targetWord: match.targetWord, yourScore: s1, opponentScore: s2 });
+            if (s2Sok) s2Sok.emit('round_start', { round: match.currentRound, targetWord: match.targetWord, yourScore: s2, opponentScore: s1 });
         }, 3500);
     }
 }
@@ -587,125 +345,81 @@ function endBlitz(matchId) {
     const match = activeMatches.get(matchId);
     if (!match || match.status === 'ended') return;
     const [p1, p2] = match.players;
-    let winnerUsername;
-    if (p1.solves > p2.solves) winnerUsername = p1.username;
-    else if (p2.solves > p1.solves) winnerUsername = p2.username;
-    else winnerUsername = p1.username; // tie → p1 wins (arbitrary)
-    console.log(`Blitz ended: ${p1.username}=${p1.solves} ${p2.username}=${p2.solves} → winner: ${winnerUsername}`);
-    endMatch(matchId, winnerUsername);
+    const winner = p1.solves >= p2.solves ? p1.username : p2.username; // p1 wins ties
+    console.log(`Blitz ended: ${p1.username}=${p1.solves} ${p2.username}=${p2.solves} → ${winner}`);
+    endMatch(matchId, winner);
 }
 
 function endMatch(matchId, forfeitWinner = null) {
     const match = activeMatches.get(matchId);
     if (!match) return;
 
-    // Cancel blitz timer if still running
-    if (match.blitzTimeout) {
-        clearTimeout(match.blitzTimeout);
-        match.blitzTimeout = null;
-    }
-
+    if (match.blitzTimeout) { clearTimeout(match.blitzTimeout); match.blitzTimeout = null; }
     match.status = 'ended';
-    
-    const [player1, player2] = match.players;
-    
+
+    const [p1, p2] = match.players;
     let winner, loser;
-    
+
     if (forfeitWinner) {
         winner = match.players.find(p => p.username === forfeitWinner);
-        loser = match.players.find(p => p.username !== forfeitWinner);
+        loser  = match.players.find(p => p.username !== forfeitWinner);
     } else {
-        // Determine winner
-        const p1Solved = player1.solved;
-        const p2Solved = player2.solved;
-        
-        if (p1Solved && !p2Solved) {
-            winner = player1;
-            loser = player2;
-        } else if (p2Solved && !p1Solved) {
-            winner = player2;
-            loser = player1;
-        } else if (p1Solved && p2Solved) {
-            // Both solved, faster wins
-            winner = player1.solveTime < player2.solveTime ? player1 : player2;
-            loser = winner === player1 ? player2 : player1;
-        } else {
-            // Neither solved, fewer guesses wins
-            winner = player1.guesses.length < player2.guesses.length ? player1 : player2;
-            loser = winner === player1 ? player2 : player1;
-        }
+        const s1 = p1.solved, s2 = p2.solved;
+        if      (s1 && !s2)  { winner = p1; loser = p2; }
+        else if (s2 && !s1)  { winner = p2; loser = p1; }
+        else if (s1 && s2)   { winner = p1.solveTime < p2.solveTime ? p1 : p2; loser = winner === p1 ? p2 : p1; }
+        else                 { winner = p1.guesses.length <= p2.guesses.length ? p1 : p2; loser = winner === p1 ? p2 : p1; }
     }
-    
-    // Update balances and stats
-    const winnerUser = users.get(winner.username.toLowerCase());
-    const loserUser = users.get(loser.username.toLowerCase());
-    
-    if (winnerUser && loserUser) {
-        const mmrChange = calculateMMRChange(winner.mmr, loser.mmr, true);
-        
-        // Each player's bet was never deducted upfront, so the winner earns
-        // the opponent's bet and the loser loses their own bet.
-        winnerUser.balance += loser.betAmount;
-        winnerUser.mmr += mmrChange;
-        winnerUser.gamesPlayed++;
-        winnerUser.gamesWon++;
 
-        loserUser.balance -= loser.betAmount;
-        loserUser.mmr -= mmrChange;
-        loserUser.gamesPlayed++;
-        
-        console.log(`Match ended: ${winner.username} defeats ${loser.username} (+${mmrChange} WMR)`);
-        
-        // Notify players
-        const winnerSocket = activeSockets.get(winner.username);
-        const loserSocket = activeSockets.get(loser.username);
-        
-        if (winnerSocket) {
-            winnerSocket.emit('match_end', {
-                won: true,
-                draw: false,
-                targetWord: match.targetWord,
-                winnings: loser.betAmount,
-                mmrChange: mmrChange,
-                newMMR: winnerUser.mmr,
-                newRank: getRank(winnerUser.mmr),
-                newBalance: winnerUser.balance
-            });
-            winnerSocket.matchId = null;
-        }
-        
-        if (loserSocket) {
-            loserSocket.emit('match_end', {
-                won: false,
-                draw: false,
-                targetWord: match.targetWord,
-                winnings: 0,
-                mmrChange: -mmrChange,
-                newMMR: loserUser.mmr,
-                newRank: getRank(loserUser.mmr),
-                newBalance: loserUser.balance
-            });
-            loserSocket.matchId = null;
-        }
+    const winnerUser = users.get(winner.username.toLowerCase());
+    const loserUser  = users.get(loser.username.toLowerCase());
+    if (!winnerUser || !loserUser) return;
+
+    const mmrChange = calculateMMRChange(winner.mmr, loser.mmr, true);
+
+    winnerUser.balance  += loser.betAmount;
+    winnerUser.mmr      += mmrChange;
+    winnerUser.gamesPlayed++;
+    winnerUser.gamesWon++;
+
+    loserUser.balance   -= loser.betAmount;
+    loserUser.mmr       -= mmrChange;
+    loserUser.gamesPlayed++;
+
+    console.log(`Match ended: ${winner.username} defeats ${loser.username} (+${mmrChange} MMR)`);
+
+    const wSock = activeSockets.get(winner.username);
+    const lSock = activeSockets.get(loser.username);
+
+    if (wSock) {
+        wSock.emit('match_end', { won: true, targetWord: match.targetWord, winnings: loser.betAmount, mmrChange, newMMR: winnerUser.mmr, newRank: getRank(winnerUser.mmr), newBalance: winnerUser.balance });
+        wSock.matchId = null;
     }
-    
-    // Clean up
-    setTimeout(() => {
-        activeMatches.delete(matchId);
-    }, 5000);
+    if (lSock) {
+        lSock.emit('match_end', { won: false, targetWord: match.targetWord, winnings: 0, mmrChange: -mmrChange, newMMR: loserUser.mmr, newRank: getRank(loserUser.mmr), newBalance: loserUser.balance });
+        lSock.matchId = null;
+    }
+
+    setTimeout(() => activeMatches.delete(matchId), 5000);
 }
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok',
-        users: users.size,
-        activeMatches: activeMatches.size,
-        queueSize: matchmakingQueue.length
-    });
-});
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Strip sensitive fields before sending user data to clients. */
+function publicProfile(user) {
+    return {
+        username:    user.username,
+        balance:     user.balance,
+        mmr:         user.mmr,
+        rank:        getRank(user.mmr),
+        gamesPlayed: user.gamesPlayed,
+        gamesWon:    user.gamesWon
+    };
+}
+
+// ── Start ────────────────────────────────────────────────────────────────────
 
 server.listen(PORT, () => {
-    console.log(`🎮 Worduel Server running on port ${PORT}`);
-    console.log(`📊 Dashboard: http://localhost:${PORT}/health`);
+    console.log(`Worduel Server running on port ${PORT}`);
+    console.log(`Health: http://localhost:${PORT}/health`);
 });
