@@ -2262,6 +2262,125 @@ h1, h2, h3, h4, h5, h6,
         font-size: 9px !important;
     }
 }
+
+        /* ── Result modal animations ───────────────────────────── */
+        @keyframes resultEnter {
+            from { opacity: 0; transform: scale(0.82) translateY(24px); }
+            to   { opacity: 1; transform: scale(1)    translateY(0); }
+        }
+        @keyframes resultIconBounce {
+            0%   { transform: scale(0) rotate(-15deg); }
+            55%  { transform: scale(1.35) rotate(8deg); }
+            75%  { transform: scale(0.9) rotate(-4deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        @keyframes resultShake {
+            0%, 100% { transform: translateX(0); }
+            18%      { transform: translateX(-9px); }
+            36%      { transform: translateX(9px); }
+            54%      { transform: translateX(-5px); }
+            72%      { transform: translateX(5px); }
+            90%      { transform: translateX(-2px); }
+        }
+        @keyframes confettiFall {
+            0%   { transform: translateY(-20px) rotate(0deg);    opacity: 1; }
+            100% { transform: translateY(105vh) rotate(800deg);  opacity: 0; }
+        }
+        .confetti-piece {
+            position: fixed;
+            top: -20px;
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 10001;
+            animation: confettiFall linear forwards;
+        }
+
+        /* ── Blitz end screen ──────────────────────────────────── */
+        #blitzEndScreen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 14, 20, 0.97);
+            backdrop-filter: blur(12px);
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        #blitzEndScreen.active { display: flex; }
+        .blitz-end-container {
+            text-align: center;
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 90%;
+        }
+        .blitz-end-emoji {
+            font-size: 80px;
+            display: block;
+            margin-bottom: 12px;
+            animation: resultIconBounce 0.7s ease forwards;
+        }
+        .blitz-end-title {
+            font-family: 'Lilita One', cursive;
+            font-size: 44px;
+            color: #00ff88;
+            margin-bottom: 4px;
+            text-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 0 30px rgba(0,255,136,0.5);
+            animation: resultEnter 0.5s ease forwards;
+        }
+        .blitz-end-subtitle {
+            font-family: 'Barlow', sans-serif;
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+        .blitz-end-solves {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 80px;
+            font-weight: 900;
+            color: #ffd700;
+            line-height: 1;
+            margin-bottom: 2px;
+            text-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 50px rgba(255,215,0,0.4);
+        }
+        .blitz-end-solves-label {
+            font-family: 'Barlow', sans-serif;
+            font-size: 11px;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+        .blitz-end-stats {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 28px;
+        }
+        .blitz-end-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .blitz-end-stat-row:not(:last-child) {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .blitz-end-stat-label {
+            color: rgba(255,255,255,0.5);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .blitz-end-stat-value {
+            font-size: 17px;
+            font-weight: 800;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -2640,9 +2759,38 @@ h1, h2, h3, h4, h5, h6,
         </div>
     </div>
 
+    <!-- BLITZ END SCREEN -->
+    <div id="blitzEndScreen">
+        <div class="blitz-end-container">
+            <span class="blitz-end-emoji">🎉</span>
+            <div class="blitz-end-title">WELL DONE!</div>
+            <div class="blitz-end-subtitle">TIME'S UP</div>
+            <div class="blitz-end-solves" id="blitzEndSolves">0</div>
+            <div class="blitz-end-solves-label">WORDS SOLVED</div>
+            <div class="blitz-end-stats">
+                <div class="blitz-end-stat-row">
+                    <span class="blitz-end-stat-label">WINNINGS</span>
+                    <span class="blitz-end-stat-value" id="blitzEndWinnings">+$0</span>
+                </div>
+                <div class="blitz-end-stat-row">
+                    <span class="blitz-end-stat-label">NEW BALANCE</span>
+                    <span class="blitz-end-stat-value" id="blitzEndBalance">$0</span>
+                </div>
+                <div class="blitz-end-stat-row">
+                    <span class="blitz-end-stat-label">MMR CHANGE</span>
+                    <span class="blitz-end-stat-value" id="blitzEndMMR">+0</span>
+                </div>
+            </div>
+            <div class="result-actions">
+                <button class="btn result-btn result-btn-primary" onclick="closeBlitzEnd(true)">PLAY AGAIN</button>
+                <button class="btn result-btn result-btn-secondary" onclick="closeBlitzEnd(false)">LOBBY</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SERVER_URL = window.location.origin;
-        
+
         let socket = null;
         let user = null;
         let token = null;
@@ -4561,9 +4709,12 @@ h1, h2, h3, h4, h5, h6,
 
             socket.on('match_end', (data) => {
                 if (game.timerInterval) { clearInterval(game.timerInterval); game.timerInterval = null; }
-                // Hide any round overlay
                 document.getElementById('roundOverlay').style.display = 'none';
-                showResult(data);
+                if (currentMatch && currentMatch.mode === 'blitz') {
+                    showBlitzEnd(data);
+                } else {
+                    showResult(data);
+                }
             });
 
             // Best-of-3: round finished, show score overlay
@@ -4585,8 +4736,19 @@ h1, h2, h3, h4, h5, h6,
                 game.currentRow = 0; game.opponentRow = 0; game.currentGuess = '';
                 createGrid('yourGrid'); createGrid('opponentGrid');
                 document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
-                document.querySelectorAll('.ml').forEach(k => k.classList.remove('correct', 'present', 'absent'));
                 document.getElementById('roundScore').textContent = `R${data.round} · ${data.yourScore} – ${data.opponentScore}`;
+                // Reset 3-minute timer for the new round
+                if (game.timerInterval) clearInterval(game.timerInterval);
+                let timeLeft = 180;
+                const timerEl = document.getElementById('battleTimer');
+                timerEl.textContent = '3:00';
+                game.timerInterval = setInterval(() => {
+                    timeLeft--;
+                    const m = Math.floor(timeLeft / 60);
+                    const s = timeLeft % 60;
+                    timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+                    if (timeLeft <= 0) { clearInterval(game.timerInterval); timerEl.textContent = '0:00'; }
+                }, 1000);
             });
 
             // Blitz: you solved a word — reset your grid with new word
@@ -4601,6 +4763,7 @@ h1, h2, h3, h4, h5, h6,
                     toast.style.background = '#ff3366'; toast.style.color = '#fff';
                 }, 1400);
                 game.targetWord = data.newWord;
+                game.yourSolves = data.yourSolves;
                 game.currentRow = 0; game.currentGuess = '';
                 createGrid('yourGrid');
                 document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
@@ -4873,16 +5036,33 @@ h1, h2, h3, h4, h5, h6,
             });
         }
 
+        function launchConfetti() {
+            const colors = ['#ffd700','#00ff88','#ff3366','#4a9eff','#ff9800','#e040fb','#ffffff'];
+            for (let i = 0; i < 90; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti-piece';
+                el.style.left = (Math.random() * 100) + 'vw';
+                el.style.width = (5 + Math.random() * 7) + 'px';
+                el.style.height = (8 + Math.random() * 10) + 'px';
+                el.style.background = colors[Math.floor(Math.random() * colors.length)];
+                el.style.borderRadius = Math.random() > 0.4 ? '50%' : '2px';
+                el.style.animationDuration = (1.4 + Math.random() * 2) + 's';
+                el.style.animationDelay = (Math.random() * 1.2) + 's';
+                document.body.appendChild(el);
+                el.addEventListener('animationend', () => el.remove());
+            }
+        }
+
         function showResult(data) {
             document.getElementById('resultIcon').textContent = data.won ? '🏆' : '🛡️';
             const titleEl = document.getElementById('resultTitle');
             titleEl.textContent = data.won ? 'VICTORY!' : 'DEFEAT';
             titleEl.className = 'result-title ' + (data.won ? 'win' : 'lose');
-            
+
             document.getElementById('resultWinnings').textContent = data.won ? `+$${data.winnings}` : `$0`;
             document.getElementById('resultBalance').textContent = `$${data.newBalance}`;
             document.getElementById('resultMMR').textContent = data.mmrChange >= 0 ? `+${data.mmrChange}` : data.mmrChange;
-            
+
             // Update user object
             user.balance = data.newBalance;
             if (data.newMMR !== undefined) {
@@ -4890,13 +5070,24 @@ h1, h2, h3, h4, h5, h6,
             } else if (data.mmrChange !== undefined) {
                 user.mmr = (user.mmr || 1000) + data.mmrChange;
             }
-            
-            // Update balance display
             document.getElementById('userBalance').textContent = user.balance;
-            
-            // Update home screen with new WMR
             updateHomeScreen();
-            
+
+            // Animate container entrance
+            const container = document.querySelector('#resultModal .result-container');
+            const iconEl = document.getElementById('resultIcon');
+            container.style.animation = 'none';
+            iconEl.style.animation = 'none';
+            container.offsetHeight; // force reflow
+            if (data.won) {
+                container.style.animation = 'resultEnter 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards';
+                iconEl.style.animation = 'resultIconBounce 0.65s 0.3s ease both';
+                setTimeout(launchConfetti, 350);
+                setTimeout(launchConfetti, 900);
+            } else {
+                container.style.animation = 'resultEnter 0.35s ease forwards, resultShake 0.5s 0.4s ease forwards';
+            }
+
             document.getElementById('resultModal').classList.add('active');
         }
 
@@ -4916,6 +5107,40 @@ h1, h2, h3, h4, h5, h6,
             document.getElementById('resultModal').classList.remove('active');
             selectedBet = null;
             showScreen('homeScreen');
+        }
+
+        function showBlitzEnd(data) {
+            // Update user stats
+            user.balance = data.newBalance;
+            if (data.newMMR !== undefined) user.mmr = data.newMMR;
+            else if (data.mmrChange !== undefined) user.mmr = (user.mmr || 1000) + data.mmrChange;
+            document.getElementById('userBalance').textContent = user.balance;
+            updateHomeScreen();
+
+            // Populate screen
+            document.getElementById('blitzEndSolves').textContent = data.yourSolves ?? 0;
+            document.getElementById('blitzEndWinnings').textContent = data.won ? `+$${data.winnings}` : '$0';
+            document.getElementById('blitzEndBalance').textContent = `$${data.newBalance}`;
+            const mmr = data.mmrChange ?? 0;
+            document.getElementById('blitzEndMMR').textContent = mmr >= 0 ? `+${mmr}` : `${mmr}`;
+
+            document.getElementById('blitzEndScreen').classList.add('active');
+
+            // Celebration confetti bursts
+            setTimeout(launchConfetti, 200);
+            setTimeout(launchConfetti, 700);
+            setTimeout(launchConfetti, 1300);
+        }
+
+        function closeBlitzEnd(playAgainMode) {
+            document.getElementById('blitzEndScreen').classList.remove('active');
+            game.yourSolves = 0;
+            if (playAgainMode) {
+                showScreen('betScreen');
+            } else {
+                selectedBet = null;
+                showScreen('homeScreen');
+            }
         }
 
         // ── Mobile native keyboard setup ──────────────────────────────────────

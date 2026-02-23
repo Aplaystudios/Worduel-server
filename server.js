@@ -392,11 +392,11 @@ function endMatch(matchId, forfeitWinner = null) {
     const lSock = activeSockets.get(loser.username);
 
     if (wSock) {
-        wSock.emit('match_end', { won: true, targetWord: match.targetWord, winnings: loser.betAmount, mmrChange, newMMR: winnerUser.mmr, newRank: getRank(winnerUser.mmr), newBalance: winnerUser.balance });
+        wSock.emit('match_end', { won: true, targetWord: match.targetWord, winnings: loser.betAmount, mmrChange, newMMR: winnerUser.mmr, newRank: getRank(winnerUser.mmr), newBalance: winnerUser.balance, yourSolves: winner.solves });
         wSock.matchId = null;
     }
     if (lSock) {
-        lSock.emit('match_end', { won: false, targetWord: match.targetWord, winnings: 0, mmrChange: -mmrChange, newMMR: loserUser.mmr, newRank: getRank(loserUser.mmr), newBalance: loserUser.balance });
+        lSock.emit('match_end', { won: false, targetWord: match.targetWord, winnings: 0, mmrChange: -mmrChange, newMMR: loserUser.mmr, newRank: getRank(loserUser.mmr), newBalance: loserUser.balance, yourSolves: loser.solves });
         lSock.matchId = null;
     }
 
