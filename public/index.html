@@ -3367,7 +3367,12 @@ h1, h2, h3, h4, h5, h6,
 
         function setupKeyboard() {
             document.querySelectorAll('.key').forEach(key => {
-                key.onclick = () => handleKey(key.dataset.key);
+                // pointerdown fires instantly on first touch — no 300ms delay,
+                // no stacking-context blocks. preventDefault stops ghost clicks.
+                key.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    handleKey(key.dataset.key);
+                });
                 key.classList.remove('correct', 'present', 'absent');
             });
             
@@ -3513,7 +3518,7 @@ h1, h2, h3, h4, h5, h6,
             
             document.getElementById('resultWinnings').textContent = data.won ? `+$${data.winnings}` : `$0`;
             document.getElementById('resultBalance').textContent = `$${data.newBalance}`;
-            document.getElementById('resultWMR').textContent = data.mmrChange >= 0 ? `+${data.mmrChange}` : data.mmrChange;
+            document.getElementById('resultMMR').textContent = data.mmrChange >= 0 ? `+${data.mmrChange}` : data.mmrChange;
             
             // Update user object
             user.balance = data.newBalance;
