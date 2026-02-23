@@ -1630,9 +1630,9 @@ body::after {
 }
 }
 
-/* Hide letter tracker on desktop — the on-screen keyboard already shows colours */
+/* Hide letter tracker everywhere — the on-screen keyboard already shows colours */
 #mobileLetterTracker {
-    display: none;
+    display: none !important;
     position: fixed;
     top: 0;
     left: 0;
@@ -2155,7 +2155,7 @@ h1, h2, h3, h4, h5, h6,
     /* #battleScreen is position:fixed inset:0 display:flex — stretch it */
     #battleScreen {
         align-items: stretch !important;
-        justify-content: stretch !important;
+        justify-content: flex-start !important;
         padding: 0 !important;
         overflow: hidden !important;
     }
