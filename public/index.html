@@ -118,7 +118,6 @@
             display: block !important;
             position: relative !important;
         }
-        }
 
         .loading-bar {
             width: 280px;
@@ -1600,47 +1599,6 @@ body::after {
         font-size: 10px !important;
     }
 
-    /* Letter tracker is redundant — on-screen keyboard shows colors */
-    #mobileLetterTracker { display: none !important; }
-    #battleScreen .battle-container { padding-top: 6px !important; }
-
-    .ml-row {
-        display: flex !important;
-        gap: 3px !important;
-    }
-
-    .ml {
-        width: 24px !important;
-        height: 24px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 11px !important;
-        font-weight: 800 !important;
-        border-radius: 4px !important;
-        background: #2d3748 !important;
-        color: #9ca3af !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        transition: background 0.2s !important;
-    }
-
-    .ml.correct { background: var(--correct) !important; color: #000 !important; }
-    .ml.present { background: var(--present) !important; color: #000 !important; }
-    .ml.absent  { background: #1a202c !important; color: #4a5568 !important; }
-}
-}
-
-/* Hide letter tracker everywhere — the on-screen keyboard already shows colours */
-#mobileLetterTracker {
-    display: none !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 9998;
-    background: rgba(10, 14, 20, 0.92);
-    padding: 6px 0 4px;
-    border-bottom: 1px solid #2d3748;
 }
 
 .battle-header {
@@ -2201,71 +2159,69 @@ h1, h2, h3, h4, h5, h6,
     #battleScreen #roundScore, #battleScreen #blitzScore { font-size: 12px !important; }
     #battleScreen .battle-pot { font-size: 11px !important; }
 
-    /* Hide letter tracker (not needed — keyboard shows colours) */
-    #battleScreen #mobileLetterTracker { display: none !important; }
-
-    /* Row 2: two grids side by side */
+    /* Row 2: two grids side by side, sits at top (align-self:start so it doesn't
+       stretch to fill the 1fr row — that would make rows tall and tiles portrait) */
     #battleScreen .battle-grid {
         grid-row: 2 !important;
-        min-height: 0 !important;
-        max-height: 100% !important;
-        overflow: hidden !important;
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 3px !important;
-        padding: 3px !important;
+        align-self: start !important;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 4px !important;
+        padding: 4px !important;
         margin: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
-    /* Player panels fill their grid cell */
+    /* Player panels split width equally */
     #battleScreen .player-panel {
+        flex: 1 !important;
+        min-width: 0 !important;
         overflow: hidden !important;
         padding: 4px !important;
         border-radius: 8px !important;
         border-width: 2px !important;
         display: flex !important;
         flex-direction: column !important;
-        min-height: 0 !important;
-        max-height: 100% !important;
+        align-items: center !important;
     }
 
     #battleScreen .panel-header {
         flex-shrink: 0 !important;
+        width: 100% !important;
         padding: 2px 4px !important;
         margin-bottom: 3px !important;
         border-radius: 5px !important;
     }
     #battleScreen .panel-name { font-size: 9px !important; }
 
-    /* Word grid: flex column, fills panel */
+    /* Word grid: flex column, sized by tile content (not flex:1 stretch) */
     #battleScreen .word-grid {
-        flex: 1 !important;
-        min-height: 0 !important;
-        overflow: hidden !important;
         display: flex !important;
         flex-direction: column !important;
         gap: 2px !important;
         position: static !important;
+        flex: none !important;
     }
 
-    /* Rows share height equally */
+    /* Each row: plain flex row */
     #battleScreen .word-row {
-        flex: 1 !important;
         display: flex !important;
         gap: 2px !important;
-        min-height: 0 !important;
     }
 
-    /* Tiles scale to fill their row */
+    /* Tiles: fixed square based on viewport width.
+       Formula: (50vw = one panel) minus padding/gaps, divided by 5 tiles.
+       Example on 390px: (195 - 26) / 5 ≈ 34px square. */
     #battleScreen .tile {
-        flex: 1 !important;
-        width: auto !important;
-        height: auto !important;
+        width: calc((50vw - 26px) / 5) !important;
+        height: calc((50vw - 26px) / 5) !important;
+        flex: none !important;
         min-width: 0 !important;
         min-height: 0 !important;
         font-size: 10px !important;
         border-radius: 3px !important;
-        border: 1.5px solid rgba(100,100,100,0.35) !important;
+        border: 1.5px solid rgba(100, 100, 100, 0.35) !important;
         padding: 0 !important;
     }
 
@@ -2602,19 +2558,6 @@ h1, h2, h3, h4, h5, h6,
                 </div>
             </div>
 
-            <!-- Mobile letter tracker: shows used-letter colours when on-screen keyboard is hidden -->
-            <div id="mobileLetterTracker">
-                <div class="ml-row">
-                    <span class="ml" data-key="Q">Q</span><span class="ml" data-key="W">W</span><span class="ml" data-key="E">E</span><span class="ml" data-key="R">R</span><span class="ml" data-key="T">T</span><span class="ml" data-key="Y">Y</span><span class="ml" data-key="U">U</span><span class="ml" data-key="I">I</span><span class="ml" data-key="O">O</span><span class="ml" data-key="P">P</span>
-                </div>
-                <div class="ml-row">
-                    <span class="ml" data-key="A">A</span><span class="ml" data-key="S">S</span><span class="ml" data-key="D">D</span><span class="ml" data-key="F">F</span><span class="ml" data-key="G">G</span><span class="ml" data-key="H">H</span><span class="ml" data-key="J">J</span><span class="ml" data-key="K">K</span><span class="ml" data-key="L">L</span>
-                </div>
-                <div class="ml-row">
-                    <span class="ml" data-key="Z">Z</span><span class="ml" data-key="X">X</span><span class="ml" data-key="C">C</span><span class="ml" data-key="V">V</span><span class="ml" data-key="B">B</span><span class="ml" data-key="N">N</span><span class="ml" data-key="M">M</span>
-                </div>
-            </div>
-
             <div class="keyboard">
                 <div class="keyboard-row">
                     <div class="key" data-key="Q">Q</div>
@@ -2889,12 +2832,7 @@ h1, h2, h3, h4, h5, h6,
 
         function isValidWord(word) {
             if (!word || word.length !== 5) return false;
-            // For multiplayer the server validates; for training use client-side list.
-            // This function is called before submitGuess so just check length here —
-            // server emits invalid_word if not in dictionary for multiplayer,
-            // and training mode uses the same check via VALID_WORDS below.
-            if (game.isTraining) return VALID_WORDS.has(word.toUpperCase());
-            return true; // length-only check; server validates word in multiplayer
+            return VALID_WORDS.has(word.toUpperCase());
         }
 
         let aiInterval = null;
@@ -3564,7 +3502,9 @@ h1, h2, h3, h4, h5, h6,
         // Called ONCE on page load. Attaches all listeners to the hidden input
         // and makes the battle screen a tap-to-focus zone.
         function initMobileInput() {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            // Only activate for real touch devices — not laptops with a narrow browser window.
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+                             ('ontouchstart' in window && window.innerWidth <= 768);
             if (!isMobile) return;
 
             const mobileInput  = document.getElementById('mobileInput');
