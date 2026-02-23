@@ -5,15 +5,9 @@
 
 'use strict';
 
-// ── Word pool used for target words ────────────────────────────────────────
-const WORDS = [
-    'CRANE', 'SLATE', 'TRACE', 'STARE', 'RAISE', 'SHINE', 'STONE', 'BRAVE',
-    'GLOVE', 'PROVE', 'SHARE', 'SPARE', 'PHASE', 'SHAPE', 'GRAPE', 'TRADE',
-    'CHASE', 'HOUSE', 'MOUSE', 'PLACE', 'PLANT', 'PIANO', 'CRIME', 'PRIME',
-    'CLIMB', 'ROUND', 'SOUND', 'POUND', 'MOUNT', 'CLOUD', 'PROUD', 'FLOUR',
-    'WORLD', 'WORTH', 'WRITE', 'WRONG', 'WROTE', 'FRESH', 'FLESH', 'FLASH',
-    'TRASH', 'CRASH', 'STACK', 'TRACK', 'TRICK', 'TRUCK', 'TRUNK', 'TRUST'
-];
+// ── Word pool used for target words (full tabatkins/wordle-list) ───────────
+const VALID_WORDS = require('./words');
+const WORDS = [...VALID_WORDS];
 
 // ── Rank thresholds ─────────────────────────────────────────────────────────
 const RANKS = [
