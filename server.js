@@ -336,7 +336,7 @@ function endRound(matchId) {
 
     console.log(`Round ${match.currentRound}: ${p1.username}=${s1} ${p2.username}=${s2}`);
 
-    scheduleNextRoundOrEnd(matchId, s1, s2, s1Sok, s2Sok);
+    scheduleNextRoundOrEnd(matchId, s1, s2);
 }
 
 function startOvertime(matchId) {
@@ -374,11 +374,11 @@ function endRoundDraw(matchId) {
     if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, draw: true, roundWon: false, yourScore: s2, opponentScore: s1, targetWord: match.targetWord });
     console.log(`Round ${match.currentRound}: DRAW — ${p1.username}=${s1} ${p2.username}=${s2}`);
 
-    scheduleNextRoundOrEnd(matchId, s1, s2, s1Sok, s2Sok);
+    scheduleNextRoundOrEnd(matchId, s1, s2);
 }
 
 // Shared: after scoring a round, either end the match or start the next round.
-function scheduleNextRoundOrEnd(matchId, s1, s2, s1Sok, s2Sok) {
+function scheduleNextRoundOrEnd(matchId, s1, s2) {
     const match = activeMatches.get(matchId);
     const [p1, p2] = match.players;
 
@@ -392,8 +392,12 @@ function scheduleNextRoundOrEnd(matchId, s1, s2, s1Sok, s2Sok) {
         setTimeout(() => {
             match.status = 'active';
             match.roundTimer = setTimeout(() => startOvertime(matchId), 3 * 60 * 1000);
-            if (s1Sok) s1Sok.emit('round_start', { round: match.currentRound, targetWord: match.targetWord, yourScore: s1, opponentScore: s2 });
-            if (s2Sok) s2Sok.emit('round_start', { round: match.currentRound, targetWord: match.targetWord, yourScore: s2, opponentScore: s1 });
+            // Re-fetch sockets here — stale refs captured before the delay cause
+            // round_start to be silently lost if a player's socket reconnected.
+            const freshP1Sok = activeSockets.get(p1.username);
+            const freshP2Sok = activeSockets.get(p2.username);
+            if (freshP1Sok) freshP1Sok.emit('round_start', { round: match.currentRound, targetWord: match.targetWord, yourScore: s1, opponentScore: s2 });
+            if (freshP2Sok) freshP2Sok.emit('round_start', { round: match.currentRound, targetWord: match.targetWord, yourScore: s2, opponentScore: s1 });
         }, 3500);
     }
 }

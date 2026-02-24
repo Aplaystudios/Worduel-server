@@ -4671,11 +4671,11 @@ h1, h2, h3, h4, h5, h6,
             socket.on('guess_result', (data) => {
                 revealGuess(data.guess, game.currentRow, 'yourGrid');
                 updateKeyboard(game.currentGuess, data.guess.evaluation);
-                
+
                 if (data.solved) {
-                    // Won!
+                    game.currentGuess = ''; // clear so no stale input carries into next round
                 } else if (game.currentRow >= 5) {
-                    // Lost
+                    game.currentGuess = '';
                 } else {
                     game.currentRow++;
                     game.currentGuess = '';
@@ -4726,7 +4726,7 @@ h1, h2, h3, h4, h5, h6,
                 game.targetWord = data.targetWord;
                 game.currentRow = 0; game.opponentRow = 0; game.currentGuess = '';
                 createGrid('yourGrid'); createGrid('opponentGrid');
-                document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
+                setupKeyboard(); // re-attach handlers + clear key colours
                 document.getElementById('roundScore').textContent = `R${data.round} · ${data.yourScore} – ${data.opponentScore}`;
                 startRoundTimer(180); // reset 3-min clock for new round
             });
