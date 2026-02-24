@@ -107,6 +107,41 @@ io.on('connection', (socket) => {
             activeSockets.set(user.username, socket);
             socket.emit('authenticated', publicProfile(user));
             console.log('User authenticated:', user.username);
+
+            // ── Reconnection: restore match if player was mid-game ──────────
+            const activeMatch = [...activeMatches.values()].find(m =>
+                (m.status === 'active' || m.status === 'between_rounds') &&
+                m.players.some(p => p.username === user.username)
+            );
+            if (activeMatch) {
+                socket.matchId = activeMatch.id;
+                // Cancel the forfeit timer — they made it back in time
+                if (activeMatch.reconnectTimeout) {
+                    clearTimeout(activeMatch.reconnectTimeout);
+                    activeMatch.reconnectTimeout = null;
+                }
+                const player  = activeMatch.players.find(p => p.username === user.username);
+                const opp     = activeMatch.players.find(p => p.username !== user.username);
+                const oppSock = activeSockets.get(opp.username);
+                if (oppSock) oppSock.emit('opponent_reconnected', {});
+                const targetWord   = activeMatch.mode === 'blitz' ? player.currentWord : activeMatch.targetWord;
+                const roundElapsed = Math.floor((Date.now() - activeMatch.currentRoundStartTime) / 1000);
+                socket.emit('match_reconnect', {
+                    mode:             activeMatch.mode,
+                    targetWord,
+                    guesses:          player.guesses,
+                    opponentGuesses:  opp.guesses,
+                    currentRound:     activeMatch.currentRound,
+                    scores:           activeMatch.scores,
+                    yourUsername:     user.username,
+                    opponentUsername: opp.username,
+                    yourSolves:       player.solves,
+                    opponentSolves:   opp.solves,
+                    roundElapsed,
+                    inOvertime:       !!activeMatch.overtimeTimer,
+                });
+                console.log(`Reconnected: ${user.username} rejoined match ${activeMatch.id}`);
+            }
         } catch {
             socket.emit('error', { message: 'Invalid token' });
         }
@@ -237,9 +272,17 @@ io.on('connection', (socket) => {
         if (socket.matchId) {
             const match = activeMatches.get(socket.matchId);
             if (match && (match.status === 'active' || match.status === 'between_rounds')) {
-                if (match.blitzTimeout) clearTimeout(match.blitzTimeout);
-                const opp = match.players.find(p => p.username !== socket.username);
-                if (opp) endMatch(socket.matchId, opp.username);
+                const opp     = match.players.find(p => p.username !== socket.username);
+                const oppSock = opp ? activeSockets.get(opp.username) : null;
+                // Notify opponent and give 15 seconds for reconnection before forfeiting.
+                if (oppSock) oppSock.emit('opponent_disconnected', { seconds: 15 });
+                match.reconnectTimeout = setTimeout(() => {
+                    const newSock = activeSockets.get(socket.username);
+                    if (!newSock || newSock.matchId !== match.id) {
+                        console.log(`Reconnect timeout: ${socket.username} forfeits to ${opp?.username}`);
+                        endMatch(match.id, opp?.username);
+                    }
+                }, 15000);
             }
         }
 
@@ -272,9 +315,11 @@ function createMatch(socket, user, opponent, betAmount, mode) {
         status:       'active',
         scores:       { [user.username]: 0, [opponent.username]: 0 },
         currentRound: 1,
-        blitzTimeout: null,
-        roundTimer:   null,
-        overtimeTimer: null
+        blitzTimeout:          null,
+        roundTimer:            null,
+        overtimeTimer:         null,
+        reconnectTimeout:      null,
+        currentRoundStartTime: Date.now()
     };
 
     if (mode === 'blitz') {
@@ -331,10 +376,11 @@ function endRound(matchId) {
     const s1Sok = activeSockets.get(p1.username);
     const s2Sok = activeSockets.get(p2.username);
 
-    if (s1Sok) s1Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p1.username, yourScore: s1, opponentScore: s2, targetWord: match.targetWord });
-    if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p2.username, yourScore: s2, opponentScore: s1, targetWord: match.targetWord });
+    const hasWinner = (s1 >= 2 || s2 >= 2) && s1 !== s2;
+    if (s1Sok) s1Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p1.username, yourScore: s1, opponentScore: s2, targetWord: match.targetWord, matchOver: hasWinner });
+    if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p2.username, yourScore: s2, opponentScore: s1, targetWord: match.targetWord, matchOver: hasWinner });
 
-    console.log(`Round ${match.currentRound}: ${p1.username}=${s1} ${p2.username}=${s2}`);
+    console.log(`Round ${match.currentRound}: ${p1.username}=${s1} ${p2.username}=${s2}${hasWinner ? ' → MATCH OVER' : ''}`);
 
     scheduleNextRoundOrEnd(matchId, s1, s2);
 }
@@ -370,9 +416,10 @@ function endRoundDraw(matchId) {
     const s1Sok = activeSockets.get(p1.username);
     const s2Sok = activeSockets.get(p2.username);
 
-    if (s1Sok) s1Sok.emit('round_end', { roundNumber: match.currentRound, draw: true, roundWon: false, yourScore: s1, opponentScore: s2, targetWord: match.targetWord });
-    if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, draw: true, roundWon: false, yourScore: s2, opponentScore: s1, targetWord: match.targetWord });
-    console.log(`Round ${match.currentRound}: DRAW — ${p1.username}=${s1} ${p2.username}=${s2}`);
+    const hasWinner = (s1 >= 2 || s2 >= 2) && s1 !== s2;
+    if (s1Sok) s1Sok.emit('round_end', { roundNumber: match.currentRound, draw: true, roundWon: false, yourScore: s1, opponentScore: s2, targetWord: match.targetWord, matchOver: hasWinner });
+    if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, draw: true, roundWon: false, yourScore: s2, opponentScore: s1, targetWord: match.targetWord, matchOver: hasWinner });
+    console.log(`Round ${match.currentRound}: DRAW — ${p1.username}=${s1} ${p2.username}=${s2}${hasWinner ? ' → MATCH OVER' : ''}`);
 
     scheduleNextRoundOrEnd(matchId, s1, s2);
 }
@@ -391,6 +438,7 @@ function scheduleNextRoundOrEnd(matchId, s1, s2) {
         match.players.forEach(p => { p.guesses = []; p.solved = false; p.solveTime = null; });
         setTimeout(() => {
             match.status = 'active';
+            match.currentRoundStartTime = Date.now();
             match.roundTimer = setTimeout(() => startOvertime(matchId), 3 * 60 * 1000);
             // Re-fetch sockets here — stale refs captured before the delay cause
             // round_start to be silently lost if a player's socket reconnected.
@@ -413,11 +461,12 @@ function endBlitz(matchId) {
 
 function endMatch(matchId, forfeitWinner = null) {
     const match = activeMatches.get(matchId);
-    if (!match) return;
+    if (!match || match.status === 'ended') return;
 
-    if (match.blitzTimeout)  { clearTimeout(match.blitzTimeout);  match.blitzTimeout  = null; }
-    if (match.roundTimer)    { clearTimeout(match.roundTimer);    match.roundTimer    = null; }
-    if (match.overtimeTimer) { clearTimeout(match.overtimeTimer); match.overtimeTimer = null; }
+    if (match.blitzTimeout)      { clearTimeout(match.blitzTimeout);      match.blitzTimeout      = null; }
+    if (match.roundTimer)        { clearTimeout(match.roundTimer);        match.roundTimer        = null; }
+    if (match.overtimeTimer)     { clearTimeout(match.overtimeTimer);     match.overtimeTimer     = null; }
+    if (match.reconnectTimeout)  { clearTimeout(match.reconnectTimeout);  match.reconnectTimeout  = null; }
     match.status = 'ended';
 
     const [p1, p2] = match.players;

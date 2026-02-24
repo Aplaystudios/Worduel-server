@@ -2741,7 +2741,7 @@ h1, h2, h3, h4, h5, h6,
         <div id="roundOverlayTitle" style="font-family:'Barlow',sans-serif; font-weight:900; font-size:26px; letter-spacing:3px;"></div>
         <div id="roundOverlayScore" style="font-family:'JetBrains Mono',monospace; font-weight:900; font-size:52px; color:#fff; letter-spacing:4px;"></div>
         <div id="roundOverlayWord" style="font-family:'Barlow',sans-serif; font-size:13px; color:#9ca3af; letter-spacing:1px;"></div>
-        <div style="font-family:'Barlow',sans-serif; font-size:11px; color:#4a5568; margin-top:4px;">NEXT ROUND STARTING...</div>
+        <div id="roundOverlayNext" style="font-family:'Barlow',sans-serif; font-size:11px; color:#4a5568; margin-top:4px;">NEXT ROUND STARTING...</div>
     </div>
 
     <!-- RESULT MODAL -->
@@ -2810,6 +2810,7 @@ h1, h2, h3, h4, h5, h6,
         let selectedMode = null;
         let selectedBet = null;
         let currentMatch = null;
+        let disconnectCountdown = null;
         let game = {
             targetWord: '',
             currentGuess: '',
@@ -4717,6 +4718,9 @@ h1, h2, h3, h4, h5, h6,
                 }
                 document.getElementById('roundOverlayScore').textContent = `${data.yourScore} – ${data.opponentScore}`;
                 document.getElementById('roundOverlayWord').textContent = `The word was: ${data.targetWord}`;
+                const nextEl = document.getElementById('roundOverlayNext');
+                nextEl.textContent = data.matchOver ? 'MATCH OVER!' : 'NEXT ROUND STARTING...';
+                nextEl.style.color  = data.matchOver ? '#ffd700'   : '#4a5568';
                 overlay.style.display = 'flex';
             });
 
@@ -4734,6 +4738,93 @@ h1, h2, h3, h4, h5, h6,
             // Best-of-3: 3-min regular time expired, 2-min overtime starting
             socket.on('round_overtime', () => {
                 startRoundTimer(120, true); // orange countdown from 2:00
+            });
+
+            // Opponent's socket dropped — show countdown before match forfeits
+            socket.on('opponent_disconnected', (data) => {
+                if (game.timerInterval) { clearInterval(game.timerInterval); game.timerInterval = null; }
+                let secs = data.seconds;
+                const overlay = document.getElementById('roundOverlay');
+                const titleEl = document.getElementById('roundOverlayTitle');
+                const scoreEl = document.getElementById('roundOverlayScore');
+                const wordEl  = document.getElementById('roundOverlayWord');
+                const nextEl  = document.getElementById('roundOverlayNext');
+                titleEl.textContent = 'OPPONENT DISCONNECTED';
+                titleEl.style.color = '#ff9800';
+                scoreEl.textContent = '';
+                wordEl.textContent  = 'Waiting for them to reconnect...';
+                nextEl.textContent  = `Match ends in ${secs}s`;
+                nextEl.style.color  = '#ff3366';
+                overlay.style.display = 'flex';
+                if (disconnectCountdown) clearInterval(disconnectCountdown);
+                disconnectCountdown = setInterval(() => {
+                    secs--;
+                    nextEl.textContent = secs > 0 ? `Match ends in ${secs}s` : 'Ending match...';
+                    if (secs <= 0) { clearInterval(disconnectCountdown); disconnectCountdown = null; }
+                }, 1000);
+            });
+
+            // Opponent reconnected within grace period — resume match
+            socket.on('opponent_reconnected', () => {
+                if (disconnectCountdown) { clearInterval(disconnectCountdown); disconnectCountdown = null; }
+                document.getElementById('roundOverlay').style.display = 'none';
+            });
+
+            // You reconnected mid-match — restore full game state
+            socket.on('match_reconnect', (data) => {
+                if (disconnectCountdown) { clearInterval(disconnectCountdown); disconnectCountdown = null; }
+                currentMatch = { mode: data.mode, opponent: { username: data.opponentUsername } };
+                game.targetWord   = data.targetWord;
+                game.currentRow   = data.guesses.length;
+                game.opponentRow  = data.opponentGuesses.length;
+                game.currentGuess = '';
+                game.isTraining   = false;
+                game.yourSolves   = data.yourSolves || 0;
+
+                setupBattle();
+                showScreen('battleScreen');
+
+                // Mode-specific header
+                const roundScoreEl = document.getElementById('roundScore');
+                const blitzScoreEl = document.getElementById('blitzScore');
+                roundScoreEl.style.display = data.mode === 'best_of_3' ? 'block' : 'none';
+                blitzScoreEl.style.display = data.mode === 'blitz'     ? 'block' : 'none';
+                if (data.mode === 'best_of_3') {
+                    const myScore  = (data.scores && data.scores[data.yourUsername])     || 0;
+                    const oppScore = (data.scores && data.scores[data.opponentUsername]) || 0;
+                    roundScoreEl.textContent = `R${data.currentRound} · ${myScore} – ${oppScore}`;
+                }
+                if (data.mode === 'blitz') {
+                    blitzScoreEl.textContent = `${data.yourSolves} – ${data.opponentSolves} SOLVED`;
+                }
+
+                // Restore your grid tiles instantly (no stagger animation for restored state)
+                data.guesses.forEach((g, row) => {
+                    g.evaluation.forEach((status, col) => {
+                        const tile = document.getElementById(`yourGrid-${row}-${col}`);
+                        if (tile) { tile.textContent = g.word[col]; tile.classList.add(status); }
+                    });
+                    updateKeyboard(g.word, g.evaluation);
+                });
+
+                // Restore opponent grid tiles (no letters shown)
+                data.opponentGuesses.forEach((g, row) => {
+                    g.evaluation.forEach((status, col) => {
+                        const tile = document.getElementById(`opponentGrid-${row}-${col}`);
+                        if (tile) tile.classList.add(status);
+                    });
+                });
+
+                // Restore timer at approximate remaining time
+                if (data.mode === 'best_of_3') {
+                    if (data.inOvertime) {
+                        startRoundTimer(Math.max(1, 120 - (data.roundElapsed - 180)), true);
+                    } else {
+                        startRoundTimer(Math.max(1, 180 - data.roundElapsed));
+                    }
+                } else if (data.mode === 'blitz') {
+                    startRoundTimer(300);
+                }
             });
 
             // Blitz: you solved a word — reset your grid with new word
