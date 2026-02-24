@@ -2224,6 +2224,19 @@ h1, h2, h3, h4, h5, h6,
         border: 1.5px solid rgba(100, 100, 100, 0.35) !important;
         padding: 0 !important;
     }
+    /* Tile state colors — high-specificity overrides so they always show on mobile */
+    #battleScreen .tile.correct {
+        background: linear-gradient(135deg, #00ff88, #00cc6f) !important;
+        border-color: #00ff88 !important;
+    }
+    #battleScreen .tile.present {
+        background: linear-gradient(135deg, #ffd700, #e6b800) !important;
+        border-color: #ffd700 !important;
+    }
+    #battleScreen .tile.absent {
+        background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+        border-color: #4b5563 !important;
+    }
 
     /* Row 3: keyboard — auto height, always visible, never behind grid */
     #battleScreen .keyboard {
@@ -4619,6 +4632,8 @@ h1, h2, h3, h4, h5, h6,
 
             socket.on('match_start', (data) => {
                 console.log('🎮 Match starting! Target:', data.targetWord, 'Mode:', data.mode || currentMatch?.mode);
+                game.isTraining = false; // always false in multiplayer
+                game.yourSolves = 0;
                 game.targetWord = data.targetWord;
                 setupBattle();
                 showScreen('battleScreen');
@@ -4640,43 +4655,12 @@ h1, h2, h3, h4, h5, h6,
                 // Start timer based on mode
                 const timerEl = document.getElementById('battleTimer');
                 
-                // Training mode - no timer
-                if (game.isTraining) {
-                    timerEl.textContent = '∞';
-                }
-                // Best of 3 mode (3 minutes = 180 seconds)
-                else if (currentMatch && currentMatch.mode === 'best_of_3') {
-                    let timeLeft = 180;
-                    timerEl.textContent = '3:00';
-                    
-                    game.timerInterval = setInterval(() => {
-                        timeLeft--;
-                        const minutes = Math.floor(timeLeft / 60);
-                        const seconds = timeLeft % 60;
-                        timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                        
-                        if (timeLeft <= 0) {
-                            clearInterval(game.timerInterval);
-                            timerEl.textContent = '0:00';
-                        }
-                    }, 1000);
-                }
-                // Blitz mode (5 minutes = 300 seconds)
-                else if (currentMatch && currentMatch.mode === 'blitz') {
-                    let timeLeft = 300;
-                    timerEl.textContent = '5:00';
-                    
-                    game.timerInterval = setInterval(() => {
-                        timeLeft--;
-                        const minutes = Math.floor(timeLeft / 60);
-                        const seconds = timeLeft % 60;
-                        timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                        
-                        if (timeLeft <= 0) {
-                            clearInterval(game.timerInterval);
-                            timerEl.textContent = '0:00';
-                        }
-                    }, 1000);
+                if (mode === 'best_of_3') {
+                    startRoundTimer(180);
+                } else if (mode === 'blitz') {
+                    startRoundTimer(300);
+                } else {
+                    timerEl.textContent = '∞'; // training
                 }
             });
 
@@ -4719,11 +4703,18 @@ h1, h2, h3, h4, h5, h6,
 
             // Best-of-3: round finished, show score overlay
             socket.on('round_end', (data) => {
+                if (game.timerInterval) { clearInterval(game.timerInterval); game.timerInterval = null; }
+                document.getElementById('battleTimer').style.color = '';
                 document.getElementById('roundScore').textContent = `R${data.roundNumber} · ${data.yourScore} – ${data.opponentScore}`;
                 const overlay = document.getElementById('roundOverlay');
                 const titleEl = document.getElementById('roundOverlayTitle');
-                titleEl.textContent = data.roundWon ? 'YOU WON THE ROUND!' : 'OPPONENT WON THE ROUND';
-                titleEl.style.color = data.roundWon ? '#00ff88' : '#ff3366';
+                if (data.draw) {
+                    titleEl.textContent = 'DRAW — OVERTIME!';
+                    titleEl.style.color = '#ff9800';
+                } else {
+                    titleEl.textContent = data.roundWon ? 'YOU WON THE ROUND!' : 'OPPONENT WON THE ROUND';
+                    titleEl.style.color = data.roundWon ? '#00ff88' : '#ff3366';
+                }
                 document.getElementById('roundOverlayScore').textContent = `${data.yourScore} – ${data.opponentScore}`;
                 document.getElementById('roundOverlayWord').textContent = `The word was: ${data.targetWord}`;
                 overlay.style.display = 'flex';
@@ -4737,18 +4728,12 @@ h1, h2, h3, h4, h5, h6,
                 createGrid('yourGrid'); createGrid('opponentGrid');
                 document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
                 document.getElementById('roundScore').textContent = `R${data.round} · ${data.yourScore} – ${data.opponentScore}`;
-                // Reset 3-minute timer for the new round
-                if (game.timerInterval) clearInterval(game.timerInterval);
-                let timeLeft = 180;
-                const timerEl = document.getElementById('battleTimer');
-                timerEl.textContent = '3:00';
-                game.timerInterval = setInterval(() => {
-                    timeLeft--;
-                    const m = Math.floor(timeLeft / 60);
-                    const s = timeLeft % 60;
-                    timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
-                    if (timeLeft <= 0) { clearInterval(game.timerInterval); timerEl.textContent = '0:00'; }
-                }, 1000);
+                startRoundTimer(180); // reset 3-min clock for new round
+            });
+
+            // Best-of-3: 3-min regular time expired, 2-min overtime starting
+            socket.on('round_overtime', () => {
+                startRoundTimer(120, true); // orange countdown from 2:00
             });
 
             // Blitz: you solved a word — reset your grid with new word
@@ -5034,6 +5019,25 @@ h1, h2, h3, h4, h5, h6,
                     }
                 }
             });
+        }
+
+        // Starts (or restarts) the battle clock. overtime=true shows orange + "OT" prefix.
+        function startRoundTimer(seconds, overtime = false) {
+            if (game.timerInterval) clearInterval(game.timerInterval);
+            let timeLeft = seconds;
+            const timerEl = document.getElementById('battleTimer');
+            const fmt = t => {
+                const m = Math.floor(t / 60);
+                const s = t % 60;
+                return `${m}:${s.toString().padStart(2, '0')}`;
+            };
+            timerEl.textContent = (overtime ? 'OT ' : '') + fmt(timeLeft);
+            timerEl.style.color = overtime ? '#ff9800' : '';
+            game.timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = (overtime ? 'OT ' : '') + fmt(timeLeft);
+                if (timeLeft <= 0) { clearInterval(game.timerInterval); }
+            }, 1000);
         }
 
         function launchConfetti() {

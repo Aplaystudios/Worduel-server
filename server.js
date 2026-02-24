@@ -272,13 +272,18 @@ function createMatch(socket, user, opponent, betAmount, mode) {
         status:       'active',
         scores:       { [user.username]: 0, [opponent.username]: 0 },
         currentRound: 1,
-        blitzTimeout: null
+        blitzTimeout: null,
+        roundTimer:   null,
+        overtimeTimer: null
     };
 
     if (mode === 'blitz') {
         match.players[0].currentWord = getRandomWord();
         match.players[1].currentWord = getRandomWord();
         match.blitzTimeout = setTimeout(() => endBlitz(matchId), 5 * 60 * 1000);
+    }
+    if (mode === 'best_of_3') {
+        match.roundTimer = setTimeout(() => startOvertime(matchId), 3 * 60 * 1000);
     }
 
     activeMatches.set(matchId, match);
@@ -304,6 +309,10 @@ function endRound(matchId) {
     if (!match || match.status !== 'active') return;
     match.status = 'between_rounds';
 
+    // Clear any pending round/overtime timers
+    if (match.roundTimer)    { clearTimeout(match.roundTimer);    match.roundTimer    = null; }
+    if (match.overtimeTimer) { clearTimeout(match.overtimeTimer); match.overtimeTimer = null; }
+
     const [p1, p2]   = match.players;
     const solver      = match.players.find(p => p.solved);
     let roundWinner   = null;
@@ -313,7 +322,7 @@ function endRound(matchId) {
     } else {
         if      (p1.guesses.length < p2.guesses.length) roundWinner = p1.username;
         else if (p2.guesses.length < p1.guesses.length) roundWinner = p2.username;
-        // tie → no point awarded
+        // equal guesses with no solve → no point
     }
     if (roundWinner) match.scores[roundWinner]++;
 
@@ -327,14 +336,62 @@ function endRound(matchId) {
 
     console.log(`Round ${match.currentRound}: ${p1.username}=${s1} ${p2.username}=${s2}`);
 
-    if (s1 >= 2 || s2 >= 2) {
-        setTimeout(() => endMatch(matchId, s1 >= 2 ? p1.username : p2.username), 4000);
+    scheduleNextRoundOrEnd(matchId, s1, s2, s1Sok, s2Sok);
+}
+
+function startOvertime(matchId) {
+    const match = activeMatches.get(matchId);
+    if (!match || match.status !== 'active') return;
+    if (match.players.some(p => p.solved)) return; // someone already solved this round
+
+    const [p1, p2] = match.players;
+    const s1Sok    = activeSockets.get(p1.username);
+    const s2Sok    = activeSockets.get(p2.username);
+
+    if (s1Sok) s1Sok.emit('round_overtime', {});
+    if (s2Sok) s2Sok.emit('round_overtime', {});
+    console.log(`Round ${match.currentRound}: overtime started`);
+
+    match.overtimeTimer = setTimeout(() => endRoundDraw(matchId), 2 * 60 * 1000);
+}
+
+function endRoundDraw(matchId) {
+    const match = activeMatches.get(matchId);
+    if (!match || match.status !== 'active') return;
+    match.status = 'between_rounds';
+    if (match.overtimeTimer) { clearTimeout(match.overtimeTimer); match.overtimeTimer = null; }
+
+    const [p1, p2] = match.players;
+    match.scores[p1.username]++;
+    match.scores[p2.username]++;
+
+    const s1    = match.scores[p1.username];
+    const s2    = match.scores[p2.username];
+    const s1Sok = activeSockets.get(p1.username);
+    const s2Sok = activeSockets.get(p2.username);
+
+    if (s1Sok) s1Sok.emit('round_end', { roundNumber: match.currentRound, draw: true, roundWon: false, yourScore: s1, opponentScore: s2, targetWord: match.targetWord });
+    if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, draw: true, roundWon: false, yourScore: s2, opponentScore: s1, targetWord: match.targetWord });
+    console.log(`Round ${match.currentRound}: DRAW — ${p1.username}=${s1} ${p2.username}=${s2}`);
+
+    scheduleNextRoundOrEnd(matchId, s1, s2, s1Sok, s2Sok);
+}
+
+// Shared: after scoring a round, either end the match or start the next round.
+function scheduleNextRoundOrEnd(matchId, s1, s2, s1Sok, s2Sok) {
+    const match = activeMatches.get(matchId);
+    const [p1, p2] = match.players;
+
+    const hasWinner = (s1 >= 2 || s2 >= 2) && s1 !== s2;
+    if (hasWinner) {
+        setTimeout(() => endMatch(matchId, s1 > s2 ? p1.username : p2.username), 4000);
     } else {
         match.currentRound++;
         match.targetWord = getRandomWord();
         match.players.forEach(p => { p.guesses = []; p.solved = false; p.solveTime = null; });
         setTimeout(() => {
             match.status = 'active';
+            match.roundTimer = setTimeout(() => startOvertime(matchId), 3 * 60 * 1000);
             if (s1Sok) s1Sok.emit('round_start', { round: match.currentRound, targetWord: match.targetWord, yourScore: s1, opponentScore: s2 });
             if (s2Sok) s2Sok.emit('round_start', { round: match.currentRound, targetWord: match.targetWord, yourScore: s2, opponentScore: s1 });
         }, 3500);
@@ -354,7 +411,9 @@ function endMatch(matchId, forfeitWinner = null) {
     const match = activeMatches.get(matchId);
     if (!match) return;
 
-    if (match.blitzTimeout) { clearTimeout(match.blitzTimeout); match.blitzTimeout = null; }
+    if (match.blitzTimeout)  { clearTimeout(match.blitzTimeout);  match.blitzTimeout  = null; }
+    if (match.roundTimer)    { clearTimeout(match.roundTimer);    match.roundTimer    = null; }
+    if (match.overtimeTimer) { clearTimeout(match.overtimeTimer); match.overtimeTimer = null; }
     match.status = 'ended';
 
     const [p1, p2] = match.players;
