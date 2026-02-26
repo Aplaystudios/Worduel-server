@@ -59,6 +59,78 @@ Server status check.
 
 ---
 
+### `POST /api/ads/reward`
+Grant a reward after a player watches an ad. Call this from your AppLovin MAX reward callback.
+
+**Request body**
+```json
+{
+  "token": "<jwt>",
+  "type": "daily"   // "daily" | "double_winnings" | "consolation"
+}
+```
+
+| type | Reward | Condition |
+|------|--------|-----------|
+| `daily` | 100 coins | Once per 24 hours |
+| `double_winnings` | Doubles last match winnings | Player must have won their last match |
+| `consolation` | 25% of last match bet | Player must have lost their last match |
+
+**Success response**
+```json
+{ "success": true, "coinsEarned": 100, "newBalance": 1100 }
+```
+
+**Error response**
+```json
+{ "success": false, "error": "Daily reward already claimed", "nextAvailableAt": 1700000000000 }
+```
+
+Also triggers Socket.IO `ad_reward_granted` event on the player's connected socket.
+
+---
+
+### `POST /api/purchase/coins`
+Initiate a Stripe payment for a coin package. Requires `STRIPE_SECRET_KEY` env var.
+
+**Request body**
+```json
+{ "token": "<jwt>", "packageId": "bronze" }
+```
+
+Package IDs: `bronze` (100c/$0.99) · `silver` (500c/$4.99) · `gold` (1000c/$9.99) · `platinum` (5000c/$39.99)
+
+**Success response** — use `clientSecret` with Stripe.js `confirmCardPayment`
+```json
+{ "success": true, "clientSecret": "pi_xxx_secret_xxx" }
+```
+
+> ⚠️ Currently returns `{ "success": false, "error": "Payments not yet enabled" }` until Stripe keys are configured and a database is connected.
+
+---
+
+### `POST /api/purchase/validate-receipt`
+Validate a mobile IAP receipt (Unity / iOS / Android). Server-to-server validation.
+
+**Request body**
+```json
+{
+  "token": "<jwt>",
+  "platform": "apple",   // "apple" | "google"
+  "productId": "com.worduel.coins.bronze",
+  "receipt": "<receipt data from platform>"
+}
+```
+
+> ⚠️ Currently a stub — returns `{ "success": false, "error": "IAP validation not yet enabled" }` until Apple/Google credentials are configured.
+
+---
+
+### `POST /api/webhooks/stripe`
+Stripe webhook endpoint (raw body, `Stripe-Signature` header). Called by Stripe servers after payment confirmation. Do not call this directly.
+
+---
+
 ## Socket.IO — Client → Server
 
 ### `authenticate`
@@ -227,11 +299,14 @@ The match is over (standard or blitz timer).
   "mmrChange": 14,
   "newMMR": 1014,
   "newRank": { "name": "Bronze", "icon": "🥉", "minMMR": 0 },
-  "newBalance": 1050
+  "newBalance": 1050,
+  "betAmount": 50,
+  "consolationAmount": 13
 }
 ```
 
 - `mmrChange` is always positive here. The loser receives `-mmrChange`.
+- `betAmount` and `consolationAmount` are only relevant for the loser — show the "GET 25% BACK" ad button using `consolationAmount`.
 
 ---
 
@@ -306,6 +381,77 @@ Generic server error.
 
 ---
 
+### `ad_reward_granted`
+Fired after `/api/ads/reward` successfully credits coins.
+
+```json
+{
+  "type": "daily",          // "daily" | "double_winnings" | "consolation"
+  "coinsEarned": 100,
+  "newBalance": 1100
+}
+```
+
+---
+
+### `daily_reward_already_claimed`
+Fired if the player tries to claim the daily reward more than once in 24 hours.
+
+```json
+{ "nextAvailableAt": 1700086400000 }
+```
+
+---
+
+### `coin_purchase_success`
+Fired after a Stripe payment is confirmed via webhook and coins are credited.
+
+```json
+{ "newBalance": 1500 }
+```
+
+---
+
+### `opponent_disconnected`
+Opponent's socket dropped — grace period started.
+
+```json
+{ "seconds": 15 }
+```
+
+---
+
+### `opponent_reconnected`
+Opponent reconnected within the grace period.
+
+```json
+{}
+```
+
+---
+
+### `match_reconnect`
+Sent to a player who reconnected mid-match. Restore full game state from this payload.
+
+```json
+{
+  "mode": "best_of_3",
+  "targetWord": "CRANE",
+  "guesses": [{ "word": "STARE", "evaluation": ["absent","present","correct","absent","absent"] }],
+  "opponentGuesses": [{ "word": "CRANE", "evaluation": ["correct","correct","correct","correct","correct"] }],
+  "currentRound": 2,
+  "scores": { "alice": 1, "bob": 0 },
+  "yourUsername": "alice",
+  "opponentUsername": "bob",
+  "yourSolves": 2,
+  "opponentSolves": 3,
+  "roundElapsed": 45,
+  "inOvertime": false
+}
+```
+
+---
+
 ## Game Logic (mirrored in Unity)
 
 ### `evaluateGuess(guess, target)`
@@ -351,3 +497,12 @@ mmrChange = round(32 * (result - expected))   // result = 1 (win) or 0 (loss)
 - [ ] Handle `blitz_word_solved` / `blitz_word_failed` / `blitz_opponent_solved`
 - [ ] Handle `match_end` → show results, update profile
 - [ ] Replicate `evaluateGuess` in C# for client-side tile preview
+- [ ] Handle `opponent_disconnected` / `opponent_reconnected` / `match_reconnect` for reconnection
+- [ ] **Monetization**:
+  - Use Unity IAP SDK (StoreKit / Google Play Billing) → `POST /api/purchase/validate-receipt`
+  - Use AppLovin MAX Unity Plugin for interstitials and rewarded ads
+  - On `OnRewardedAdReceivedReward` → `POST /api/ads/reward { type, token }`
+  - Handle `ad_reward_granted` socket event → update balance display
+  - Show "DOUBLE YOUR WINNINGS" ad button on victory (`match_end.won = true`)
+  - Show "GET 25% BACK" ad button on defeat using `match_end.consolationAmount`
+  - Show interstitial on navigation away from results screen

@@ -2591,7 +2591,100 @@ h1, h2, h3, h4, h5, h6,
             cursor: pointer;
         }
         .store-close-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+
+        /* ── Monetization buttons ──────────────────────────────────────────── */
+        .daily-reward-btn {
+            background: linear-gradient(135deg, rgba(0,200,100,0.15), rgba(0,150,80,0.08));
+            border: 1px solid rgba(0,255,120,0.35);
+            border-radius: 14px;
+            color: #00e87a;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 2px;
+            padding: 10px 32px;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s, border-color 0.2s;
+        }
+        .daily-reward-btn:disabled, .daily-reward-btn.claimed {
+            opacity: 0.4;
+            cursor: default;
+            color: #888;
+            border-color: rgba(255,255,255,0.1);
+        }
+        .ad-reward-btn {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .double-btn {
+            background: linear-gradient(135deg, rgba(255,215,0,0.18), rgba(255,152,0,0.1));
+            border: 1px solid rgba(255,215,0,0.4);
+            color: #ffd700;
+        }
+        .consolation-btn {
+            background: linear-gradient(135deg, rgba(100,180,255,0.15), rgba(60,130,220,0.08));
+            border: 1px solid rgba(100,180,255,0.35);
+            color: #7ec8ff;
+        }
+        .ad-reward-btn:disabled { opacity: 0.35; cursor: default; }
+
+        /* ── Interstitial overlay ──────────────────────────────────────────── */
+        #interstitialAd {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #interstitialAdContainer {
+            width: 100%;
+            max-width: 480px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-size: 14px;
+        }
+        .interstitial-skip {
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            max-width: 480px;
+            justify-content: flex-end;
+        }
+        #interstitialCountdown { color: #888; font-size: 13px; font-family: 'Barlow', sans-serif; }
+        #interstitialSkipBtn {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #fff;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 1px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #interstitialSkipBtn:disabled { opacity: 0.35; cursor: default; }
     </style>
+
+    <!-- AppLovin MAX Web SDK — set YOUR_SDK_KEY and ad unit IDs before enabling -->
+    <!-- <script src="https://sdk.applovin.com/web/latest/applovin-max.js" data-sdk-key="YOUR_SDK_KEY"></script> -->
 </head>
 <body>
     <!-- SPLASH SCREEN -->
@@ -2726,9 +2819,16 @@ h1, h2, h3, h4, h5, h6,
             </div>
 
             <!-- Store button -->
-            <div style="padding: 0 0 12px; text-align:center;">
+            <div style="padding: 0 0 8px; text-align:center;">
                 <button onclick="showStore()" style="background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,152,0,0.08)); border:1px solid rgba(255,215,0,0.35); border-radius:14px; color:#ffd700; font-family:'Barlow',sans-serif; font-weight:800; font-size:13px; letter-spacing:2px; padding:10px 32px; cursor:pointer; width:100%;">
                     🏪 &nbsp;COIN STORE
+                </button>
+            </div>
+
+            <!-- Daily reward button -->
+            <div style="padding: 0 0 12px; text-align:center;">
+                <button id="dailyRewardBtn" class="daily-reward-btn" onclick="claimDailyReward()">
+                    📺 &nbsp;DAILY REWARD — WATCH AD FOR 100 COINS
                 </button>
             </div>
 
@@ -2973,6 +3073,16 @@ h1, h2, h3, h4, h5, h6,
                 </div>
             </div>
 
+            <!-- Rewarded ad buttons (shown based on win/loss) -->
+            <div id="resultAdButtons" style="margin-bottom:12px;">
+                <button id="doubleWinningsBtn" class="ad-reward-btn double-btn" onclick="watchAdDoubleWinnings()" style="display:none">
+                    📺 &nbsp;DOUBLE YOUR WINNINGS — WATCH AD
+                </button>
+                <button id="consolationBtn" class="ad-reward-btn consolation-btn" onclick="watchAdConsolation()" style="display:none">
+                    📺 &nbsp;GET 25% BACK — WATCH AD
+                </button>
+            </div>
+
             <div class="result-actions">
                 <button class="btn result-btn result-btn-primary" onclick="playAgain()">PLAY AGAIN</button>
                 <button class="btn result-btn result-btn-secondary" onclick="goBackToHome()">HOME</button>
@@ -3025,10 +3135,10 @@ h1, h2, h3, h4, h5, h6,
                             <div class="store-package-label">COINS</div>
                         </div>
                     </div>
-                    <div class="store-buy-btn">
+                    <button class="store-buy-btn" data-package="bronze" onclick="purchasePackage('bronze')">
                         <span class="price">$0.99</span>
                         <span class="store-coming-soon">COMING SOON</span>
-                    </div>
+                    </button>
                 </div>
                 <div class="store-package featured">
                     <div class="store-package-left">
@@ -3039,10 +3149,10 @@ h1, h2, h3, h4, h5, h6,
                             <div class="store-package-badge">POPULAR</div>
                         </div>
                     </div>
-                    <div class="store-buy-btn">
+                    <button class="store-buy-btn" data-package="silver" onclick="purchasePackage('silver')">
                         <span class="price">$4.99</span>
                         <span class="store-coming-soon">COMING SOON</span>
-                    </div>
+                    </button>
                 </div>
                 <div class="store-package">
                     <div class="store-package-left">
@@ -3053,10 +3163,10 @@ h1, h2, h3, h4, h5, h6,
                             <div class="store-package-badge">BEST VALUE</div>
                         </div>
                     </div>
-                    <div class="store-buy-btn">
+                    <button class="store-buy-btn" data-package="gold" onclick="purchasePackage('gold')">
                         <span class="price">$9.99</span>
                         <span class="store-coming-soon">COMING SOON</span>
-                    </div>
+                    </button>
                 </div>
                 <div class="store-package">
                     <div class="store-package-left">
@@ -3066,10 +3176,10 @@ h1, h2, h3, h4, h5, h6,
                             <div class="store-package-label">COINS</div>
                         </div>
                     </div>
-                    <div class="store-buy-btn">
+                    <button class="store-buy-btn" data-package="platinum" onclick="purchasePackage('platinum')">
                         <span class="price">$39.99</span>
                         <span class="store-coming-soon">COMING SOON</span>
-                    </div>
+                    </button>
                 </div>
             </div>
             <button class="store-close-btn" onclick="closeStore()">CLOSE</button>
@@ -3086,6 +3196,13 @@ h1, h2, h3, h4, h5, h6,
         let selectedBet = null;
         let currentMatch = null;
         let disconnectCountdown = null;
+
+        // Monetization state
+        const APPLOVIN_INTERSTITIAL_UNIT = 'YOUR_INTERSTITIAL_UNIT_ID';
+        const APPLOVIN_REWARDED_UNIT     = 'YOUR_REWARDED_UNIT_ID';
+        let _interstitialCallback = null;
+        let _interstitialTimer   = null;
+        let _rewardedCallback    = null;
         let game = {
             targetWord: '',
             currentGuess: '',
@@ -4876,6 +4993,7 @@ h1, h2, h3, h4, h5, h6,
                 user = data;
                 isAuthenticated = true;
                 updateHomeScreen();
+                refreshDailyRewardBtn();
             });
 
             function handleAuthFailure(msg) {
@@ -5132,6 +5250,28 @@ h1, h2, h3, h4, h5, h6,
             // Blitz: opponent solved a word
             socket.on('blitz_opponent_solved', (data) => {
                 document.getElementById('blitzScore').textContent = `${data.yourSolves} – ${data.opponentSolves} SOLVED`;
+            });
+
+            // Ad reward granted by server
+            socket.on('ad_reward_granted', (data) => {
+                user.balance = data.newBalance;
+                updateHomeScreen();
+                document.getElementById('resultBalance').textContent = `$${data.newBalance}`;
+                document.getElementById('userBalance').textContent = data.newBalance;
+                if (data.type === 'daily') {
+                    localStorage.setItem('worduel_daily_reward_claimed', Date.now().toString());
+                    refreshDailyRewardBtn();
+                    showToast(`+100 coins! Balance: $${data.newBalance}`);
+                } else if (data.type === 'double_winnings') {
+                    showToast(`Winnings doubled! +$${data.coinsEarned}`);
+                } else if (data.type === 'consolation') {
+                    showToast(`Consolation prize! +$${data.coinsEarned} back`);
+                }
+            });
+
+            socket.on('daily_reward_already_claimed', () => {
+                localStorage.setItem('worduel_daily_reward_claimed', Date.now().toString());
+                refreshDailyRewardBtn();
             });
 
             socket.on('disconnect', () => {
@@ -5441,6 +5581,22 @@ h1, h2, h3, h4, h5, h6,
             document.getElementById('resultBalance').textContent = `$${data.newBalance}`;
             document.getElementById('resultMMR').textContent = data.mmrChange >= 0 ? `+${data.mmrChange}` : data.mmrChange;
 
+            // Rewarded ad buttons
+            const doubleBtn = document.getElementById('doubleWinningsBtn');
+            const consolBtn = document.getElementById('consolationBtn');
+            doubleBtn.style.display = 'none';
+            consolBtn.style.display = 'none';
+            doubleBtn.disabled = false;
+            consolBtn.disabled = false;
+            if (!game.isTraining) {
+                if (data.won) {
+                    doubleBtn.style.display = 'block';
+                } else if (data.consolationAmount > 0) {
+                    consolBtn.textContent = `📺  GET $${data.consolationAmount} BACK (25%) — WATCH AD`;
+                    consolBtn.style.display = 'block';
+                }
+            }
+
             // Update user object
             user.balance = data.newBalance;
             if (data.newMMR !== undefined) {
@@ -5471,20 +5627,20 @@ h1, h2, h3, h4, h5, h6,
 
         function playAgain() {
             document.getElementById('resultModal').classList.remove('active');
-            
             if (game.isTraining) {
-                // Restart training mode
                 startTrainingMode();
             } else {
-                // Go back to bet selection for multiplayer
-                showScreen('betScreen');
+                showInterstitial(() => showScreen('betScreen'));
             }
         }
 
         function goBackToHome() {
             document.getElementById('resultModal').classList.remove('active');
             selectedBet = null;
-            showScreen('homeScreen');
+            showInterstitial(() => {
+                showScreen('homeScreen');
+                refreshDailyRewardBtn();
+            });
         }
 
         function showBlitzEnd(data) {
@@ -5527,6 +5683,193 @@ h1, h2, h3, h4, h5, h6,
 
         function closeStore() {
             document.getElementById('storeModal').classList.remove('active');
+        }
+
+        // ── AppLovin MAX wrappers ─────────────────────────────────────────────
+        // These call AppLovin if the SDK is loaded; otherwise fall through immediately.
+
+        function showInterstitial(onClose) {
+            if (typeof AppLovinMAX !== 'undefined' && AppLovinMAX.Interstitials && AppLovinMAX.Interstitials.isReady(APPLOVIN_INTERSTITIAL_UNIT)) {
+                _interstitialCallback = onClose;
+                AppLovinMAX.Interstitials.show(APPLOVIN_INTERSTITIAL_UNIT);
+            } else {
+                // SDK not loaded or ad not ready — skip directly
+                if (onClose) onClose();
+            }
+        }
+
+        function closeInterstitial() {
+            document.getElementById('interstitialAd').style.display = 'none';
+            if (_interstitialTimer) { clearInterval(_interstitialTimer); _interstitialTimer = null; }
+            const cb = _interstitialCallback;
+            _interstitialCallback = null;
+            if (cb) cb();
+        }
+
+        function showRewardedAd(onEarned, onClose) {
+            if (typeof AppLovinMAX !== 'undefined' && AppLovinMAX.Rewarded && AppLovinMAX.Rewarded.isReady(APPLOVIN_REWARDED_UNIT)) {
+                _rewardedCallback = onEarned;
+                AppLovinMAX.Rewarded.show(APPLOVIN_REWARDED_UNIT);
+            } else {
+                // SDK not loaded — call earned immediately (dev/test mode)
+                console.warn('[Ads] AppLovin SDK not loaded — granting reward in dev mode');
+                if (onEarned) onEarned();
+                if (onClose) onClose();
+            }
+        }
+
+        // ── Daily reward ──────────────────────────────────────────────────────
+
+        function refreshDailyRewardBtn() {
+            const btn = document.getElementById('dailyRewardBtn');
+            if (!btn || !user) return;
+            // Server tracks lastDailyRewardAt; we check a client-side cache in localStorage
+            const claimed = localStorage.getItem('worduel_daily_reward_claimed');
+            const now = Date.now();
+            if (claimed && (now - parseInt(claimed)) < 24 * 60 * 60 * 1000) {
+                btn.classList.add('claimed');
+                btn.disabled = true;
+                btn.textContent = '📺  DAILY REWARD — COME BACK TOMORROW';
+            } else {
+                btn.classList.remove('claimed');
+                btn.disabled = false;
+                btn.textContent = '📺  DAILY REWARD — WATCH AD FOR 100 COINS';
+            }
+        }
+
+        function claimDailyReward() {
+            const btn = document.getElementById('dailyRewardBtn');
+            if (btn && btn.disabled) return;
+            showRewardedAd(
+                () => {
+                    // Ad watched — call server to grant coins
+                    fetch(`${SERVER_URL}/api/ads/reward`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'daily', token })
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            user.balance = res.newBalance;
+                            localStorage.setItem('worduel_daily_reward_claimed', Date.now().toString());
+                            refreshDailyRewardBtn();
+                            updateHomeScreen();
+                            showToast(`+100 coins! New balance: $${res.newBalance}`);
+                        } else if (res.error && res.error.includes('already claimed')) {
+                            localStorage.setItem('worduel_daily_reward_claimed', Date.now().toString());
+                            refreshDailyRewardBtn();
+                            showToast('Already claimed today. Come back tomorrow!');
+                        }
+                    })
+                    .catch(() => showToast('Network error. Please try again.'));
+                },
+                null
+            );
+        }
+
+        // ── Result screen rewarded ads ────────────────────────────────────────
+
+        function watchAdDoubleWinnings() {
+            const btn = document.getElementById('doubleWinningsBtn');
+            if (btn) btn.disabled = true;
+            showRewardedAd(
+                () => {
+                    fetch(`${SERVER_URL}/api/ads/reward`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'double_winnings', token })
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            user.balance = res.newBalance;
+                            document.getElementById('resultBalance').textContent = `$${res.newBalance}`;
+                            document.getElementById('userBalance').textContent = res.newBalance;
+                            if (btn) btn.style.display = 'none';
+                            showToast(`Winnings doubled! +$${res.coinsEarned}`);
+                        } else {
+                            if (btn) btn.disabled = false;
+                            showToast(res.error || 'Could not claim reward.');
+                        }
+                    })
+                    .catch(() => { if (btn) btn.disabled = false; showToast('Network error.'); });
+                },
+                () => { if (btn) btn.disabled = false; }
+            );
+        }
+
+        function watchAdConsolation() {
+            const btn = document.getElementById('consolationBtn');
+            if (btn) btn.disabled = true;
+            showRewardedAd(
+                () => {
+                    fetch(`${SERVER_URL}/api/ads/reward`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'consolation', token })
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            user.balance = res.newBalance;
+                            document.getElementById('resultBalance').textContent = `$${res.newBalance}`;
+                            document.getElementById('userBalance').textContent = res.newBalance;
+                            if (btn) btn.style.display = 'none';
+                            showToast(`+$${res.coinsEarned} consolation prize!`);
+                        } else {
+                            if (btn) btn.disabled = false;
+                            showToast(res.error || 'Could not claim reward.');
+                        }
+                    })
+                    .catch(() => { if (btn) btn.disabled = false; showToast('Network error.'); });
+                },
+                () => { if (btn) btn.disabled = false; }
+            );
+        }
+
+        // ── Toast helper ──────────────────────────────────────────────────────
+
+        function showToast(message) {
+            let toast = document.getElementById('adToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'adToast';
+                toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.88);color:#fff;padding:10px 20px;border-radius:20px;font-family:Barlow,sans-serif;font-size:14px;font-weight:700;z-index:999999;transition:opacity 0.4s;pointer-events:none;';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.opacity = '1';
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+        }
+
+        // ── Store purchase (Stripe) ───────────────────────────────────────────
+
+        function purchasePackage(packageId) {
+            const btn = document.querySelector(`[data-package="${packageId}"]`);
+            if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+            fetch(`${SERVER_URL}/api/purchase/coins`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ packageId, token })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && res.clientSecret) {
+                    // TODO: use Stripe.js to confirm payment with res.clientSecret
+                    // const stripe = Stripe('YOUR_PUBLISHABLE_KEY');
+                    // stripe.confirmCardPayment(res.clientSecret, { ... })
+                    showToast('Payment flow coming soon!');
+                } else {
+                    showToast(res.error || 'Purchase not available yet.');
+                }
+                if (btn) { btn.disabled = false; btn.textContent = 'BUY'; }
+            })
+            .catch(() => {
+                showToast('Network error. Please try again.');
+                if (btn) { btn.disabled = false; btn.textContent = 'BUY'; }
+            });
         }
 
         // ── Mobile native keyboard setup ──────────────────────────────────────
@@ -5593,5 +5936,16 @@ h1, h2, h3, h4, h5, h6,
         // Initialise once the DOM is ready
         initMobileInput();
     </script>
+
+    <!-- INTERSTITIAL AD OVERLAY -->
+    <div id="interstitialAd">
+        <div id="interstitialAdContainer">
+            <!-- AppLovin MAX injects ad content here -->
+        </div>
+        <div class="interstitial-skip">
+            <span id="interstitialCountdown">Skip in 5s</span>
+            <button id="interstitialSkipBtn" onclick="closeInterstitial()" disabled>SKIP ▶</button>
+        </div>
+    </div>
 </body>
 </html>

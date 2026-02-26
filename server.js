@@ -52,7 +52,14 @@ app.post('/api/register', async (req, res) => {
             mmr: 1000,
             gamesPlayed: 0,
             gamesWon: 0,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            // Monetization tracking
+            lastDailyRewardAt:    null,
+            lastMatchBet:         0,
+            lastMatchWon:         false,
+            lastMatchWinnings:    0,
+            consolationClaimed:   false,
+            doubleWinningsClaimed: false,
         };
         users.set(username.toLowerCase(), user);
 
@@ -86,6 +93,112 @@ app.get('/health', (_req, res) => {
         activeMatches: activeMatches.size,
         queueSize:    matchmakingQueue.length
     });
+});
+
+// ── Coin packages ─────────────────────────────────────────────────────────────
+const COIN_PACKAGES = {
+    bronze:   { coins: 100,  priceUsd: 0.99 },
+    silver:   { coins: 500,  priceUsd: 4.99 },
+    gold:     { coins: 1000, priceUsd: 9.99 },
+    platinum: { coins: 5000, priceUsd: 39.99 },
+};
+
+// ── Ad reward endpoint ────────────────────────────────────────────────────────
+// POST /api/ads/reward  { type: 'daily' | 'double_winnings' | 'consolation', token }
+app.post('/api/ads/reward', (req, res) => {
+    try {
+        const { type, token } = req.body;
+        if (!token) return res.json({ success: false, error: 'Not authenticated' });
+
+        let decoded;
+        try { decoded = jwt.verify(token, JWT_SECRET); }
+        catch { return res.json({ success: false, error: 'Invalid token' }); }
+
+        const user = users.get(decoded.username.toLowerCase());
+        if (!user) return res.json({ success: false, error: 'User not found' });
+
+        const socket = activeSockets.get(user.username);
+
+        if (type === 'daily') {
+            const now = Date.now();
+            const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+            if (user.lastDailyRewardAt && (now - user.lastDailyRewardAt) < TWENTY_FOUR_HOURS) {
+                const nextAvailableAt = user.lastDailyRewardAt + TWENTY_FOUR_HOURS;
+                if (socket) socket.emit('daily_reward_already_claimed', { nextAvailableAt });
+                return res.json({ success: false, error: 'Daily reward already claimed', nextAvailableAt });
+            }
+            user.balance += 100;
+            user.lastDailyRewardAt = now;
+            if (socket) socket.emit('ad_reward_granted', { type: 'daily', coinsEarned: 100, newBalance: user.balance });
+            return res.json({ success: true, coinsEarned: 100, newBalance: user.balance });
+        }
+
+        if (type === 'double_winnings') {
+            if (!user.lastMatchWon) return res.json({ success: false, error: 'No winnings to double' });
+            if (user.doubleWinningsClaimed) return res.json({ success: false, error: 'Already claimed' });
+            const bonus = user.lastMatchWinnings;
+            user.balance += bonus;
+            user.doubleWinningsClaimed = true;
+            if (socket) socket.emit('ad_reward_granted', { type: 'double_winnings', coinsEarned: bonus, newBalance: user.balance });
+            return res.json({ success: true, coinsEarned: bonus, newBalance: user.balance });
+        }
+
+        if (type === 'consolation') {
+            if (user.lastMatchWon) return res.json({ success: false, error: 'Winners cannot claim consolation prize' });
+            if (user.consolationClaimed) return res.json({ success: false, error: 'Already claimed' });
+            if (!user.lastMatchBet) return res.json({ success: false, error: 'No recent match found' });
+            const consolation = Math.floor(user.lastMatchBet * 0.25);
+            user.balance += consolation;
+            user.consolationClaimed = true;
+            if (socket) socket.emit('ad_reward_granted', { type: 'consolation', coinsEarned: consolation, newBalance: user.balance });
+            return res.json({ success: true, coinsEarned: consolation, newBalance: user.balance });
+        }
+
+        return res.json({ success: false, error: 'Unknown reward type' });
+    } catch (e) {
+        console.error('ads/reward error:', e);
+        res.json({ success: false, error: 'Server error' });
+    }
+});
+
+// ── Coin purchase endpoint (Stripe) ──────────────────────────────────────────
+// POST /api/purchase/coins  { packageId, token }
+// Returns Stripe clientSecret for client-side confirmation.
+// Requires STRIPE_SECRET_KEY env var and database for production.
+app.post('/api/purchase/coins', (req, res) => {
+    const { packageId, token } = req.body;
+    if (!token) return res.json({ success: false, error: 'Not authenticated' });
+
+    let decoded;
+    try { decoded = jwt.verify(token, JWT_SECRET); }
+    catch { return res.json({ success: false, error: 'Invalid token' }); }
+
+    const pkg = COIN_PACKAGES[packageId];
+    if (!pkg) return res.json({ success: false, error: 'Invalid package' });
+
+    // TODO: When STRIPE_SECRET_KEY is set and database is connected, create a real PaymentIntent:
+    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    // const intent = await stripe.paymentIntents.create({ amount: Math.round(pkg.priceUsd * 100), currency: 'usd', metadata: { username: decoded.username, packageId } });
+    // return res.json({ success: true, clientSecret: intent.client_secret });
+    res.json({ success: false, error: 'Payments not yet enabled. Coming soon!' });
+});
+
+// ── Stripe webhook ────────────────────────────────────────────────────────────
+// POST /api/webhooks/stripe  (raw body, Stripe-Signature header)
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), (req, res) => {
+    // TODO: Verify Stripe webhook signature and credit coins after payment succeeds
+    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    // const event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET);
+    res.json({ received: true });
+});
+
+// ── IAP receipt validation (Unity / mobile) ──────────────────────────────────
+// POST /api/purchase/validate-receipt  { platform, productId, receipt, token }
+app.post('/api/purchase/validate-receipt', (req, res) => {
+    const { token } = req.body;
+    if (!token) return res.json({ success: false, error: 'Not authenticated' });
+    // TODO: Validate Apple/Google receipt server-to-server and credit coins
+    res.json({ success: false, error: 'IAP validation not yet enabled. Coming soon!' });
 });
 
 // ── Socket.IO ────────────────────────────────────────────────────────────────
@@ -470,10 +583,20 @@ function endMatch(matchId, forfeitWinner = null) {
     winnerUser.mmr      += mmrChange;
     winnerUser.gamesPlayed++;
     winnerUser.gamesWon++;
+    winnerUser.lastMatchBet          = winner.betAmount;
+    winnerUser.lastMatchWon          = true;
+    winnerUser.lastMatchWinnings     = loser.betAmount;
+    winnerUser.doubleWinningsClaimed = false;
+    winnerUser.consolationClaimed    = false;
 
     loserUser.balance   -= loser.betAmount;
     loserUser.mmr       -= mmrChange;
     loserUser.gamesPlayed++;
+    loserUser.lastMatchBet          = loser.betAmount;
+    loserUser.lastMatchWon          = false;
+    loserUser.lastMatchWinnings     = 0;
+    loserUser.consolationClaimed    = false;
+    loserUser.doubleWinningsClaimed = false;
 
     console.log(`Match ended: ${winner.username} defeats ${loser.username} (+${mmrChange} MMR)`);
 
@@ -485,7 +608,8 @@ function endMatch(matchId, forfeitWinner = null) {
         wSock.matchId = null;
     }
     if (lSock) {
-        lSock.emit('match_end', { won: false, targetWord: match.targetWord, winnings: 0, mmrChange: -mmrChange, newMMR: loserUser.mmr, newRank: getRank(loserUser.mmr), newBalance: loserUser.balance, yourSolves: loser.solves });
+        const consolationAmount = Math.floor(loser.betAmount * 0.25);
+        lSock.emit('match_end', { won: false, targetWord: match.targetWord, winnings: 0, mmrChange: -mmrChange, newMMR: loserUser.mmr, newRank: getRank(loserUser.mmr), newBalance: loserUser.balance, yourSolves: loser.solves, betAmount: loser.betAmount, consolationAmount });
         lSock.matchId = null;
     }
 
