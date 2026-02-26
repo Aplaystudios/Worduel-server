@@ -2681,6 +2681,286 @@ h1, h2, h3, h4, h5, h6,
             cursor: pointer;
         }
         #interstitialSkipBtn:disabled { opacity: 0.35; cursor: default; }
+
+        /* ══════════════════════════════════════════
+           HOME SCREEN — Wireframe layout
+           ══════════════════════════════════════════ */
+        #homeScreen .home-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px 16px 24px;
+            box-sizing: border-box;
+            gap: 16px;
+        }
+
+        /* Top bar */
+        .home-topbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .home-profile-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .home-profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .home-ranking {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Right column: balance + action buttons */
+        .home-right-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            min-width: 110px;
+        }
+
+        .home-balance-box {
+            background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,170,0,0.2));
+            border: 2px solid rgba(255,215,0,0.5);
+            border-radius: 12px;
+            padding: 6px 12px;
+            text-align: right;
+        }
+
+        .home-balance-amount {
+            font-size: 20px;
+            font-weight: 900;
+            color: #ffd700;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.1;
+        }
+
+        .home-balance-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .home-side-btn {
+            background: rgba(255,255,255,0.12);
+            border: 1.5px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            padding: 7px 12px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .home-side-btn:active { transform: scale(0.96); }
+
+        /* Mode pills row */
+        .mode-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .mode-pill {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 16px 8px;
+            border-radius: 16px;
+            border: 3px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mode-pill:active { transform: scale(0.95); }
+
+        .mode-pill.ranked  { border-color: rgba(255,215,0,0.5);  background: rgba(255,215,0,0.12); }
+        .mode-pill.speed   { border-color: rgba(0,217,255,0.5);  background: rgba(0,217,255,0.12); }
+        .mode-pill.practice{ border-color: rgba(0,255,136,0.5);  background: rgba(0,255,136,0.12); }
+
+        .mode-pill.selected,
+        .mode-pill.ranked.selected  { border-color: #ffd700;  box-shadow: 0 0 14px rgba(255,215,0,0.5);  background: rgba(255,215,0,0.25); }
+        .mode-pill.speed.selected   { border-color: #00d9ff;  box-shadow: 0 0 14px rgba(0,217,255,0.5);  background: rgba(0,217,255,0.25); }
+        .mode-pill.practice.selected{ border-color: #00ff88;  box-shadow: 0 0 14px rgba(0,255,136,0.5);  background: rgba(0,255,136,0.25); }
+
+        .mode-pill-icon { font-size: 28px; line-height: 1; }
+        .mode-pill-name { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+
+        /* Battle button */
+        .battle-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffd700, #ff9800);
+            border: none;
+            border-radius: 20px;
+            color: #1a1a1a;
+            font-family: 'Lilita One', 'Barlow', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(255,152,0,0.5);
+            transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .battle-btn:disabled {
+            background: rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.4);
+            box-shadow: none;
+            cursor: default;
+        }
+
+        .battle-btn:not(:disabled):active {
+            transform: scale(0.97);
+            box-shadow: 0 4px 12px rgba(255,152,0,0.4);
+        }
+
+        /* ══════════════════════════════════════════
+           BATTLE SCREEN — Stacked vertical layout
+           ══════════════════════════════════════════ */
+        #battleScreen .battle-container {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            height: 100vh;
+            padding: 0;
+            overflow: hidden;
+            background: var(--bg-primary) !important;
+        }
+
+        /* Header: 3 equal columns — YOU | SCORE | TIME */
+        #battleScreen .battle-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+            padding: 10px 14px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-primary);
+            border-radius: 0;
+            margin-bottom: 0;
+        }
+
+        .battle-header-you,
+        .battle-header-time {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .battle-header-time { align-items: flex-end; }
+
+        .battle-header-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .battle-header-name {
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--neon-green);
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        #battleScreen #battleTimer {
+            font-size: 22px;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--neon-green);
+        }
+
+        .battle-header-score {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        #battleScreen #roundScore,
+        #battleScreen #blitzScore {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 900;
+            font-size: 15px;
+            color: var(--neon-yellow);
+            letter-spacing: 1px;
+        }
+
+        .battle-pot {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Stacked grids area — scrollable middle section */
+        .battle-grids {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            overflow-y: auto;
+            padding: 12px 12px 6px;
+        }
+
+        .your-grid-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .opp-grid-wrap {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .opp-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            align-self: flex-start;
+            padding-left: 4px;
+        }
+
+        /* Opponent tiles are smaller (display-only) */
+        .opp-grid .tile {
+            width: 38px !important;
+            height: 38px !important;
+            font-size: 16px !important;
+        }
+
+        /* Keyboard pinned to bottom */
+        #battleScreen .keyboard {
+            flex-shrink: 0;
+        }
     </style>
 
     <!-- AppLovin MAX Web SDK — set YOUR_SDK_KEY and ad unit IDs before enabling -->
@@ -2733,129 +3013,48 @@ h1, h2, h3, h4, h5, h6,
     <!-- HOME SCREEN -->
     <div class="screen" id="homeScreen">
         <div class="home-container">
-            <!-- Profile Header -->
-            <div class="profile-header">
-                <div class="profile-avatar">
-                    <div class="avatar-icon">⚔️</div>
-                    <div class="rank-badge" id="userRank">🥉</div>
-                </div>
-                <div class="profile-info">
-                    <div class="profile-name" id="profileName">PLAYER</div>
-                    <div class="profile-mmr">
-                        <span class="mmr-icon">🏆</span>
-                        <span id="profileMMR">1000</span> WMR
+
+            <!-- Top bar: avatar+ranking left | balance right -->
+            <div class="home-topbar">
+                <div class="home-profile-left">
+                    <div class="profile-avatar">
+                        <div class="avatar-icon">⚔️</div>
+                        <div class="rank-badge" id="userRank">🥉</div>
+                    </div>
+                    <div class="home-profile-info">
+                        <div class="profile-name" id="profileName">PLAYER</div>
+                        <div class="home-ranking">🏆 <span id="profileMMR">1000</span> WMR</div>
                     </div>
                 </div>
-                <div class="profile-balance">
-                    <div class="balance-amount">$<span id="profileBalance">1000</span></div>
-                    <div class="balance-label">COINS</div>
+                <div class="home-right-col">
+                    <div class="home-balance-box">
+                        <div class="home-balance-amount"><span id="profileBalance">1000</span></div>
+                        <div class="home-balance-label">COINS</div>
+                    </div>
+                    <button class="home-side-btn" onclick="showStore()">🏪 Store</button>
+                    <button class="home-side-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">📺 Daily Reward</button>
                 </div>
             </div>
 
-            <!-- Stats Panel -->
-            <div class="stats-panel">
-                <div class="stat-box">
-                    <div class="stat-value" id="statsWins">0</div>
-                    <div class="stat-label">WINS</div>
+            <!-- Mode selection: 3 compact cards in a row -->
+            <div class="mode-row">
+                <div class="mode-pill ranked" id="modeCard_best_of_3" onclick="selectMode('best_of_3')">
+                    <span class="mode-pill-icon">🏆</span>
+                    <span class="mode-pill-name">BEST OF 3</span>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="statsLosses">0</div>
-                    <div class="stat-label">LOSSES</div>
+                <div class="mode-pill speed" id="modeCard_blitz" onclick="selectMode('blitz')">
+                    <span class="mode-pill-icon">⚡</span>
+                    <span class="mode-pill-name">BLITZ</span>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="statsWinRate">0%</div>
-                    <div class="stat-label">WIN RATE</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value online-count">12</div>
-                    <div class="stat-label">🟢 ONLINE</div>
+                <div class="mode-pill practice" id="modeCard_training" onclick="selectMode('training')">
+                    <span class="mode-pill-icon">🎓</span>
+                    <span class="mode-pill-name">TRAINING</span>
                 </div>
             </div>
 
-            <!-- Battle Modes -->
-            <div class="modes-section">
-                <h2 class="section-title">BATTLE MODES</h2>
-                
-                <div class="mode-grid">
-                    <div class="mode-card ranked" onclick="selectMode('best_of_3')">
-                        <div class="mode-badge">RANKED</div>
-                        <div class="mode-icon">🏆</div>
-                        <div class="mode-content">
-                            <div class="mode-name">BEST OF 3</div>
-                            <div class="mode-desc">Win 2 rounds to claim victory</div>
-                            <div class="mode-timer">
-                                <span class="timer-icon">⏱️</span>
-                                <span>3 min per round</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mode-card speed" onclick="selectMode('blitz')">
-                        <div class="mode-badge">SPEED</div>
-                        <div class="mode-icon">⚡</div>
-                        <div class="mode-content">
-                            <div class="mode-name">BLITZ</div>
-                            <div class="mode-desc">Fast-paced word battle</div>
-                            <div class="mode-timer">
-                                <span class="timer-icon">⏱️</span>
-                                <span>5 minutes total</span>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Battle button -->
+            <button class="battle-btn" id="battleBtn" onclick="startBattle()" disabled>Battle!</button>
 
-                    <div class="mode-card practice" onclick="selectMode('training')">
-                        <div class="mode-badge">PRACTICE</div>
-                        <div class="mode-icon">🎓</div>
-                        <div class="mode-content">
-                            <div class="mode-name">TRAINING</div>
-                            <div class="mode-desc">Practice against AI</div>
-                            <div class="mode-timer">
-                                <span class="timer-icon">∞</span>
-                                <span>No time limit</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Store button -->
-            <div style="padding: 0 0 8px; text-align:center;">
-                <button onclick="showStore()" style="background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,152,0,0.08)); border:1px solid rgba(255,215,0,0.35); border-radius:14px; color:#ffd700; font-family:'Barlow',sans-serif; font-weight:800; font-size:13px; letter-spacing:2px; padding:10px 32px; cursor:pointer; width:100%;">
-                    🏪 &nbsp;COIN STORE
-                </button>
-            </div>
-
-            <!-- Daily reward button -->
-            <div style="padding: 0 0 12px; text-align:center;">
-                <button id="dailyRewardBtn" class="daily-reward-btn" onclick="claimDailyReward()">
-                    📺 &nbsp;DAILY REWARD — WATCH AD FOR 100 COINS
-                </button>
-            </div>
-
-            <!-- Leaderboard Preview -->
-            <div class="leaderboard-preview">
-                <div class="leaderboard-header">
-                    <h3>🏅 TOP PLAYERS</h3>
-                    <span class="view-all">View All →</span>
-                </div>
-                <div class="leaderboard-list">
-                    <div class="leaderboard-item">
-                        <span class="rank-num">#1</span>
-                        <span class="player-name">WordMaster</span>
-                        <span class="player-mmr">2450 🏆</span>
-                    </div>
-                    <div class="leaderboard-item">
-                        <span class="rank-num">#2</span>
-                        <span class="player-name">SpeedKing</span>
-                        <span class="player-mmr">2380 🏆</span>
-                    </div>
-                    <div class="leaderboard-item">
-                        <span class="rank-num">#3</span>
-                        <span class="player-name">LetterLord</span>
-                        <span class="player-mmr">2315 🏆</span>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -2971,30 +3170,32 @@ h1, h2, h3, h4, h5, h6,
     <!-- BATTLE SCREEN -->
     <div class="screen" id="battleScreen">
         <div class="battle-container">
+
+            <!-- Header row: YOU | SCORE | TIME -->
             <div class="battle-header">
-                <!-- Big centered timer — the focal point of the battle screen -->
-                <div id="battleTimer">3:00</div>
-                <!-- Info row: score on left, pot on right -->
-                <div class="battle-header-info">
-                    <div id="roundScore" style="display:none; font-family:'Barlow',sans-serif; font-weight:900; font-size:16px; color:#ffd700; letter-spacing:2px;"></div>
-                    <div id="blitzScore" style="display:none; font-family:'Barlow',sans-serif; font-weight:900; font-size:14px; color:#00ff88; letter-spacing:1px;"></div>
-                    <div class="battle-pot">POT: $<span id="battlePot">100</span></div>
+                <div class="battle-header-you">
+                    <span class="battle-header-label">YOU</span>
+                    <span class="battle-header-name" id="yourName">—</span>
+                </div>
+                <div class="battle-header-score">
+                    <div id="roundScore" style="display:none"></div>
+                    <div id="blitzScore" style="display:none"></div>
+                    <div class="battle-pot" id="potDisplay">POT <span id="battlePot">100</span>🪙</div>
+                </div>
+                <div class="battle-header-time">
+                    <span class="battle-header-label">TIME</span>
+                    <span id="battleTimer">3:00</span>
                 </div>
             </div>
 
-            <div class="battle-grid">
-                <div class="player-panel you">
-                    <div class="panel-header">
-                        <span class="panel-name you" id="yourName">YOU</span>
-                    </div>
+            <!-- Stacked grids -->
+            <div class="battle-grids">
+                <div class="your-grid-wrap">
                     <div class="word-grid" id="yourGrid"></div>
                 </div>
-
-                <div class="player-panel">
-                    <div class="panel-header">
-                        <span class="panel-name" id="opponentName">OPPONENT</span>
-                    </div>
-                    <div class="word-grid" id="opponentGrid"></div>
+                <div class="opp-grid-wrap">
+                    <span class="opp-label" id="opponentName">OPPONENT</span>
+                    <div class="word-grid opp-grid" id="opponentGrid"></div>
                 </div>
             </div>
 
@@ -3249,15 +3450,7 @@ h1, h2, h3, h4, h5, h6,
             
             document.getElementById('userRank').textContent = rankEmoji;
             
-            // Update stats
-            const wins = user.gamesWon || 0;
-            const played = user.gamesPlayed || 0;
-            const losses = played - wins;
-            const winRate = played > 0 ? Math.round((wins / played) * 100) : 0;
-            
-            document.getElementById('statsWins').textContent = wins;
-            document.getElementById('statsLosses').textContent = losses;
-            document.getElementById('statsWinRate').textContent = winRate + '%';
+            // Stats panel removed from home screen — no elements to update
         }
 
         function showScreen(screenId) {
@@ -3276,19 +3469,29 @@ h1, h2, h3, h4, h5, h6,
 
         function selectMode(mode) {
             selectedMode = mode;
-            
-            // Training mode - practice against AI
-            if (mode === 'training') {
+
+            // Highlight selected card, un-highlight others
+            document.querySelectorAll('.mode-pill').forEach(c => c.classList.remove('selected'));
+            const card = document.getElementById('modeCard_' + mode);
+            if (card) card.classList.add('selected');
+
+            // Enable Battle button
+            const btn = document.getElementById('battleBtn');
+            if (btn) { btn.disabled = false; btn.textContent = 'Battle!'; }
+        }
+
+        function startBattle() {
+            if (!selectedMode) return;
+
+            if (selectedMode === 'training') {
                 startTrainingMode();
                 return;
             }
-            
-            // Update balance display before showing bet screen
+
+            // For competitive modes, go to bet screen
             if (user) {
                 document.getElementById('userBalance').textContent = user.balance;
             }
-            
-            // For competitive modes, go to bet screen
             showScreen('betScreen');
         }
 
@@ -5637,6 +5840,10 @@ h1, h2, h3, h4, h5, h6,
         function goBackToHome() {
             document.getElementById('resultModal').classList.remove('active');
             selectedBet = null;
+            selectedMode = null;
+            document.querySelectorAll('.mode-pill').forEach(c => c.classList.remove('selected'));
+            const btn = document.getElementById('battleBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Battle!'; }
             showInterstitial(() => {
                 showScreen('homeScreen');
                 refreshDailyRewardBtn();
