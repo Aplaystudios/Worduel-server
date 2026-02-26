@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0a0e14">
+    <meta name="theme-color" content="#F9F7F4">
     <title>Worduel - Multiplayer</title>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Barlow:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,600;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -17,26 +17,38 @@
         }
 
         :root {
-            --bg-primary: #0a0e14;
-            --bg-secondary: #151922;
-            --bg-elevated: #222831;
-            --neon-green: #00ff88;
-            --neon-yellow: #ffd700;
-            --neon-cyan: #00d9ff;
-            --neon-red: #ff3366;
-            --correct: #00ff88;
-            --present: #ffd700;
-            --absent: #2d3748;
-            --border-primary: #2d3748;
-            --text-primary: #e5e7eb;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
-            --glow-green: 0 0 20px rgba(0, 255, 136, 0.4);
-            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+            /* ── Light theme (NYT × Casual Mobile) ── */
+            --bg-primary:    #F9F7F4;
+            --bg-secondary:  #FFFFFF;
+            --bg-elevated:   #F0EDEA;
+            --accent:        #FF5A5F;
+            --accent-light:  #FFF1F1;
+            --correct:       #6AAA64;
+            --present:       #C9B458;
+            --absent:        #787C7E;
+            --border-primary:#D3D6DA;
+            --text-primary:  #1C1C1E;
+            --text-secondary:#6E6E73;
+            --text-muted:    #6E6E73;
+            --surface:       #FFFFFF;
+            --border:        #D3D6DA;
+            --text:          #1C1C1E;
+            --bg:            #F9F7F4;
+            /* Keep neon names for backward compat but remap to new palette */
+            --neon-green:    #6AAA64;
+            --neon-yellow:   #FF5A5F;
+            --neon-cyan:     #6AAA64;
+            --neon-red:      #FF5A5F;
+            --neon-purple:   #6AAA64;
+            --border-primary:#D3D6DA;
+            --glow-green:    none;
+            --shadow-sm:     0 2px 8px rgba(0,0,0,0.06);
+            --shadow-md:     0 4px 20px rgba(0,0,0,0.10);
+            --shadow-lg:     0 12px 40px rgba(0,0,0,0.14);
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Barlow', sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
@@ -51,10 +63,7 @@
             content: '';
             position: fixed;
             inset: 0;
-            background: 
-                linear-gradient(90deg, rgba(0, 255, 136, 0.02) 1px, transparent 1px),
-                linear-gradient(0deg, rgba(0, 255, 136, 0.02) 1px, transparent 1px);
-            background-size: 40px 40px;
+            background: var(--bg-primary);
             pointer-events: none;
         }
 
@@ -94,23 +103,24 @@
         }
 
         .splash-title {
-            font-family: 'Lilita One', cursive !important;
-            font-size: 72px !important;
-            font-weight: 400 !important;
-            letter-spacing: 2px !important;
-            margin: 0 auto 20px auto !important;
-            color: #ffd700 !important;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+            font-family: 'Barlow', sans-serif !important;
+            font-size: 64px !important;
+            font-weight: 900 !important;
+            letter-spacing: 6px !important;
+            margin: 0 auto 16px auto !important;
+            color: var(--accent) !important;
+            text-shadow: none !important;
             text-align: center !important;
             display: block !important;
             position: relative !important;
+            text-transform: uppercase !important;
         }
 
         .splash-subtitle {
             font-family: 'Barlow', sans-serif !important;
-            font-size: 15px !important;
+            font-size: 13px !important;
             font-weight: 700 !important;
-            color: rgba(255, 255, 255, 0.9) !important;
+            color: var(--text-muted) !important;
             text-transform: uppercase !important;
             letter-spacing: 4px !important;
             margin: 0 auto 50px auto !important;
@@ -129,10 +139,9 @@
 
         .loading-progress {
             height: 100%;
-            background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+            background: var(--accent);
             width: 0%;
             animation: load 2s ease forwards;
-            box-shadow: var(--glow-green);
         }
 
         @keyframes load {
@@ -184,29 +193,17 @@
    Replace HOME SCREEN CSS with this
    ======================================== */
 
-/* Clean blue gradient background */
+/* Warm white background — no gradient overlay */
 body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background: linear-gradient(180deg, #4a90e2 0%, #2c5aa0 50%, #1e3a66 100%);
+    background: var(--bg-primary);
     pointer-events: none;
 }
 
-/* Diagonal pattern overlay */
 body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: 
-        repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 20px,
-            rgba(255, 255, 255, 0.02) 20px,
-            rgba(255, 255, 255, 0.02) 40px
-        );
-    pointer-events: none;
+    display: none;
 }
 
 .home-container {
@@ -2681,6 +2678,412 @@ h1, h2, h3, h4, h5, h6,
             cursor: pointer;
         }
         #interstitialSkipBtn:disabled { opacity: 0.35; cursor: default; }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           THEME OVERRIDE — NYT Clean × Casual Mobile
+           These rules cascade over all earlier styles.
+           ═══════════════════════════════════════════════════════════════════ */
+
+        /* ── Global reset to light theme ── */
+        body, .screen { background: var(--bg-primary) !important; }
+        body::before { background: var(--bg-primary) !important; }
+        body::after { display: none !important; }
+        * { text-shadow: none !important; }
+
+        /* ── Splash ── */
+        #splashScreen { background: var(--bg-primary) !important; }
+        .loading-bar { background: #E8E5E0 !important; }
+
+        /* ── HOME SCREEN ── */
+        #homeScreen { background: var(--bg-primary) !important; align-items: flex-start !important; overflow-y: auto !important; }
+
+        .profile-header {
+            background: #fff !important;
+            border: 1.5px solid var(--border-primary) !important;
+            box-shadow: var(--shadow-sm) !important;
+            border-radius: 16px !important;
+        }
+        .profile-name { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; font-weight: 900 !important; }
+        .profile-mmr { color: var(--text-muted) !important; font-family: 'Barlow', sans-serif !important; }
+        .avatar-icon { background: linear-gradient(135deg, var(--accent), #FF8C00) !important; border-color: #fff !important; }
+        .rank-badge { background: #fff !important; border-color: var(--border-primary) !important; }
+        .profile-balance {
+            background: var(--accent-light) !important;
+            border: 1.5px solid rgba(255,90,95,0.3) !important;
+        }
+        .balance-amount { color: var(--accent) !important; font-family: 'Barlow', sans-serif !important; font-variant-numeric: tabular-nums; }
+        .balance-label { color: var(--text-muted) !important; }
+
+        .stat-box {
+            background: #fff !important;
+            border: 1.5px solid var(--border-primary) !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+        .stat-value { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; font-variant-numeric: tabular-nums; }
+        .stat-value.online-count { color: var(--correct) !important; }
+        .stat-label { color: var(--text-muted) !important; }
+        .section-title { color: var(--text-muted) !important; font-size: 11px !important; letter-spacing: 2px !important; }
+
+        /* Mode cards */
+        .mode-card {
+            background: #fff !important;
+            border: 1.5px solid var(--border-primary) !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+        .mode-card.ranked { border-left: 4px solid var(--accent) !important; }
+        .mode-card.speed  { border-left: 4px solid #FF9F1C !important; }
+        .mode-card.practice { border-left: 4px solid var(--correct) !important; }
+        .mode-card::before, .mode-card::after { display: none !important; }
+        .mode-card:active { box-shadow: var(--shadow-md) !important; transform: scale(0.98) !important; }
+        .mode-name { color: var(--text-primary) !important; font-size: 18px !important; }
+        .mode-desc { color: var(--text-muted) !important; }
+        .mode-timer { color: var(--text-muted) !important; }
+        .mode-icon {
+            background: var(--bg-elevated) !important;
+            border: 1px solid var(--border-primary) !important;
+            filter: none !important;
+            animation: none !important;
+            font-size: 32px !important;
+        }
+        /* Mode badges — pill style */
+        .mode-badge {
+            background: var(--accent) !important;
+            border: none !important;
+            color: #fff !important;
+            border-radius: 20px !important;
+            box-shadow: none !important;
+            animation: none !important;
+            font-size: 10px !important;
+            padding: 4px 10px !important;
+        }
+        .mode-card.speed .mode-badge    { background: #FF9F1C !important; }
+        .mode-card.practice .mode-badge { background: var(--correct) !important; }
+
+        /* Leaderboard */
+        .leaderboard-preview {
+            background: #fff !important;
+            border: 1.5px solid var(--border-primary) !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+        .leaderboard-preview::before { display: none !important; }
+        .leaderboard-header { border-bottom-color: var(--border-primary) !important; }
+        .leaderboard-header h3 { color: var(--text-primary) !important; }
+        .view-all { color: var(--accent) !important; }
+        .view-all:active { color: var(--accent) !important; }
+        .leaderboard-item {
+            background: var(--bg-primary) !important;
+            border-color: var(--border-primary) !important;
+        }
+        .leaderboard-item:active { background: var(--bg-elevated) !important; border-color: var(--accent) !important; transform: none !important; }
+        .rank-num { color: var(--accent) !important; font-family: 'Barlow', sans-serif !important; font-variant-numeric: tabular-nums; }
+        .player-name { color: var(--text-primary) !important; }
+        .player-mmr { color: var(--text-muted) !important; font-family: 'Barlow', sans-serif !important; }
+
+        /* ── BUTTONS ── */
+        .btn {
+            background: var(--accent) !important;
+            color: #fff !important;
+            border: none !important;
+            box-shadow: 0 4px 14px rgba(255,90,95,0.35) !important;
+            font-family: 'Barlow', sans-serif !important;
+        }
+        .btn:hover { filter: brightness(1.06) !important; transform: translateY(-1px) !important; box-shadow: 0 6px 18px rgba(255,90,95,0.45) !important; }
+        .btn-secondary {
+            background: #fff !important;
+            color: var(--text-primary) !important;
+            border: 1.5px solid var(--border-primary) !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+        .btn-secondary:hover { border-color: var(--accent) !important; color: var(--accent) !important; box-shadow: none !important; }
+
+        /* ── AUTH SCREEN ── */
+        #authScreen { background: var(--bg-primary) !important; }
+        .auth-container {
+            background: #fff !important;
+            border: 1.5px solid var(--border-primary) !important;
+            box-shadow: var(--shadow-md) !important;
+        }
+        .auth-title { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; font-weight: 900 !important; font-size: 28px !important; letter-spacing: 4px !important; }
+        .auth-tabs { background: var(--bg-primary) !important; border-radius: 10px !important; }
+        .tab, .auth-tab { color: var(--text-muted) !important; background: transparent !important; border-color: var(--border-primary) !important; box-shadow: none !important; }
+        .tab.active, .auth-tab.active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; box-shadow: none !important; }
+        .form-label { color: var(--text-muted) !important; }
+        .form-input {
+            background: var(--bg-primary) !important;
+            border-color: var(--border-primary) !important;
+            color: var(--text-primary) !important;
+        }
+        .form-input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(255,90,95,0.15) !important; }
+        .error-msg { color: var(--accent) !important; background: var(--accent-light) !important; }
+
+        /* ── BET SCREEN ── */
+        #betScreen { background: var(--bg-primary) !important; }
+        .bet-container {
+            background: #fff !important;
+            border: 1.5px solid var(--border-primary) !important;
+            box-shadow: var(--shadow-md) !important;
+        }
+        .bet-title { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; }
+        .bet-balance { color: var(--correct) !important; font-family: 'Barlow', sans-serif !important; }
+        .bet-option {
+            background: var(--bg-primary) !important;
+            border-color: var(--border-primary) !important;
+        }
+        .bet-option:hover { border-color: var(--accent) !important; }
+        .bet-option.selected {
+            border-color: var(--accent) !important;
+            background: var(--accent-light) !important;
+            box-shadow: 0 0 0 3px rgba(255,90,95,0.15) !important;
+        }
+        .bet-amount { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; font-variant-numeric: tabular-nums; }
+        .bet-label { color: var(--text-muted) !important; }
+
+        /* ── MATCHMAKING SCREEN ── */
+        #matchmakingScreen { background: var(--bg-primary) !important; }
+        .matchmaking-container { color: var(--text-primary) !important; }
+        .matchmaking-title { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; font-weight: 900 !important; }
+        .matchmaking-info { color: var(--text-muted) !important; }
+        .matchmaking-bet { color: var(--accent) !important; font-family: 'Barlow', sans-serif !important; }
+        .radar {
+            border-color: var(--accent) !important;
+            box-shadow: none !important;
+        }
+        .radar::before { border-color: rgba(255,90,95,0.3) !important; }
+        .radar::after { background: conic-gradient(from 0deg, transparent 75%, rgba(255,90,95,0.5) 100%) !important; }
+
+        /* ── BATTLE SCREEN ── */
+        #battleScreen { background: var(--bg-primary) !important; }
+        .battle-header {
+            background: #fff !important;
+            border-bottom: 1px solid var(--border-primary) !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+        }
+        #battleScreen #battleTimer {
+            color: var(--text-primary) !important;
+            font-family: 'Barlow', sans-serif !important;
+            font-variant-numeric: tabular-nums;
+        }
+        #battleScreen #battleTimer.timer-caution { color: #FF9F1C !important; }
+        #battleScreen #battleTimer.timer-warning  { color: var(--accent) !important; animation: timerPulse 1s ease-in-out infinite !important; }
+        #battleScreen #battleTimer.timer-critical { color: var(--accent) !important; animation: timerPulse 0.4s ease-in-out infinite !important; }
+        #roundScore, #blitzScore { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; }
+        .battle-pot { color: var(--text-muted) !important; }
+        .battle-pot span { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; }
+
+        /* Player panels */
+        .player-panel {
+            background: #fff !important;
+            border: 1px solid var(--border-primary) !important;
+            box-shadow: none !important;
+        }
+        .player-panel.you { border-color: var(--accent) !important; box-shadow: none !important; }
+        .panel-header {
+            background: transparent !important;
+            color: var(--text-muted) !important;
+            border: none !important;
+            border-bottom: 1px solid var(--border-primary) !important;
+        }
+        .panel-header.you { border-bottom-color: var(--accent) !important; color: var(--accent) !important; }
+        .panel-name { color: var(--text-muted) !important; font-family: 'Barlow', sans-serif !important; text-shadow: none !important; }
+        .panel-name.you { color: var(--accent) !important; text-shadow: none !important; }
+
+        /* ── TILES ── */
+        .tile {
+            background: #fff !important;
+            border: 2px solid var(--border-primary) !important;
+            color: var(--text-primary) !important;
+            border-radius: 6px !important;
+            font-family: 'Barlow', sans-serif !important;
+        }
+        .tile.filled { border-color: #999 !important; }
+        .tile.correct {
+            background: var(--correct) !important;
+            border-color: var(--correct) !important;
+            color: #fff !important;
+        }
+        .tile.present {
+            background: var(--present) !important;
+            border-color: var(--present) !important;
+            color: #fff !important;
+        }
+        .tile.absent {
+            background: var(--absent) !important;
+            border-color: var(--absent) !important;
+            color: #fff !important;
+        }
+        /* Opponent tiles (no letters) */
+        .tile.opp-correct { background: var(--correct) !important; border-color: var(--correct) !important; }
+        .tile.opp-present { background: var(--present) !important; border-color: var(--present) !important; }
+        .tile.opp-absent  { background: var(--absent)  !important; border-color: var(--absent)  !important; }
+
+        /* Tile bounce on reveal */
+        @keyframes tileReveal {
+            0%   { transform: rotateX(0); }
+            45%  { transform: rotateX(90deg); }
+            55%  { transform: rotateX(90deg); }
+            80%  { transform: rotateX(-8deg) scale(1.06); }
+            100% { transform: rotateX(0) scale(1); }
+        }
+        .tile.correct, .tile.present, .tile.absent {
+            animation: tileReveal 0.5s ease forwards !important;
+        }
+
+        /* ── KEYBOARD ── */
+        .keyboard { background: #fff !important; box-shadow: 0 -1px 0 var(--border-primary) !important; padding-top: 8px !important; }
+        .key {
+            background: #fff !important;
+            border: 1px solid var(--border-primary) !important;
+            color: var(--text-primary) !important;
+            border-radius: 6px !important;
+            box-shadow: 0 2px 0 var(--border-primary) !important;
+            font-family: 'Barlow', sans-serif !important;
+        }
+        .key:active, .key:hover { background: var(--bg-elevated) !important; transform: translateY(1px) !important; box-shadow: 0 1px 0 var(--border-primary) !important; }
+        .key.correct { background: var(--correct) !important; border-color: var(--correct) !important; color: #fff !important; box-shadow: 0 2px 0 #4d8a49 !important; }
+        .key.present { background: var(--present) !important; border-color: var(--present) !important; color: #fff !important; box-shadow: 0 2px 0 #a08a30 !important; }
+        .key.absent  { background: var(--absent)  !important; border-color: var(--absent)  !important; color: #fff !important; box-shadow: 0 2px 0 #5a5d5f !important; }
+
+        /* ── ROUND OVERLAY ── */
+        #roundOverlay {
+            background: rgba(249,247,244,0.96) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        #roundOverlayTitle { color: var(--text-primary) !important; }
+        #roundOverlayTitle.overlay-win  { color: var(--correct) !important; }
+        #roundOverlayTitle.overlay-lose { color: var(--accent) !important; }
+        #roundOverlayTitle.overlay-caution { color: #FF9F1C !important; }
+        #roundOverlayScore { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; font-variant-numeric: tabular-nums; }
+        #roundOverlayWord  { color: var(--text-muted) !important; font-family: 'Barlow', sans-serif !important; }
+        #roundOverlayNext  { color: var(--text-muted) !important; }
+        #roundOverlayNext.overlay-over   { color: var(--accent) !important; }
+        #roundOverlayNext.overlay-danger { color: var(--accent) !important; }
+
+        /* ── RESULT MODAL ── */
+        .result-modal {
+            background: rgba(28,28,30,0.55) !important;
+        }
+        .result-container {
+            background: #fff !important;
+            border: none !important;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18) !important;
+            border-radius: 28px !important;
+        }
+        .result-title { font-family: 'Barlow', sans-serif !important; font-weight: 900 !important; font-style: italic !important; font-size: 48px !important; }
+        .result-title.win  { color: var(--text-primary) !important; }
+        .result-title.lose { color: var(--absent) !important; }
+        .result-stats {
+            background: var(--bg-primary) !important;
+            border: none !important;
+        }
+        .result-label { color: var(--text-muted) !important; }
+        .result-value { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; font-variant-numeric: tabular-nums; }
+        .result-value.positive { color: var(--correct) !important; }
+        .result-btn { font-family: 'Barlow', sans-serif !important; font-weight: 700 !important; letter-spacing: 1px !important; }
+        .result-btn-primary {
+            background: var(--accent) !important;
+            color: #fff !important;
+            border: none !important;
+            box-shadow: 0 4px 14px rgba(255,90,95,0.35) !important;
+            font-family: 'Barlow', sans-serif !important;
+        }
+        .result-btn-secondary {
+            background: #fff !important;
+            color: var(--text-primary) !important;
+            border: 1.5px solid var(--border-primary) !important;
+            box-shadow: none !important;
+            font-family: 'Barlow', sans-serif !important;
+        }
+        .double-btn {
+            background: var(--accent-light) !important;
+            border: 1.5px solid rgba(255,90,95,0.4) !important;
+            color: var(--accent) !important;
+        }
+        .consolation-btn {
+            background: #EEF6FF !important;
+            border: 1.5px solid rgba(100,170,255,0.4) !important;
+            color: #3A86FF !important;
+        }
+
+        /* ── BLITZ END SCREEN ── */
+        #blitzEndScreen {
+            background: rgba(249,247,244,0.97) !important;
+            backdrop-filter: blur(12px) !important;
+        }
+        .blitz-end-container { color: var(--text-primary) !important; }
+        .blitz-end-title { color: var(--correct) !important; font-family: 'Barlow', sans-serif !important; font-weight: 900 !important; }
+        .blitz-end-subtitle { color: var(--text-muted) !important; }
+        .blitz-end-solves { color: var(--accent) !important; font-family: 'Barlow', sans-serif !important; font-variant-numeric: tabular-nums; }
+        .blitz-end-solves-label { color: var(--text-muted) !important; }
+        .blitz-end-stats { background: #fff !important; border: 1px solid var(--border-primary) !important; }
+        .blitz-end-stat-label { color: var(--text-muted) !important; }
+        .blitz-end-stat-value { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; }
+
+        /* ── STORE MODAL ── */
+        #storeModal { background: rgba(28,28,30,0.55) !important; backdrop-filter: blur(12px) !important; }
+        .store-container {
+            background: #fff !important;
+            border: 1px solid var(--border-primary) !important;
+            box-shadow: var(--shadow-lg) !important;
+        }
+        .store-title { color: var(--text-primary) !important; }
+        .store-subtitle { color: var(--text-muted) !important; }
+        .store-package {
+            background: var(--bg-primary) !important;
+            border-color: var(--border-primary) !important;
+        }
+        .store-package.featured {
+            background: var(--accent-light) !important;
+            border-color: rgba(255,90,95,0.3) !important;
+        }
+        .store-package-coins { color: var(--text-primary) !important; font-family: 'Barlow', sans-serif !important; font-variant-numeric: tabular-nums; }
+        .store-package-label { color: var(--text-muted) !important; }
+        .store-package-badge { background: var(--accent) !important; color: #fff !important; border-radius: 20px !important; padding: 2px 8px !important; font-size: 10px !important; }
+        .store-buy-btn {
+            background: var(--accent) !important;
+            color: #fff !important;
+            border: none !important;
+            border-radius: 20px !important;
+            cursor: pointer !important;
+            padding: 6px 14px !important;
+        }
+        .price { color: #fff !important; }
+        .store-coming-soon { color: rgba(255,255,255,0.75) !important; font-size: 10px !important; }
+        .store-close-btn { color: var(--text-muted) !important; border-color: var(--border-primary) !important; }
+        .store-close-btn:hover { color: var(--text-primary) !important; border-color: var(--text-primary) !important; }
+
+        /* ── Monetization buttons ── */
+        .daily-reward-btn {
+            background: #fff !important;
+            border: 1.5px solid rgba(255,90,95,0.4) !important;
+            color: var(--accent) !important;
+        }
+        .daily-reward-btn.claimed { opacity: 0.5 !important; color: var(--text-muted) !important; border-color: var(--border-primary) !important; }
+
+        /* ── Mobile overrides ── */
+        @media (max-width: 768px) {
+            #battleScreen .tile {
+                background: #fff !important;
+                border: 1.5px solid var(--border-primary) !important;
+                border-radius: 4px !important;
+            }
+            #battleScreen .tile.correct { background: var(--correct) !important; border-color: var(--correct) !important; }
+            #battleScreen .tile.present { background: var(--present) !important; border-color: var(--present) !important; }
+            #battleScreen .tile.absent  { background: var(--absent)  !important; border-color: var(--absent)  !important; }
+            #battleScreen .key {
+                background: #fff !important;
+                border: 1px solid var(--border-primary) !important;
+                color: var(--text-primary) !important;
+                box-shadow: 0 1px 0 var(--border-primary) !important;
+            }
+            #battleScreen .key.correct { background: var(--correct) !important; border-color: var(--correct) !important; color: #fff !important; }
+            #battleScreen .key.present { background: var(--present) !important; border-color: var(--present) !important; color: #fff !important; }
+            #battleScreen .key.absent  { background: var(--absent)  !important; border-color: var(--absent)  !important; color: #fff !important; }
+            #battleScreen #battleTimer { font-size: 36px !important; color: var(--text-primary) !important; }
+            #battleScreen #battleTimer.timer-warning  { color: var(--accent) !important; }
+            #battleScreen #battleTimer.timer-critical { color: var(--accent) !important; }
+            .battle-header { background: #fff !important; }
+            .player-panel { background: #fff !important; border-color: var(--border-primary) !important; }
+        }
     </style>
 
     <!-- AppLovin MAX Web SDK — set YOUR_SDK_KEY and ad unit IDs before enabling -->
@@ -2714,14 +3117,10 @@ h1, h2, h3, h4, h5, h6,
             </div>
             
             <!-- Title -->
-            <div style="width: 100%; text-align: center; padding-bottom: 25px;">
-                <h1 style="font-family: 'Lilita One', cursive; font-size: 72px; font-weight: 400; color: #ffd700; margin: 0; padding: 0; letter-spacing: 2px; text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);">WORDUEL</h1>
-            </div>
-            
+            <h1 class="splash-title">WORDUEL</h1>
+
             <!-- Subtitle -->
-            <div style="width: 100%; text-align: center; padding-bottom: 60px;">
-                <p style="font-family: 'Barlow', sans-serif; font-size: 15px; font-weight: 700; color: rgba(255, 255, 255, 0.9); margin: 0; padding: 0; text-transform: uppercase; letter-spacing: 4px;">COMPETITIVE WORD BATTLES</p>
-            </div>
+            <p class="splash-subtitle">COMPETITIVE WORD BATTLES</p>
             
             <!-- Loading bar -->
             <div class="loading-bar">
@@ -2820,7 +3219,7 @@ h1, h2, h3, h4, h5, h6,
 
             <!-- Store button -->
             <div style="padding: 0 0 8px; text-align:center;">
-                <button onclick="showStore()" style="background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,152,0,0.08)); border:1px solid rgba(255,215,0,0.35); border-radius:14px; color:#ffd700; font-family:'Barlow',sans-serif; font-weight:800; font-size:13px; letter-spacing:2px; padding:10px 32px; cursor:pointer; width:100%;">
+                <button onclick="showStore()" style="background:#fff; border:1.5px solid rgba(255,90,95,0.4); border-radius:14px; color:#FF5A5F; font-family:'Barlow',sans-serif; font-weight:800; font-size:13px; letter-spacing:2px; padding:10px 32px; cursor:pointer; width:100%;">
                     🏪 &nbsp;COIN STORE
                 </button>
             </div>
@@ -5104,16 +5503,16 @@ h1, h2, h3, h4, h5, h6,
                 const titleEl = document.getElementById('roundOverlayTitle');
                 if (data.draw) {
                     titleEl.textContent = 'DRAW — OVERTIME!';
-                    titleEl.style.color = '#ff9800';
+                    titleEl.className = 'overlay-caution';
                 } else {
                     titleEl.textContent = data.roundWon ? 'YOU WON THE ROUND!' : 'OPPONENT WON THE ROUND';
-                    titleEl.style.color = data.roundWon ? '#00ff88' : '#ff3366';
+                    titleEl.className = data.roundWon ? 'overlay-win' : 'overlay-lose';
                 }
                 document.getElementById('roundOverlayScore').textContent = `${data.yourScore} – ${data.opponentScore}`;
                 document.getElementById('roundOverlayWord').textContent = `The word was: ${data.targetWord}`;
                 const nextEl = document.getElementById('roundOverlayNext');
                 nextEl.textContent = data.matchOver ? 'MATCH OVER!' : 'NEXT ROUND STARTING...';
-                nextEl.style.color  = data.matchOver ? '#ffd700'   : '#4a5568';
+                nextEl.className = data.matchOver ? 'overlay-over' : '';
                 overlay.style.display = 'flex';
             });
 
@@ -5143,11 +5542,11 @@ h1, h2, h3, h4, h5, h6,
                 const wordEl  = document.getElementById('roundOverlayWord');
                 const nextEl  = document.getElementById('roundOverlayNext');
                 titleEl.textContent = 'OPPONENT DISCONNECTED';
-                titleEl.style.color = '#ff9800';
+                titleEl.className = 'overlay-caution';
                 scoreEl.textContent = '';
                 wordEl.textContent  = 'Waiting for them to reconnect...';
                 nextEl.textContent  = `Match ends in ${secs}s`;
-                nextEl.style.color  = '#ff3366';
+                nextEl.className = 'overlay-danger';
                 overlay.style.display = 'flex';
                 if (disconnectCountdown) clearInterval(disconnectCountdown);
                 disconnectCountdown = setInterval(() => {
