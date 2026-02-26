@@ -328,7 +328,7 @@ function createMatch(socket, user, opponent, betAmount, mode) {
         match.blitzTimeout = setTimeout(() => endBlitz(matchId), 5 * 60 * 1000);
     }
     if (mode === 'best_of_3') {
-        match.roundTimer = setTimeout(() => startOvertime(matchId), 3 * 60 * 1000);
+        match.roundTimer = setTimeout(() => endRound(matchId), 3 * 60 * 1000);
     }
 
     activeMatches.set(matchId, match);
@@ -358,16 +358,32 @@ function endRound(matchId) {
     if (match.roundTimer)    { clearTimeout(match.roundTimer);    match.roundTimer    = null; }
     if (match.overtimeTimer) { clearTimeout(match.overtimeTimer); match.overtimeTimer = null; }
 
-    const [p1, p2]   = match.players;
-    const solver      = match.players.find(p => p.solved);
-    let roundWinner   = null;
+    const [p1, p2] = match.players;
+    let roundWinner = null;
 
+    const solver = match.players.find(p => p.solved);
     if (solver) {
+        // Someone solved: solver wins outright
         roundWinner = solver.username;
     } else {
-        if      (p1.guesses.length < p2.guesses.length) roundWinner = p1.username;
-        else if (p2.guesses.length < p1.guesses.length) roundWinner = p2.username;
-        // equal guesses with no solve → no point
+        // Nobody solved: compare best single-guess green count
+        // Winner = most greens in any one guess; tiebreaker = achieved it on an earlier guess
+        const bestSingle = (player) => {
+            let bestGreens = 0, bestIdx = Infinity;
+            player.guesses.forEach((g, i) => {
+                const greens = g.evaluation.filter(e => e === 'correct').length;
+                if (greens > bestGreens || (greens === bestGreens && i < bestIdx)) {
+                    bestGreens = greens; bestIdx = i;
+                }
+            });
+            return { greens: bestGreens, idx: bestIdx };
+        };
+        const p1b = bestSingle(p1), p2b = bestSingle(p2);
+        if      (p1b.greens > p2b.greens) roundWinner = p1.username;
+        else if (p2b.greens > p1b.greens) roundWinner = p2.username;
+        else if (p1b.greens > 0 && p1b.idx < p2b.idx) roundWinner = p1.username;
+        else if (p2b.greens > 0 && p2b.idx < p1b.idx) roundWinner = p2.username;
+        // true tie or both 0 greens → no point awarded
     }
     if (roundWinner) match.scores[roundWinner]++;
 
@@ -381,45 +397,6 @@ function endRound(matchId) {
     if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p2.username, yourScore: s2, opponentScore: s1, targetWord: match.targetWord, matchOver: hasWinner });
 
     console.log(`Round ${match.currentRound}: ${p1.username}=${s1} ${p2.username}=${s2}${hasWinner ? ' → MATCH OVER' : ''}`);
-
-    scheduleNextRoundOrEnd(matchId, s1, s2);
-}
-
-function startOvertime(matchId) {
-    const match = activeMatches.get(matchId);
-    if (!match || match.status !== 'active') return;
-    if (match.players.some(p => p.solved)) return; // someone already solved this round
-
-    const [p1, p2] = match.players;
-    const s1Sok    = activeSockets.get(p1.username);
-    const s2Sok    = activeSockets.get(p2.username);
-
-    if (s1Sok) s1Sok.emit('round_overtime', {});
-    if (s2Sok) s2Sok.emit('round_overtime', {});
-    console.log(`Round ${match.currentRound}: overtime started`);
-
-    match.overtimeTimer = setTimeout(() => endRoundDraw(matchId), 2 * 60 * 1000);
-}
-
-function endRoundDraw(matchId) {
-    const match = activeMatches.get(matchId);
-    if (!match || match.status !== 'active') return;
-    match.status = 'between_rounds';
-    if (match.overtimeTimer) { clearTimeout(match.overtimeTimer); match.overtimeTimer = null; }
-
-    const [p1, p2] = match.players;
-    match.scores[p1.username]++;
-    match.scores[p2.username]++;
-
-    const s1    = match.scores[p1.username];
-    const s2    = match.scores[p2.username];
-    const s1Sok = activeSockets.get(p1.username);
-    const s2Sok = activeSockets.get(p2.username);
-
-    const hasWinner = (s1 >= 2 || s2 >= 2) && s1 !== s2;
-    if (s1Sok) s1Sok.emit('round_end', { roundNumber: match.currentRound, draw: true, roundWon: false, yourScore: s1, opponentScore: s2, targetWord: match.targetWord, matchOver: hasWinner });
-    if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, draw: true, roundWon: false, yourScore: s2, opponentScore: s1, targetWord: match.targetWord, matchOver: hasWinner });
-    console.log(`Round ${match.currentRound}: DRAW — ${p1.username}=${s1} ${p2.username}=${s2}${hasWinner ? ' → MATCH OVER' : ''}`);
 
     scheduleNextRoundOrEnd(matchId, s1, s2);
 }
@@ -439,7 +416,7 @@ function scheduleNextRoundOrEnd(matchId, s1, s2) {
         setTimeout(() => {
             match.status = 'active';
             match.currentRoundStartTime = Date.now();
-            match.roundTimer = setTimeout(() => startOvertime(matchId), 3 * 60 * 1000);
+            match.roundTimer = setTimeout(() => endRound(matchId), 3 * 60 * 1000);
             // Re-fetch sockets here — stale refs captured before the delay cause
             // round_start to be silently lost if a player's socket reconnected.
             const freshP1Sok = activeSockets.get(p1.username);
