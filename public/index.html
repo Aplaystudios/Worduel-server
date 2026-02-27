@@ -2475,115 +2475,161 @@ h1, h2, h3, h4, h5, h6,
         }
         #storeModal.active { display: flex; }
         .store-container {
-            background: linear-gradient(145deg, #1a1a2e, #16213e);
-            border: 1px solid rgba(255,215,0,0.3);
-            border-radius: 20px;
-            padding: 28px 24px;
+            background: linear-gradient(160deg, #0f1c2e 0%, #1a2d48 60%, #0f1c2e 100%);
+            border: 1.5px solid rgba(255,215,0,0.3);
+            border-radius: 24px;
+            padding: 24px 20px 20px;
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             max-height: 90vh;
             overflow-y: auto;
         }
         .store-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .store-title {
             font-family: 'Barlow', sans-serif;
             font-weight: 900;
-            font-size: 28px;
+            font-size: 26px;
             letter-spacing: 4px;
             color: #ffd700;
-            text-shadow: 0 0 16px rgba(255,215,0,0.5);
+            text-shadow: 0 0 16px rgba(255,215,0,0.4);
         }
         .store-subtitle {
-            font-size: 12px;
-            color: #6b7280;
-            letter-spacing: 1px;
-            margin-top: 4px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            letter-spacing: 2px;
+            margin-top: 3px;
         }
-        .store-packages {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .store-package {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
-            padding: 14px 18px;
-            transition: border-color 0.2s;
-        }
-        .store-package.featured {
-            border-color: rgba(255,215,0,0.4);
-            background: rgba(255,215,0,0.06);
-        }
-        .store-package-left {
+
+        /* Daily deal card */
+        .store-daily-deal {
             display: flex;
             align-items: center;
             gap: 14px;
+            background: linear-gradient(135deg, rgba(74,222,128,0.1), rgba(0,180,90,0.05));
+            border: 1.5px solid rgba(74,222,128,0.4);
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
         }
-        .store-package-icon { font-size: 28px; }
-        .store-package-coins {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 900;
-            font-size: 20px;
-            color: #fff;
-        }
-        .store-package-label {
-            font-size: 11px;
-            color: #9ca3af;
-            letter-spacing: 1px;
-            margin-top: 2px;
-        }
-        .store-package-badge {
+        .store-daily-left { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+        .store-daily-badge {
             font-size: 9px;
-            font-weight: 800;
-            background: #ffd700;
+            font-weight: 900;
+            background: #4ade80;
             color: #000;
-            border-radius: 4px;
-            padding: 2px 6px;
+            border-radius: 100px;
+            padding: 2px 8px;
             letter-spacing: 1px;
-            margin-top: 4px;
             display: inline-block;
+            width: fit-content;
         }
-        .store-buy-btn {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
-            color: #9ca3af;
+        .store-daily-coins {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px;
+            font-weight: 900;
+            color: #4ade80;
+        }
+        .store-daily-info { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; }
+        .store-daily-btn {
+            background: rgba(74,222,128,0.18);
+            border: 1.5px solid rgba(74,222,128,0.6);
+            border-radius: 12px;
+            color: #4ade80;
             font-family: 'Barlow', sans-serif;
-            font-weight: 700;
-            font-size: 13px;
+            font-weight: 800;
+            font-size: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
             letter-spacing: 1px;
-            padding: 8px 16px;
-            cursor: not-allowed;
+            white-space: nowrap;
+        }
+
+        /* 2-column grid */
+        .store-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .store-card {
+            position: relative;
+            background: rgba(255,255,255,0.04);
+            border: 1.5px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            padding: 20px 12px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
             text-align: center;
         }
-        .store-buy-btn .price {
-            display: block;
-            font-size: 15px;
-            color: #fff;
-            font-weight: 900;
+        .store-card.featured {
+            background: rgba(255,215,0,0.07);
+            border-color: rgba(255,215,0,0.45);
         }
-        .store-coming-soon {
-            display: block;
+        .store-card-floatbadge {
+            position: absolute;
+            top: -11px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffd700;
+            color: #000;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            white-space: nowrap;
+        }
+        .store-card-floatbadge.best { background: #4ade80; }
+        .store-card-icon { font-size: 38px; margin-bottom: 6px; }
+        .store-card-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 26px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1;
+        }
+        .store-card-label {
             font-size: 9px;
-            color: #6b7280;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+        .store-card-btn {
+            margin-top: 10px;
+            width: 100%;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: 15px;
+            padding: 8px;
+            cursor: pointer;
+        }
+        .store-card-btn.featured-btn {
+            background: rgba(255,215,0,0.15);
+            border-color: rgba(255,215,0,0.5);
+            color: #ffd700;
+        }
+        .store-card-soon {
+            font-size: 8px;
+            color: rgba(255,255,255,0.2);
             letter-spacing: 1px;
             margin-top: 2px;
         }
         .store-close-btn {
-            margin-top: 20px;
             width: 100%;
             padding: 12px;
             background: transparent;
             border: 1px solid rgba(255,255,255,0.15);
             border-radius: 12px;
-            color: #9ca3af;
+            color: rgba(255,255,255,0.5);
             font-family: 'Barlow', sans-serif;
             font-weight: 700;
             font-size: 13px;
@@ -2698,35 +2744,57 @@ h1, h2, h3, h4, h5, h6,
             overflow: hidden;
         }
 
-        /* Absolute icon column — scoped to #homeScreen, add buttons freely */
+        /* Icon row — in normal flow, below stat cards */
         .home-side-icons {
-            position: absolute;
-            right: 6px;
-            top: max(env(safe-area-inset-top, 0px), 16px);
-            top: 56px;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            justify-content: flex-end;
             gap: 10px;
-            z-index: 20;
+            width: 100%;
         }
 
-        /* Wordmark fills the middle void */
+        /* Animated tiles fill the middle void */
         .home-wordmark-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 14px;
             pointer-events: none;
         }
-        .home-logo-word {
-            font-family: 'Lilita One', cursive;
-            font-size: 52px;
-            color: #ffd700;
-            text-shadow: 0 0 28px rgba(255,215,0,0.35), 0 2px 8px rgba(0,0,0,0.4);
-            letter-spacing: 3px;
+        .home-logo-tiles {
+            display: flex;
+            gap: 7px;
+            justify-content: center;
         }
+        .logo-tile {
+            width: 54px;
+            height: 54px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Barlow', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            transform-style: preserve-3d;
+            transition: border-color 0.2s;
+        }
+        .logo-tile.flipping {
+            animation: logo-flip 0.5s ease forwards;
+        }
+        @keyframes logo-flip {
+            0%   { transform: rotateX(0deg); }
+            50%  { transform: rotateX(90deg); }
+            100% { transform: rotateX(0deg); }
+        }
+        .logo-tile.tile-correct { background: #538d4e; border-color: #538d4e; }
+        .logo-tile.tile-present { background: #b59f3b; border-color: #b59f3b; }
+        .logo-tile.tile-absent  { background: #3a3a3c; border-color: #3a3a3c; }
         .home-logo-sub {
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px;
@@ -2746,7 +2814,6 @@ h1, h2, h3, h4, h5, h6,
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             width: 100%;
-            margin-right: 66px;
         }
 
         .home-stat-card {
@@ -2956,9 +3023,9 @@ h1, h2, h3, h4, h5, h6,
            dark neon palette. All !important to beat Clash Royale.
            ═══════════════════════════════════════════════════ */
 
-        /* Kill Clash Royale wood/grass background */
+        /* Kill Clash Royale wood/grass background — use game's blue gradient */
         #battleScreen .battle-container {
-            background: var(--bg-primary) !important;
+            background: linear-gradient(180deg, #3a7bd5 0%, #2c5aa0 45%, #1e3a66 100%) !important;
             width: 100% !important;
             max-width: 100% !important;
             height: 100vh !important;
@@ -2988,9 +3055,9 @@ h1, h2, h3, h4, h5, h6,
             padding: 6px 12px !important;
             margin: 0 !important;
             flex-shrink: 0 !important;
-            background: var(--bg-secondary) !important;
+            background: rgba(0,0,0,0.25) !important;
             border: none !important;
-            border-bottom: 1px solid var(--border-primary) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.12) !important;
             border-radius: 0 !important;
             box-shadow: none !important;
             position: relative !important;
@@ -3084,24 +3151,24 @@ h1, h2, h3, h4, h5, h6,
             margin-bottom: 4px;
         }
 
-        /* Tiles — full-width flex, dark navy, no scroll */
+        /* Tiles — square 38px, centred, no stretching */
         #battleScreen .word-grid {
-            width: 100% !important;
+            width: auto !important;
         }
         #battleScreen .word-row {
-            width: 100% !important;
-            justify-content: stretch !important;
+            width: auto !important;
+            justify-content: center !important;
+            gap: 4px !important;
         }
         #battleScreen .tile {
-            flex: 1 !important;
-            min-width: 0 !important;
-            width: auto !important;
-            height: 36px !important;
-            font-size: 16px !important;
+            flex: none !important;
+            width: 38px !important;
+            height: 38px !important;
+            font-size: 17px !important;
             font-weight: 900 !important;
-            background: #1b2d45 !important;
-            border: 2px solid #2a4060 !important;
-            color: var(--text-primary) !important;
+            background: rgba(255,255,255,0.12) !important;
+            border: 2px solid rgba(255,255,255,0.22) !important;
+            color: #fff !important;
             border-radius: 6px !important;
             box-shadow: none !important;
             text-shadow: none !important;
@@ -3110,31 +3177,31 @@ h1, h2, h3, h4, h5, h6,
         #battleScreen .tile.correct {
             background: var(--correct) !important;
             border-color: var(--correct) !important;
-            color: var(--bg-primary) !important;
+            color: #fff !important;
             box-shadow: none !important;
         }
 
         #battleScreen .tile.present {
             background: var(--present) !important;
             border-color: var(--present) !important;
-            color: var(--bg-primary) !important;
+            color: #fff !important;
             box-shadow: none !important;
         }
 
         #battleScreen .tile.absent {
-            background: var(--absent) !important;
-            border-color: var(--absent) !important;
-            color: var(--text-muted) !important;
+            background: rgba(0,0,0,0.35) !important;
+            border-color: rgba(255,255,255,0.12) !important;
+            color: rgba(255,255,255,0.45) !important;
             box-shadow: none !important;
         }
 
-        /* ── Keyboard: dark, full-width, pinned ── */
+        /* ── Keyboard: blue-tinted, full-width, pinned ── */
         #battleScreen .keyboard {
             width: 100% !important;
             box-sizing: border-box !important;
-            background: var(--bg-secondary) !important;
+            background: rgba(0,0,0,0.3) !important;
             border: none !important;
-            border-top: 1px solid var(--border-primary) !important;
+            border-top: 1px solid rgba(255,255,255,0.12) !important;
             border-radius: 0 !important;
             padding: 12px 6px 16px !important;
             flex-shrink: 0 !important;
@@ -3148,9 +3215,9 @@ h1, h2, h3, h4, h5, h6,
             min-width: 30px !important;
             font-size: 15px !important;
             font-weight: 800 !important;
-            background: var(--bg-elevated) !important;
-            border: 1px solid var(--border-primary) !important;
-            color: var(--text-primary) !important;
+            background: rgba(255,255,255,0.18) !important;
+            border: 1px solid rgba(255,255,255,0.25) !important;
+            color: #fff !important;
             border-radius: 7px !important;
             box-shadow: none !important;
             text-shadow: none !important;
@@ -3223,16 +3290,6 @@ h1, h2, h3, h4, h5, h6,
     <!-- HOME SCREEN -->
     <div class="screen" id="homeScreen">
 
-        <!-- Fixed right-side icon column — independent overlay, add more icons here -->
-        <div class="home-side-icons">
-            <button class="home-icon-btn" onclick="showStore()">
-                <span class="icon-btn-emoji">🛍️</span>
-            </button>
-            <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
-                <span class="icon-btn-emoji">🎁</span>
-            </button>
-        </div>
-
         <div class="home-container">
 
             <!-- Top bar: avatar+ranking left | balance right -->
@@ -3269,9 +3326,25 @@ h1, h2, h3, h4, h5, h6,
                 </div>
             </div>
 
-            <!-- Wordmark: fills dead space in the middle -->
+            <!-- Icon row: store + daily reward, below stats, above wordmark -->
+            <div class="home-side-icons">
+                <button class="home-icon-btn" onclick="showStore()">
+                    <span class="icon-btn-emoji">🛍️</span>
+                </button>
+                <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
+                    <span class="icon-btn-emoji">🎁</span>
+                </button>
+            </div>
+
+            <!-- Animated Wordle tiles: fills dead space in the middle -->
             <div class="home-wordmark-area">
-                <div class="home-logo-word">WORDUEL</div>
+                <div class="home-logo-tiles" id="logoTiles">
+                    <div class="logo-tile" id="lt0"></div>
+                    <div class="logo-tile" id="lt1"></div>
+                    <div class="logo-tile" id="lt2"></div>
+                    <div class="logo-tile" id="lt3"></div>
+                    <div class="logo-tile" id="lt4"></div>
+                </div>
                 <div class="home-logo-sub">COMPETE · GUESS · WIN</div>
             </div>
 
@@ -3563,65 +3636,54 @@ h1, h2, h3, h4, h5, h6,
     <div id="storeModal">
         <div class="store-container">
             <div class="store-header">
-                <div class="store-title">🏪 COIN STORE</div>
-                <div class="store-subtitle">TOP UP YOUR BALANCE TO KEEP DUELING</div>
+                <div class="store-title">🪙 COIN STORE</div>
+                <div class="store-subtitle">FUEL YOUR DUELS</div>
             </div>
-            <div class="store-packages">
-                <div class="store-package">
-                    <div class="store-package-left">
-                        <div class="store-package-icon">💰</div>
-                        <div>
-                            <div class="store-package-coins">100</div>
-                            <div class="store-package-label">COINS</div>
-                        </div>
-                    </div>
-                    <button class="store-buy-btn" data-package="bronze" onclick="purchasePackage('bronze')">
-                        <span class="price">$0.99</span>
-                        <span class="store-coming-soon">COMING SOON</span>
-                    </button>
+
+            <!-- Daily deal — full width card -->
+            <div class="store-daily-deal">
+                <div class="store-daily-left">
+                    <div class="store-daily-badge">⚡ DAILY FREE</div>
+                    <div class="store-daily-coins">+100 🪙</div>
+                    <div class="store-daily-info">Watch an ad — once per day</div>
                 </div>
-                <div class="store-package featured">
-                    <div class="store-package-left">
-                        <div class="store-package-icon">💎</div>
-                        <div>
-                            <div class="store-package-coins">500</div>
-                            <div class="store-package-label">COINS</div>
-                            <div class="store-package-badge">POPULAR</div>
-                        </div>
-                    </div>
-                    <button class="store-buy-btn" data-package="silver" onclick="purchasePackage('silver')">
-                        <span class="price">$4.99</span>
-                        <span class="store-coming-soon">COMING SOON</span>
-                    </button>
+                <button class="store-daily-btn" onclick="claimDailyReward(); closeStore();">WATCH AD</button>
+            </div>
+
+            <!-- 2-column packages grid -->
+            <div class="store-grid">
+                <div class="store-card">
+                    <div class="store-card-icon">💰</div>
+                    <div class="store-card-amount">100</div>
+                    <div class="store-card-label">COINS</div>
+                    <button class="store-card-btn" onclick="purchasePackage('bronze')">$0.99</button>
+                    <div class="store-card-soon">COMING SOON</div>
                 </div>
-                <div class="store-package">
-                    <div class="store-package-left">
-                        <div class="store-package-icon">👑</div>
-                        <div>
-                            <div class="store-package-coins">1,000</div>
-                            <div class="store-package-label">COINS</div>
-                            <div class="store-package-badge">BEST VALUE</div>
-                        </div>
-                    </div>
-                    <button class="store-buy-btn" data-package="gold" onclick="purchasePackage('gold')">
-                        <span class="price">$9.99</span>
-                        <span class="store-coming-soon">COMING SOON</span>
-                    </button>
+                <div class="store-card featured">
+                    <div class="store-card-floatbadge">POPULAR</div>
+                    <div class="store-card-icon">💎</div>
+                    <div class="store-card-amount">500</div>
+                    <div class="store-card-label">COINS</div>
+                    <button class="store-card-btn featured-btn" onclick="purchasePackage('silver')">$4.99</button>
+                    <div class="store-card-soon">COMING SOON</div>
                 </div>
-                <div class="store-package">
-                    <div class="store-package-left">
-                        <div class="store-package-icon">🚀</div>
-                        <div>
-                            <div class="store-package-coins">5,000</div>
-                            <div class="store-package-label">COINS</div>
-                        </div>
-                    </div>
-                    <button class="store-buy-btn" data-package="platinum" onclick="purchasePackage('platinum')">
-                        <span class="price">$39.99</span>
-                        <span class="store-coming-soon">COMING SOON</span>
-                    </button>
+                <div class="store-card">
+                    <div class="store-card-floatbadge best">BEST VALUE</div>
+                    <div class="store-card-icon">👑</div>
+                    <div class="store-card-amount">1,000</div>
+                    <div class="store-card-label">COINS</div>
+                    <button class="store-card-btn" onclick="purchasePackage('gold')">$9.99</button>
+                    <div class="store-card-soon">COMING SOON</div>
+                </div>
+                <div class="store-card">
+                    <div class="store-card-icon">🚀</div>
+                    <div class="store-card-amount">5,000</div>
+                    <div class="store-card-label">COINS</div>
+                    <button class="store-card-btn" onclick="purchasePackage('platinum')">$39.99</button>
+                    <div class="store-card-soon">COMING SOON</div>
                 </div>
             </div>
+
             <button class="store-close-btn" onclick="closeStore()">CLOSE</button>
         </div>
     </div>
@@ -3702,6 +3764,41 @@ h1, h2, h3, h4, h5, h6,
             if (elLosses) elLosses.textContent = Math.max(0, losses);
             if (elWinRate) elWinRate.textContent = winRate;
         }
+
+        /* ── Animated logo tiles ── */
+        const LOGO_WORDS = [
+            { word: 'BRAVE', colors: ['tile-absent','tile-present','tile-correct','tile-absent','tile-correct'] },
+            { word: 'CLASH', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] },
+            { word: 'SMART', colors: ['tile-present','tile-absent','tile-correct','tile-present','tile-absent'] },
+            { word: 'WORDS', colors: ['tile-correct','tile-present','tile-absent','tile-absent','tile-correct'] },
+        ];
+        let _logoIdx = 0;
+        let _logoTimer = null;
+        function animateLogoTiles() {
+            const tiles = document.querySelectorAll('.logo-tile');
+            if (!tiles.length) return;
+            const entry = LOGO_WORDS[_logoIdx % LOGO_WORDS.length];
+            _logoIdx++;
+            tiles.forEach(t => {
+                t.className = 'logo-tile';
+                t.textContent = '';
+            });
+            entry.word.split('').forEach((letter, i) => {
+                setTimeout(() => {
+                    const tile = tiles[i];
+                    if (!tile) return;
+                    tile.textContent = letter;
+                    tile.classList.add('flipping');
+                    setTimeout(() => {
+                        tile.classList.add(entry.colors[i]);
+                        tile.classList.remove('flipping');
+                    }, 250);
+                }, i * 250);
+            });
+            const cycleDuration = 5 * 250 + 2200;
+            _logoTimer = setTimeout(animateLogoTiles, cycleDuration);
+        }
+        setTimeout(animateLogoTiles, 800);
 
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
