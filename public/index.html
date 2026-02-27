@@ -2710,9 +2710,32 @@ h1, h2, h3, h4, h5, h6,
             z-index: 20;
         }
 
-        /* Bottom group: mode pills + battle btn pushed to bottom */
+        /* Wordmark fills the middle void */
+        .home-wordmark-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .home-logo-word {
+            font-family: 'Lilita One', cursive;
+            font-size: 52px;
+            color: #ffd700;
+            text-shadow: 0 0 28px rgba(255,215,0,0.35), 0 2px 8px rgba(0,0,0,0.4);
+            letter-spacing: 3px;
+        }
+        .home-logo-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 3px;
+        }
+
+        /* Bottom group: mode pills + battle btn */
         .home-bottom {
-            margin-top: auto;
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -2723,6 +2746,7 @@ h1, h2, h3, h4, h5, h6,
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             width: 100%;
+            margin-right: 66px;
         }
 
         .home-stat-card {
@@ -2961,7 +2985,7 @@ h1, h2, h3, h4, h5, h6,
             height: auto !important;
             min-height: auto !important;
             max-height: none !important;
-            padding: 10px 14px !important;
+            padding: 6px 12px !important;
             margin: 0 !important;
             flex-shrink: 0 !important;
             background: var(--bg-secondary) !important;
@@ -2991,7 +3015,7 @@ h1, h2, h3, h4, h5, h6,
         }
 
         .battle-header-name {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 900;
             color: var(--neon-green);
             font-family: 'JetBrains Mono', monospace;
@@ -2999,7 +3023,7 @@ h1, h2, h3, h4, h5, h6,
         }
 
         #battleScreen #battleTimer {
-            font-size: 22px !important;
+            font-size: 18px !important;
             font-weight: 900 !important;
             font-family: 'JetBrains Mono', monospace !important;
             color: var(--neon-green) !important;
@@ -3037,8 +3061,8 @@ h1, h2, h3, h4, h5, h6,
             flex-direction: column !important;
             align-items: center !important;
             overflow-y: hidden !important;
-            padding: 8px 12px 4px !important;
-            gap: 10px !important;
+            padding: 6px 8px 4px !important;
+            gap: 8px !important;
         }
 
         #battleScreen .your-grid-wrap,
@@ -3060,11 +3084,20 @@ h1, h2, h3, h4, h5, h6,
             margin-bottom: 4px;
         }
 
-        /* Tiles — dark navy, both grids same size, no scroll needed */
+        /* Tiles — full-width flex, dark navy, no scroll */
+        #battleScreen .word-grid {
+            width: 100% !important;
+        }
+        #battleScreen .word-row {
+            width: 100% !important;
+            justify-content: stretch !important;
+        }
         #battleScreen .tile {
-            width: 38px !important;
-            height: 38px !important;
-            font-size: 17px !important;
+            flex: 1 !important;
+            min-width: 0 !important;
+            width: auto !important;
+            height: 36px !important;
+            font-size: 16px !important;
             font-weight: 900 !important;
             background: #1b2d45 !important;
             border: 2px solid #2a4060 !important;
@@ -3236,7 +3269,13 @@ h1, h2, h3, h4, h5, h6,
                 </div>
             </div>
 
-            <!-- Mode + Battle: pushed toward bottom -->
+            <!-- Wordmark: fills dead space in the middle -->
+            <div class="home-wordmark-area">
+                <div class="home-logo-word">WORDUEL</div>
+                <div class="home-logo-sub">COMPETE · GUESS · WIN</div>
+            </div>
+
+            <!-- Mode + Battle -->
             <div class="home-bottom">
                 <div class="mode-row">
                     <div class="mode-pill ranked" id="modeCard_best_of_3" onclick="selectMode('best_of_3')">
