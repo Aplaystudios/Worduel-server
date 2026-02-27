@@ -2689,34 +2689,33 @@ h1, h2, h3, h4, h5, h6,
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            gap: 16px;
+            gap: 12px;
             height: 100dvh;
-            padding: env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 20px);
+            padding: env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 28px);
             padding-top: max(env(safe-area-inset-top, 0px), 16px);
-            padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+            padding-bottom: max(env(safe-area-inset-bottom, 0px), 28px);
             box-sizing: border-box;
             overflow: hidden;
         }
 
-        /* Fixed right-side icon overlay */
+        /* Absolute icon column — scoped to #homeScreen, add buttons freely */
         .home-side-icons {
-            position: fixed;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
+            position: absolute;
+            right: 6px;
+            top: max(env(safe-area-inset-top, 0px), 16px);
+            top: 56px;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding: 12px 6px 12px 0;
             z-index: 20;
         }
 
-        /* Center zone — stat cards */
-        .home-mid {
-            flex: 1;
+        /* Bottom group: mode pills + battle btn pushed to bottom */
+        .home-bottom {
+            margin-top: auto;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .home-stats-row {
@@ -2754,12 +2753,17 @@ h1, h2, h3, h4, h5, h6,
             text-transform: uppercase;
         }
 
-        /* Top bar */
+        /* Top bar — framed card */
         .home-topbar {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             gap: 12px;
+            background: rgba(255,255,255,0.08);
+            border: 1.5px solid rgba(255,255,255,0.18);
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin-right: 66px;
         }
 
         .home-profile-left {
@@ -3189,7 +3193,7 @@ h1, h2, h3, h4, h5, h6,
         <!-- Fixed right-side icon column — independent overlay, add more icons here -->
         <div class="home-side-icons">
             <button class="home-icon-btn" onclick="showStore()">
-                <span class="icon-btn-emoji">🏪</span>
+                <span class="icon-btn-emoji">🛍️</span>
             </button>
             <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
                 <span class="icon-btn-emoji">🎁</span>
@@ -3216,42 +3220,40 @@ h1, h2, h3, h4, h5, h6,
                 </div>
             </div>
 
-            <!-- Center: player stat cards -->
-            <div class="home-mid">
-                <div class="home-stats-row">
-                    <div class="home-stat-card">
-                        <div class="stat-value" id="statWins">0</div>
-                        <div class="stat-label">WINS</div>
-                    </div>
-                    <div class="home-stat-card">
-                        <div class="stat-value" id="statLosses">0</div>
-                        <div class="stat-label">LOSSES</div>
-                    </div>
-                    <div class="home-stat-card">
-                        <div class="stat-value" id="statWinRate">—</div>
-                        <div class="stat-label">WIN %</div>
-                    </div>
+            <!-- Stat cards: directly below the frame -->
+            <div class="home-stats-row">
+                <div class="home-stat-card">
+                    <div class="stat-value" id="statWins">0</div>
+                    <div class="stat-label">WINS</div>
+                </div>
+                <div class="home-stat-card">
+                    <div class="stat-value" id="statLosses">0</div>
+                    <div class="stat-label">LOSSES</div>
+                </div>
+                <div class="home-stat-card">
+                    <div class="stat-value" id="statWinRate">—</div>
+                    <div class="stat-label">WIN %</div>
                 </div>
             </div>
 
-            <!-- Mode selection: 3 compact cards in a row -->
-            <div class="mode-row">
-                <div class="mode-pill ranked" id="modeCard_best_of_3" onclick="selectMode('best_of_3')">
-                    <span class="mode-pill-icon">🏆</span>
-                    <span class="mode-pill-name">BEST OF 3</span>
+            <!-- Mode + Battle: pushed toward bottom -->
+            <div class="home-bottom">
+                <div class="mode-row">
+                    <div class="mode-pill ranked" id="modeCard_best_of_3" onclick="selectMode('best_of_3')">
+                        <span class="mode-pill-icon">🏆</span>
+                        <span class="mode-pill-name">BEST OF 3</span>
+                    </div>
+                    <div class="mode-pill speed" id="modeCard_blitz" onclick="selectMode('blitz')">
+                        <span class="mode-pill-icon">⚡</span>
+                        <span class="mode-pill-name">BLITZ</span>
+                    </div>
+                    <div class="mode-pill practice" id="modeCard_training" onclick="selectMode('training')">
+                        <span class="mode-pill-icon">🎓</span>
+                        <span class="mode-pill-name">TRAINING</span>
+                    </div>
                 </div>
-                <div class="mode-pill speed" id="modeCard_blitz" onclick="selectMode('blitz')">
-                    <span class="mode-pill-icon">⚡</span>
-                    <span class="mode-pill-name">BLITZ</span>
-                </div>
-                <div class="mode-pill practice" id="modeCard_training" onclick="selectMode('training')">
-                    <span class="mode-pill-icon">🎓</span>
-                    <span class="mode-pill-name">TRAINING</span>
-                </div>
+                <button class="battle-btn" id="battleBtn" onclick="startBattle()" disabled>Battle!</button>
             </div>
-
-            <!-- Battle button -->
-            <button class="battle-btn" id="battleBtn" onclick="startBattle()" disabled>Battle!</button>
 
         </div>
     </div>
