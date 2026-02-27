@@ -2688,13 +2688,70 @@ h1, h2, h3, h4, h5, h6,
         #homeScreen .home-container {
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
+            gap: 16px;
             height: 100dvh;
             padding: env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 20px);
             padding-top: max(env(safe-area-inset-top, 0px), 16px);
             padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
             box-sizing: border-box;
             overflow: hidden;
+        }
+
+        /* Fixed right-side icon overlay */
+        .home-side-icons {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px 6px 12px 0;
+            z-index: 20;
+        }
+
+        /* Center zone — stat cards */
+        .home-mid {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .home-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .home-stat-card {
+            background: rgba(255,255,255,0.07);
+            border: 1.5px solid rgba(255,255,255,0.14);
+            border-radius: 16px;
+            padding: 18px 8px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--neon-yellow);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 1.5px;
+            font-family: 'Barlow', sans-serif;
+            text-transform: uppercase;
         }
 
         /* Top bar */
@@ -2782,6 +2839,23 @@ h1, h2, h3, h4, h5, h6,
         .icon-btn-emoji { font-size: 26px; line-height: 1; }
 
         .icon-btn-label { display: none; }
+
+        /* Daily reward: green pulse when available */
+        .home-icon-btn.daily-reward-btn:not(.claimed) {
+            border-color: rgba(0,255,136,0.65);
+            animation: pulse-avail 2.2s ease-in-out infinite;
+        }
+        @keyframes pulse-avail {
+            0%, 100% { box-shadow: 0 0 10px rgba(0,255,136,0.25), 0 4px 16px rgba(0,0,0,0.35); }
+            50% { box-shadow: 0 0 20px rgba(0,255,136,0.5), 0 4px 16px rgba(0,0,0,0.35); }
+        }
+        /* Claimed: grey */
+        .home-icon-btn.daily-reward-btn.claimed {
+            opacity: 0.38;
+            border-color: rgba(255,255,255,0.15);
+            box-shadow: none;
+            animation: none;
+        }
 
         /* Mode pills row */
         .mode-row {
@@ -2950,7 +3024,7 @@ h1, h2, h3, h4, h5, h6,
             text-shadow: none !important;
         }
 
-        /* ── Stacked grids: scrollable middle zone ── */
+        /* ── Stacked grids: no scroll ── */
         #battleScreen .battle-grids {
             flex: 1 !important;
             width: 100% !important;
@@ -2958,9 +3032,9 @@ h1, h2, h3, h4, h5, h6,
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
-            overflow-y: auto !important;
-            padding: 14px 12px 8px !important;
-            gap: 12px !important;
+            overflow-y: hidden !important;
+            padding: 8px 12px 4px !important;
+            gap: 10px !important;
         }
 
         #battleScreen .your-grid-wrap,
@@ -2982,14 +3056,14 @@ h1, h2, h3, h4, h5, h6,
             margin-bottom: 4px;
         }
 
-        /* Tiles — dark neon, both grids same size */
+        /* Tiles — dark navy, both grids same size, no scroll needed */
         #battleScreen .tile {
-            width: 44px !important;
-            height: 44px !important;
-            font-size: 20px !important;
+            width: 38px !important;
+            height: 38px !important;
+            font-size: 17px !important;
             font-weight: 900 !important;
-            background: var(--bg-elevated) !important;
-            border: 2px solid var(--border-primary) !important;
+            background: #1b2d45 !important;
+            border: 2px solid #2a4060 !important;
             color: var(--text-primary) !important;
             border-radius: 6px !important;
             box-shadow: none !important;
@@ -3111,6 +3185,17 @@ h1, h2, h3, h4, h5, h6,
 
     <!-- HOME SCREEN -->
     <div class="screen" id="homeScreen">
+
+        <!-- Fixed right-side icon column — independent overlay, add more icons here -->
+        <div class="home-side-icons">
+            <button class="home-icon-btn" onclick="showStore()">
+                <span class="icon-btn-emoji">🏪</span>
+            </button>
+            <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
+                <span class="icon-btn-emoji">🎁</span>
+            </button>
+        </div>
+
         <div class="home-container">
 
             <!-- Top bar: avatar+ranking left | balance right -->
@@ -3125,18 +3210,26 @@ h1, h2, h3, h4, h5, h6,
                         <div class="home-ranking">🏆 <span id="profileMMR">1000</span> WMR</div>
                     </div>
                 </div>
-                <div class="home-right-col">
-                    <div class="home-balance-box">
-                        <div class="home-balance-amount"><span id="profileBalance">1000</span></div>
-                        <div class="home-balance-label">COINS</div>
+                <div class="home-balance-box">
+                    <div class="home-balance-amount"><span id="profileBalance">1000</span></div>
+                    <div class="home-balance-label">COINS</div>
+                </div>
+            </div>
+
+            <!-- Center: player stat cards -->
+            <div class="home-mid">
+                <div class="home-stats-row">
+                    <div class="home-stat-card">
+                        <div class="stat-value" id="statWins">0</div>
+                        <div class="stat-label">WINS</div>
                     </div>
-                    <div class="home-icon-btns">
-                        <button class="home-icon-btn" onclick="showStore()">
-                            <span class="icon-btn-emoji">🏪</span>
-                        </button>
-                        <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
-                            <span class="icon-btn-emoji">🎁</span>
-                        </button>
+                    <div class="home-stat-card">
+                        <div class="stat-value" id="statLosses">0</div>
+                        <div class="stat-label">LOSSES</div>
+                    </div>
+                    <div class="home-stat-card">
+                        <div class="stat-value" id="statWinRate">—</div>
+                        <div class="stat-label">WIN %</div>
                     </div>
                 </div>
             </div>
@@ -3554,8 +3647,19 @@ h1, h2, h3, h4, h5, h6,
             else if (mmr >= 1100) rankEmoji = '🥈';
             
             document.getElementById('userRank').textContent = rankEmoji;
-            
-            // Stats panel removed from home screen — no elements to update
+
+            // Stat cards
+            const wins = user.gamesWon || 0;
+            const losses = (user.gamesPlayed || 0) - wins;
+            const winRate = user.gamesPlayed > 0
+                ? Math.round((wins / user.gamesPlayed) * 100) + '%'
+                : '—';
+            const elWins = document.getElementById('statWins');
+            const elLosses = document.getElementById('statLosses');
+            const elWinRate = document.getElementById('statWinRate');
+            if (elWins) elWins.textContent = wins;
+            if (elLosses) elLosses.textContent = Math.max(0, losses);
+            if (elWinRate) elWinRate.textContent = winRate;
         }
 
         function showScreen(screenId) {
@@ -6041,11 +6145,9 @@ h1, h2, h3, h4, h5, h6,
             if (claimed && (now - parseInt(claimed)) < 24 * 60 * 60 * 1000) {
                 btn.classList.add('claimed');
                 btn.disabled = true;
-                btn.textContent = '📺  DAILY REWARD — COME BACK TOMORROW';
             } else {
                 btn.classList.remove('claimed');
                 btn.disabled = false;
-                btn.textContent = '📺  DAILY REWARD — WATCH AD FOR 100 COINS';
             }
         }
 
