@@ -228,17 +228,40 @@ io.on('connection', (socket) => {
             );
             if (activeMatch) {
                 socket.matchId = activeMatch.id;
-                // Cancel the forfeit timer — they made it back in time
+
+                // Cancel the forfeit timer — they made it back in time.
                 if (activeMatch.reconnectTimeout) {
                     clearTimeout(activeMatch.reconnectTimeout);
                     activeMatch.reconnectTimeout = null;
                 }
+
+                // Restore the game timer that was paused on disconnect.
+                if (activeMatch.status === 'active' && activeMatch.pausedTimerMs != null) {
+                    if (activeMatch.mode === 'best_of_3') {
+                        // Adjust currentRoundStartTime so elapsed calculations stay accurate.
+                        activeMatch.currentRoundStartTime = Date.now() - (3 * 60 * 1000 - activeMatch.pausedTimerMs);
+                        activeMatch.roundTimer = setTimeout(() => endRound(activeMatch.id), activeMatch.pausedTimerMs);
+                    } else if (activeMatch.mode === 'blitz') {
+                        activeMatch.blitzTimeout = setTimeout(() => endBlitz(activeMatch.id), activeMatch.pausedTimerMs);
+                    }
+                    activeMatch.pausedTimerMs = null;
+                }
+
                 const player  = activeMatch.players.find(p => p.username === user.username);
                 const opp     = activeMatch.players.find(p => p.username !== user.username);
                 const oppSock = activeSockets.get(opp.username);
                 if (oppSock) oppSock.emit('opponent_reconnected', {});
-                const targetWord   = activeMatch.mode === 'blitz' ? player.currentWord : activeMatch.targetWord;
-                const roundElapsed = Math.floor((Date.now() - activeMatch.currentRoundStartTime) / 1000);
+
+                const targetWord = activeMatch.mode === 'blitz' ? player.currentWord : activeMatch.targetWord;
+
+                // Compute how many seconds have elapsed in the current round/blitz.
+                let roundElapsed;
+                if (activeMatch.mode === 'blitz') {
+                    roundElapsed = Math.floor((Date.now() - activeMatch.startTime) / 1000);
+                } else {
+                    roundElapsed = Math.floor((Date.now() - activeMatch.currentRoundStartTime) / 1000);
+                }
+
                 socket.emit('match_reconnect', {
                     mode:             activeMatch.mode,
                     targetWord,
@@ -253,7 +276,7 @@ io.on('connection', (socket) => {
                     roundElapsed,
                     inOvertime:       !!activeMatch.overtimeTimer,
                 });
-                console.log(`Reconnected: ${user.username} rejoined match ${activeMatch.id}`);
+                console.log(`Reconnected: ${user.username} rejoined match ${activeMatch.id} (timer resumed with ${activeMatch.pausedTimerMs ?? 'N/A'}ms remaining)`);
             }
         } catch {
             socket.emit('error', { message: 'Invalid token' });
@@ -384,11 +407,30 @@ io.on('connection', (socket) => {
 
         if (socket.matchId) {
             const match = activeMatches.get(socket.matchId);
-            if (match && (match.status === 'active' || match.status === 'between_rounds')) {
+            if (match && match.status !== 'ended') {
                 const opp     = match.players.find(p => p.username !== socket.username);
                 const oppSock = opp ? activeSockets.get(opp.username) : null;
-                // Notify opponent and give 15 seconds for reconnection before forfeiting.
+
+                // Pause the active game timer so it doesn't race against the reconnect window.
+                // The timer is restored if the player reconnects; otherwise endMatch forfeits.
+                if (match.status === 'active') {
+                    if (match.mode === 'best_of_3' && match.roundTimer) {
+                        clearTimeout(match.roundTimer);
+                        match.roundTimer = null;
+                        const elapsed = Date.now() - match.currentRoundStartTime;
+                        match.pausedTimerMs = Math.max(0, 3 * 60 * 1000 - elapsed);
+                    }
+                    if (match.mode === 'blitz' && match.blitzTimeout) {
+                        clearTimeout(match.blitzTimeout);
+                        match.blitzTimeout = null;
+                        const elapsed = Date.now() - match.startTime;
+                        match.pausedTimerMs = Math.max(0, 5 * 60 * 1000 - elapsed);
+                    }
+                }
+
+                // Notify opponent — 15-second grace window before forfeit.
                 if (oppSock) oppSock.emit('opponent_disconnected', { seconds: 15 });
+
                 match.reconnectTimeout = setTimeout(() => {
                     const newSock = activeSockets.get(socket.username);
                     if (!newSock || newSock.matchId !== match.id) {
@@ -432,6 +474,7 @@ function createMatch(socket, user, opponent, betAmount, mode) {
         roundTimer:            null,
         overtimeTimer:         null,
         reconnectTimeout:      null,
+        pausedTimerMs:         null,
         currentRoundStartTime: Date.now()
     };
 
@@ -557,6 +600,7 @@ function endMatch(matchId, forfeitWinner = null) {
     if (match.roundTimer)        { clearTimeout(match.roundTimer);        match.roundTimer        = null; }
     if (match.overtimeTimer)     { clearTimeout(match.overtimeTimer);     match.overtimeTimer     = null; }
     if (match.reconnectTimeout)  { clearTimeout(match.reconnectTimeout);  match.reconnectTimeout  = null; }
+    match.pausedTimerMs = null;
     match.status = 'ended';
 
     const [p1, p2] = match.players;
