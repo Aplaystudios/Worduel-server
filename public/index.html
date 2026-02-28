@@ -2812,28 +2812,26 @@ h1, h2, h3, h4, h5, h6,
         }
 
         .home-stats-row {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
             width: 100%;
         }
 
         .home-stat-card {
-            width: 90px;
-            flex-shrink: 0;
             background: rgba(255,255,255,0.07);
             border: 1.5px solid rgba(255,255,255,0.14);
-            border-radius: 16px;
-            padding: 14px 8px 10px;
+            border-radius: 14px;
+            padding: 10px 4px 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .stat-value {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 900;
             color: var(--neon-yellow);
             line-height: 1;
@@ -2919,8 +2917,11 @@ h1, h2, h3, h4, h5, h6,
 
         .home-icon-btn {
             position: relative;
-            width: 56px;
-            height: 56px;
+            width: 54px;
+            height: 54px;
+            min-width: 54px;
+            min-height: 54px;
+            flex-shrink: 0;
             border-radius: 50%;
             background: rgba(255,255,255,0.15);
             border: 3px solid rgba(255,215,0,0.5);
@@ -2928,7 +2929,7 @@ h1, h2, h3, h4, h5, h6,
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: transform 0.15s;
             -webkit-tap-highlight-color: transparent;
             box-shadow: 0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
         }
@@ -3784,16 +3785,16 @@ h1, h2, h3, h4, h5, h6,
         /* ── Animated logo tiles: word discovery (guess → answer) ── */
         // Row 1 = guess (mixed colors showing hints), Row 2 = answer (all green = solved!)
         const LOGO_PAIRS = [
-            {   // CRANE → DANCE: R present, A present, N present, E correct
-                guess:  { word: 'CRANE', colors: ['tile-absent','tile-present','tile-present','tile-present','tile-correct'] },
-                answer: { word: 'DANCE', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
-            },
-            {   // PLANT → CLASH: L correct, A correct, rest absent
-                guess:  { word: 'PLANT', colors: ['tile-absent','tile-correct','tile-correct','tile-absent','tile-absent'] },
+            {   // STALE → CLASH: S present, T absent, A correct, L present, E absent
+                guess:  { word: 'STALE', colors: ['tile-present','tile-absent','tile-correct','tile-present','tile-absent'] },
                 answer: { word: 'CLASH', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
             },
-            {   // RIDER → WORDS: R present, D present, rest absent
-                guess:  { word: 'RIDER', colors: ['tile-present','tile-absent','tile-present','tile-absent','tile-present'] },
+            {   // GRAPE → BRAVE: G absent, R present, A present, P absent, E correct
+                guess:  { word: 'GRAPE', colors: ['tile-absent','tile-present','tile-present','tile-absent','tile-correct'] },
+                answer: { word: 'BRAVE', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {   // TWIST → WORDS: T absent, W present, I absent, S present, T absent
+                guess:  { word: 'TWIST', colors: ['tile-absent','tile-present','tile-absent','tile-present','tile-absent'] },
                 answer: { word: 'WORDS', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
             },
         ];
