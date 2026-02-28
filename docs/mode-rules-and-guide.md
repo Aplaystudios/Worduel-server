@@ -46,9 +46,19 @@ Be the first player to **win 2 rounds**.
 - Each player works through their own 6-guess grid independently.
 - You can see how many guesses your opponent has used (but not what they guessed).
 
+**Round Timer**
+- Each round has a **3-minute time limit**.
+- If neither player has solved the word when the timer expires, the round ends automatically and the tiebreaker applies.
+
 **Winning a Round**
 - The first player to correctly guess the word wins that round.
-- If neither player guesses the word within 6 attempts, the round is a **draw** (no point awarded — a new word is given).
+- **There are no draws.** If neither player solves the word (6 guesses used up, or 3-minute timer expires), the round goes to tiebreaker.
+
+**Tiebreaker — Most Green Letters**
+When nobody solves the word, the round winner is decided by:
+1. **Most green (correct-position) letters** in a single guess — whoever had the highest green count in any one guess wins the round.
+2. **Tie on green count** → whoever achieved that green count on an **earlier guess number** wins (got there faster).
+3. **True tie** (same green count on same guess number, or both had 0 greens) → no point awarded to either player, new word dealt.
 
 **Between Rounds**
 - A round-end screen shows both players' results for that round.
@@ -71,7 +81,10 @@ Be the first player to **win 2 rounds**.
 |-----------|---------|
 | You guess the word before your opponent | You win the round |
 | Opponent guesses before you | Opponent wins the round |
-| Both players use all 6 guesses without solving | Round is a draw, new word dealt |
+| 3-minute timer expires, you had more greens in a single guess | You win the round (tiebreaker) |
+| 3-minute timer expires, tied on greens, you got that many greens on an earlier guess | You win the round (tiebreaker) |
+| 3-minute timer expires, both had identical best greens on same guess number | No point awarded, new word dealt |
+| Both use all 6 guesses, neither had any green letters | No point awarded, new word dealt |
 | You reach 2 round wins | You win the match |
 | Opponent reaches 2 round wins | You lose the match |
 | You win 1, opponent wins 1, then you win 1 more | You win the match (2–1) |
@@ -175,6 +188,7 @@ Solve **as many words as possible** in **5 minutes**. The player with the most s
 | **Round** | A single word-guessing duel (Best of 3 only) |
 | **Solve** | Successfully guessing the target word within 6 tries |
 | **Fail** | Using all 6 guesses without finding the word |
+| **Tiebreaker** | When nobody solves the word, the round winner is whoever had the most green letters in a single guess (fastest if tied) |
 | **MMR** | Matchmaking Rating — your skill score |
 | **Pot** | Total coins wagered by both players in a match |
 | **Blitz** | 5-minute timed mode, most solves wins |
