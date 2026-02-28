@@ -2639,26 +2639,6 @@ h1, h2, h3, h4, h5, h6,
         .store-close-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
 
         /* ── Monetization buttons ──────────────────────────────────────────── */
-        .daily-reward-btn {
-            background: linear-gradient(135deg, rgba(0,200,100,0.15), rgba(0,150,80,0.08));
-            border: 1px solid rgba(0,255,120,0.35);
-            border-radius: 14px;
-            color: #00e87a;
-            font-family: 'Barlow', sans-serif;
-            font-weight: 800;
-            font-size: 13px;
-            letter-spacing: 2px;
-            padding: 10px 32px;
-            cursor: pointer;
-            width: 100%;
-            transition: opacity 0.2s, border-color 0.2s;
-        }
-        .daily-reward-btn:disabled, .daily-reward-btn.claimed {
-            opacity: 0.4;
-            cursor: default;
-            color: #888;
-            border-color: rgba(255,255,255,0.1);
-        }
         .ad-reward-btn {
             width: 100%;
             margin-bottom: 10px;
@@ -2924,17 +2904,23 @@ h1, h2, h3, h4, h5, h6,
         }
 
         .home-icon-btn {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            border: 3px solid rgba(255,215,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 54px !important;
+            height: 54px !important;
+            min-width: 54px !important;
+            min-height: 54px !important;
+            max-width: 54px !important;
+            max-height: 54px !important;
+            border-radius: 50% !important;
+            background: rgba(255,255,255,0.15) !important;
+            border: 3px solid rgba(255,215,0,0.5) !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             box-shadow: 0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+            box-sizing: border-box !important;
         }
 
         .home-icon-btn:active { transform: scale(0.90); }
