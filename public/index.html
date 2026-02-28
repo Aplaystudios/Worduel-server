@@ -2914,13 +2914,23 @@ h1, h2, h3, h4, h5, h6,
             background: rgba(255,255,255,0.15) !important;
             border: 3px solid rgba(255,215,0,0.5) !important;
             padding: 0 !important;
+            margin: 0 !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            overflow: hidden !important;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            -webkit-appearance: none !important;
+            appearance: none !important;
             box-shadow: 0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
             box-sizing: border-box !important;
+            opacity: 1 !important;
+        }
+        /* Disable webkit shrink on disabled buttons */
+        .home-icon-btn:disabled {
+            -webkit-opacity: 1 !important;
+            opacity: 1 !important;
         }
 
         .home-icon-btn:active { transform: scale(0.90); }
@@ -2942,8 +2952,11 @@ h1, h2, h3, h4, h5, h6,
             pointer-events: none;
             display: none;
         }
-        /* Claimed: dimmed */
-        #dailyRewardBtn.claimed { opacity: 0.5; }
+        /* Claimed: dimmed — no size change, no disabled attribute */
+        #dailyRewardBtn.claimed {
+            opacity: 0.5 !important;
+            pointer-events: none !important;
+        }
 
         /* Mode pills row */
         .mode-row {
@@ -6403,11 +6416,11 @@ h1, h2, h3, h4, h5, h6,
             const now = Date.now();
             if (claimed && (now - parseInt(claimed)) < 24 * 60 * 60 * 1000) {
                 btn.classList.add('claimed');
-                btn.disabled = true;
+                btn.style.pointerEvents = 'none';
                 if (dot) dot.style.display = 'none';
             } else {
                 btn.classList.remove('claimed');
-                btn.disabled = false;
+                btn.style.pointerEvents = '';
                 if (dot) dot.style.display = 'block';
             }
         }
@@ -6448,7 +6461,7 @@ h1, h2, h3, h4, h5, h6,
 
         function claimDailyReward() {
             const btn = document.getElementById('dailyRewardBtn');
-            if (btn && btn.disabled) return;
+            if (btn && btn.classList.contains('claimed')) return;
             showRewardedAd(
                 () => {
                     // Ad watched — call server to grant coins
