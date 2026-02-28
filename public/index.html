@@ -2915,13 +2915,17 @@ h1, h2, h3, h4, h5, h6,
             align-items: center;
         }
 
-        .home-icon-btn {
+        /* Slot: fixed 54×54 container, green dot lives here not on the button */
+        .home-icon-slot {
             position: relative;
             width: 54px;
             height: 54px;
-            min-width: 54px;
-            min-height: 54px;
             flex-shrink: 0;
+        }
+
+        .home-icon-btn {
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             background: rgba(255,255,255,0.15);
             border: 3px solid rgba(255,215,0,0.5);
@@ -2929,34 +2933,31 @@ h1, h2, h3, h4, h5, h6,
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: transform 0.15s;
             -webkit-tap-highlight-color: transparent;
             box-shadow: 0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
         }
 
         .home-icon-btn:active { transform: scale(0.90); }
 
-        .icon-btn-emoji { font-size: 26px; line-height: 1; }
+        .icon-btn-emoji { font-size: 26px; line-height: 1; pointer-events: none; }
 
         .icon-btn-label { display: none; }
 
-        /* Daily reward available: same shape, small green dot in corner */
-        .home-icon-btn.daily-reward-btn:not(.claimed)::after {
-            content: '';
+        /* Green dot on the SLOT (not button) so it never distorts the circle */
+        .reward-available-dot {
             position: absolute;
-            top: 0px;
-            right: 0px;
-            width: 13px;
-            height: 13px;
+            top: 1px;
+            right: 1px;
+            width: 12px;
+            height: 12px;
             background: #00ff88;
             border-radius: 50%;
             border: 2px solid #0a0e14;
+            pointer-events: none;
+            display: none;
         }
-        /* Claimed: same shape, just dimmed */
-        .home-icon-btn.daily-reward-btn.claimed {
-            opacity: 0.5;
-            animation: none;
-        }
+        /* Claimed: dimmed */
+        .home-icon-btn.daily-reward-btn.claimed { opacity: 0.5; }
 
         /* Mode pills row */
         .mode-row {
@@ -3243,6 +3244,95 @@ h1, h2, h3, h4, h5, h6,
         #battleScreen .key.present { background: var(--present) !important; border-color: var(--present) !important; color: var(--bg-primary) !important; }
         #battleScreen .key.absent  { background: var(--absent)  !important; border-color: var(--absent)  !important; }
 
+        /* ── Daily Reward Popup ── */
+        #dailyRewardPopup {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #dailyRewardPopup.active { display: flex; }
+
+        .reward-popup-box {
+            background: linear-gradient(160deg, #0d1f0d 0%, #0a1a1a 100%);
+            border: 2px solid #00ff88;
+            border-radius: 28px;
+            padding: 36px 48px 32px;
+            text-align: center;
+            box-shadow: 0 0 80px rgba(0,255,136,0.35), 0 20px 60px rgba(0,0,0,0.6);
+            animation: rewardBoxIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            position: relative;
+        }
+        @keyframes rewardBoxIn {
+            from { transform: scale(0.3) translateY(-80px); opacity: 0; }
+            to   { transform: scale(1)   translateY(0);     opacity: 1; }
+        }
+
+        .reward-popup-gift {
+            font-size: 80px;
+            display: block;
+            margin-bottom: 10px;
+            animation: giftBounce 0.7s 0.1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes giftBounce {
+            0%   { transform: scale(0) rotate(-20deg); }
+            60%  { transform: scale(1.25) rotate(8deg); }
+            80%  { transform: scale(0.92) rotate(-4deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .reward-popup-label {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 900;
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .reward-popup-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 58px;
+            font-weight: 900;
+            color: #ffd700;
+            line-height: 1;
+            text-shadow: 0 0 40px rgba(255,215,0,0.9), 0 0 80px rgba(255,215,0,0.4);
+            animation: amountPop 0.5s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes amountPop {
+            from { transform: scale(0); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+        .reward-popup-balance {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: rgba(255,255,255,0.45);
+            margin-top: 10px;
+        }
+        .reward-popup-tap {
+            font-size: 11px;
+            color: rgba(255,255,255,0.25);
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* Flying coin particles */
+        .reward-coin-particle {
+            position: fixed;
+            font-size: 30px;
+            pointer-events: none;
+            z-index: 10000;
+            animation: coinFlyUp var(--dur, 1.4s) ease-out forwards;
+        }
+        @keyframes coinFlyUp {
+            0%   { transform: translateY(0) scale(1) rotate(0deg);     opacity: 1; }
+            100% { transform: translateY(-280px) scale(0.4) rotate(540deg); opacity: 0; }
+        }
+
         /* ── Home: Battle button full width ── */
         .battle-btn {
             display: block !important;
@@ -3339,12 +3429,17 @@ h1, h2, h3, h4, h5, h6,
 
             <!-- Icons: stacked column, right-aligned, beneath stats -->
             <div class="home-side-icons">
-                <button class="home-icon-btn" onclick="showStore()">
-                    <span class="icon-btn-emoji">🛍️</span>
-                </button>
-                <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
-                    <span class="icon-btn-emoji">🎁</span>
-                </button>
+                <div class="home-icon-slot">
+                    <button class="home-icon-btn" onclick="showStore()">
+                        <span class="icon-btn-emoji">🛍️</span>
+                    </button>
+                </div>
+                <div class="home-icon-slot">
+                    <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
+                        <span class="icon-btn-emoji">🎁</span>
+                    </button>
+                    <span class="reward-available-dot" id="rewardDot"></span>
+                </div>
             </div>
 
             <!-- Animated Wordle tiles: two rows fill the middle -->
@@ -3582,6 +3677,17 @@ h1, h2, h3, h4, h5, h6,
         <div id="roundOverlayNext" style="font-family:'Barlow',sans-serif; font-size:11px; color:#4a5568; margin-top:4px;">NEXT ROUND STARTING...</div>
     </div>
 
+    <!-- DAILY REWARD POPUP -->
+    <div id="dailyRewardPopup" onclick="closeDailyRewardPopup()">
+        <div class="reward-popup-box" onclick="event.stopPropagation()">
+            <span class="reward-popup-gift">🎁</span>
+            <div class="reward-popup-label">Daily Reward</div>
+            <div class="reward-popup-amount" id="rewardPopupAmount">+100 🪙</div>
+            <div class="reward-popup-balance" id="rewardPopupBalance"></div>
+            <div class="reward-popup-tap">TAP ANYWHERE TO CLOSE</div>
+        </div>
+    </div>
+
     <!-- RESULT MODAL -->
     <div class="result-modal" id="resultModal">
         <div class="result-container">
@@ -3789,8 +3895,8 @@ h1, h2, h3, h4, h5, h6,
                 guess:  { word: 'STALE', colors: ['tile-present','tile-absent','tile-correct','tile-present','tile-absent'] },
                 answer: { word: 'CLASH', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
             },
-            {   // GRAPE → BRAVE: G absent, R present, A present, P absent, E correct
-                guess:  { word: 'GRAPE', colors: ['tile-absent','tile-present','tile-present','tile-absent','tile-correct'] },
+            {   // GRAPE → BRAVE: G absent, R correct(pos2), A correct(pos3), P absent, E correct(pos5)
+                guess:  { word: 'GRAPE', colors: ['tile-absent','tile-correct','tile-correct','tile-absent','tile-correct'] },
                 answer: { word: 'BRAVE', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
             },
             {   // TWIST → WORDS: T absent, W present, I absent, S present, T absent
@@ -6305,17 +6411,53 @@ h1, h2, h3, h4, h5, h6,
 
         function refreshDailyRewardBtn() {
             const btn = document.getElementById('dailyRewardBtn');
+            const dot = document.getElementById('rewardDot');
             if (!btn || !user) return;
-            // Server tracks lastDailyRewardAt; we check a client-side cache in localStorage
             const claimed = localStorage.getItem('worduel_daily_reward_claimed');
             const now = Date.now();
             if (claimed && (now - parseInt(claimed)) < 24 * 60 * 60 * 1000) {
                 btn.classList.add('claimed');
                 btn.disabled = true;
+                if (dot) dot.style.display = 'none';
             } else {
                 btn.classList.remove('claimed');
                 btn.disabled = false;
+                if (dot) dot.style.display = 'block';
             }
+        }
+
+        function showCoinRewardPopup(amount, newBalance) {
+            const popup = document.getElementById('dailyRewardPopup');
+            const amountEl = document.getElementById('rewardPopupAmount');
+            const balanceEl = document.getElementById('rewardPopupBalance');
+            if (amountEl) amountEl.textContent = '+' + amount + ' 🪙';
+            if (balanceEl) balanceEl.textContent = 'Balance: ' + newBalance + ' 🪙';
+            if (popup) {
+                // Reset animation by re-inserting box
+                const box = popup.querySelector('.reward-popup-box');
+                if (box) { box.style.animation = 'none'; box.offsetHeight; box.style.animation = ''; }
+                popup.classList.add('active');
+            }
+            // Spawn coin particles from random positions
+            for (let i = 0; i < 14; i++) {
+                setTimeout(() => {
+                    const coin = document.createElement('div');
+                    coin.className = 'reward-coin-particle';
+                    coin.textContent = '🪙';
+                    coin.style.left = (15 + Math.random() * 70) + 'vw';
+                    coin.style.top = (45 + Math.random() * 25) + 'vh';
+                    coin.style.setProperty('--dur', (1.1 + Math.random() * 0.6) + 's');
+                    document.body.appendChild(coin);
+                    setTimeout(() => coin.remove(), 1800);
+                }, i * 90);
+            }
+            // Auto-dismiss after 3.5s
+            setTimeout(closeDailyRewardPopup, 3500);
+        }
+
+        function closeDailyRewardPopup() {
+            const popup = document.getElementById('dailyRewardPopup');
+            if (popup) popup.classList.remove('active');
         }
 
         function claimDailyReward() {
@@ -6336,7 +6478,7 @@ h1, h2, h3, h4, h5, h6,
                             localStorage.setItem('worduel_daily_reward_claimed', Date.now().toString());
                             refreshDailyRewardBtn();
                             updateHomeScreen();
-                            showToast(`+100 coins! New balance: $${res.newBalance}`);
+                            showCoinRewardPopup(100, res.newBalance);
                         } else if (res.error && res.error.includes('already claimed')) {
                             localStorage.setItem('worduel_daily_reward_claimed', Date.now().toString());
                             refreshDailyRewardBtn();
