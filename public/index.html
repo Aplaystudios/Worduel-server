@@ -2760,7 +2760,7 @@ h1, h2, h3, h4, h5, h6,
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 14px;
+            gap: 6px;
             pointer-events: none;
         }
         .home-logo-tiles {
@@ -2810,21 +2810,23 @@ h1, h2, h3, h4, h5, h6,
         }
 
         .home-stats-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: flex;
+            justify-content: center;
             gap: 10px;
             width: 100%;
         }
 
         .home-stat-card {
+            width: 90px;
+            flex-shrink: 0;
             background: rgba(255,255,255,0.07);
             border: 1.5px solid rgba(255,255,255,0.14);
             border-radius: 16px;
-            padding: 18px 8px 14px;
+            padding: 14px 8px 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .stat-value {
@@ -2914,6 +2916,7 @@ h1, h2, h3, h4, h5, h6,
         }
 
         .home-icon-btn {
+            position: relative;
             width: 56px;
             height: 56px;
             border-radius: 50%;
@@ -2934,20 +2937,21 @@ h1, h2, h3, h4, h5, h6,
 
         .icon-btn-label { display: none; }
 
-        /* Daily reward: green pulse when available */
-        .home-icon-btn.daily-reward-btn:not(.claimed) {
-            border-color: rgba(0,255,136,0.65);
-            animation: pulse-avail 2.2s ease-in-out infinite;
+        /* Daily reward available: same shape, small green dot in corner */
+        .home-icon-btn.daily-reward-btn:not(.claimed)::after {
+            content: '';
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 13px;
+            height: 13px;
+            background: #00ff88;
+            border-radius: 50%;
+            border: 2px solid #0a0e14;
         }
-        @keyframes pulse-avail {
-            0%, 100% { box-shadow: 0 0 10px rgba(0,255,136,0.25), 0 4px 16px rgba(0,0,0,0.35); }
-            50% { box-shadow: 0 0 20px rgba(0,255,136,0.5), 0 4px 16px rgba(0,0,0,0.35); }
-        }
-        /* Claimed: same size/shape, just visually muted */
+        /* Claimed: same shape, just dimmed */
         .home-icon-btn.daily-reward-btn.claimed {
-            opacity: 0.55;
-            border-color: rgba(255,215,0,0.3);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+            opacity: 0.5;
             animation: none;
         }
 
@@ -3776,18 +3780,19 @@ h1, h2, h3, h4, h5, h6,
         }
 
         /* ── Animated logo tiles: word discovery (guess → answer) ── */
+        // Row 1 = guess (mixed colors showing hints), Row 2 = answer (all green = solved!)
         const LOGO_PAIRS = [
-            {
-                guess:  { word: 'CRANE', colors: ['tile-absent','tile-present','tile-correct','tile-absent','tile-present'] },
-                answer: { word: 'BRAVE', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            {   // CRANE → DANCE: R present, A present, N present, E correct
+                guess:  { word: 'CRANE', colors: ['tile-absent','tile-present','tile-present','tile-present','tile-correct'] },
+                answer: { word: 'DANCE', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
             },
-            {
-                guess:  { word: 'STORK', colors: ['tile-present','tile-absent','tile-correct','tile-absent','tile-absent'] },
-                answer: { word: 'WORDS', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
-            },
-            {
-                guess:  { word: 'PLANT', colors: ['tile-absent','tile-present','tile-absent','tile-correct','tile-absent'] },
+            {   // PLANT → CLASH: L correct, A correct, rest absent
+                guess:  { word: 'PLANT', colors: ['tile-absent','tile-correct','tile-correct','tile-absent','tile-absent'] },
                 answer: { word: 'CLASH', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {   // RIDER → WORDS: R present, D present, rest absent
+                guess:  { word: 'RIDER', colors: ['tile-present','tile-absent','tile-present','tile-absent','tile-present'] },
+                answer: { word: 'WORDS', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
             },
         ];
         let _logoIdx = 0;
@@ -3799,24 +3804,24 @@ h1, h2, h3, h4, h5, h6,
             const pair = LOGO_PAIRS[_logoIdx % LOGO_PAIRS.length];
             _logoIdx++;
             [...row1, ...row2].forEach(t => { t.className = 'logo-tile'; t.textContent = ''; });
-            // Row 1: guess letters appear one by one with mixed colors
+            // Row 1: guess — letters typed one by one, flip to reveal colors
             pair.guess.word.split('').forEach((letter, i) => {
                 setTimeout(() => {
                     row1[i].textContent = letter;
                     row1[i].classList.add('flipping');
-                    setTimeout(() => { row1[i].classList.add(pair.guess.colors[i]); row1[i].classList.remove('flipping'); }, 250);
-                }, i * 220);
+                    setTimeout(() => { row1[i].classList.add(pair.guess.colors[i]); row1[i].classList.remove('flipping'); }, 300);
+                }, i * 300);
             });
-            // Row 2: answer appears after guess, all green (word solved!)
-            const answerDelay = 5 * 220 + 500;
+            // Row 2: answer — appears after guess finishes, all green (word discovered!)
+            const answerDelay = 5 * 300 + 700;
             pair.answer.word.split('').forEach((letter, i) => {
                 setTimeout(() => {
                     row2[i].textContent = letter;
                     row2[i].classList.add('flipping');
-                    setTimeout(() => { row2[i].classList.add(pair.answer.colors[i]); row2[i].classList.remove('flipping'); }, 250);
-                }, answerDelay + i * 220);
+                    setTimeout(() => { row2[i].classList.add(pair.answer.colors[i]); row2[i].classList.remove('flipping'); }, 300);
+                }, answerDelay + i * 300);
             });
-            const cycleDuration = answerDelay + 5 * 220 + 2500;
+            const cycleDuration = answerDelay + 5 * 300 + 3000;
             _logoTimer = setTimeout(animateLogoTiles, cycleDuration);
         }
         setTimeout(animateLogoTiles, 800);
