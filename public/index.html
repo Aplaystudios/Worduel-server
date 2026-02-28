@@ -2747,8 +2747,8 @@ h1, h2, h3, h4, h5, h6,
         /* Icon row — in normal flow, below stat cards */
         .home-side-icons {
             display: flex;
-            flex-direction: row;
-            justify-content: flex-end;
+            flex-direction: column;
+            align-items: flex-end;
             gap: 10px;
             width: 100%;
         }
@@ -2854,7 +2854,6 @@ h1, h2, h3, h4, h5, h6,
             border: 1.5px solid rgba(255,255,255,0.18);
             border-radius: 20px;
             padding: 12px 16px;
-            margin-right: 66px;
         }
 
         .home-profile-left {
@@ -3162,9 +3161,10 @@ h1, h2, h3, h4, h5, h6,
         }
         #battleScreen .tile {
             flex: none !important;
-            width: 38px !important;
-            height: 38px !important;
-            font-size: 17px !important;
+            /* height-aware: 12 rows (2 grids×6) + 256px overhead (header+keyboard+label+padding) must fit in 100dvh */
+            width: min(38px, calc((100dvh - 256px) / 12)) !important;
+            height: min(38px, calc((100dvh - 256px) / 12)) !important;
+            font-size: min(17px, calc((100dvh - 256px) / 12 * 0.45)) !important;
             font-weight: 900 !important;
             background: rgba(255,255,255,0.12) !important;
             border: 2px solid rgba(255,255,255,0.22) !important;
