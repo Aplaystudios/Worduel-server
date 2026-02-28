@@ -262,8 +262,11 @@ io.on('connection', (socket) => {
                     roundElapsed = Math.floor((Date.now() - activeMatch.currentRoundStartTime) / 1000);
                 }
 
+                // matchStatus tells the client whether we're in an active round or between rounds.
+                // If active, the client should reset the grid (round_start already fired).
                 socket.emit('match_reconnect', {
                     mode:             activeMatch.mode,
+                    matchStatus:      activeMatch.status,
                     targetWord,
                     guesses:          player.guesses,
                     opponentGuesses:  opp.guesses,
@@ -276,7 +279,7 @@ io.on('connection', (socket) => {
                     roundElapsed,
                     inOvertime:       !!activeMatch.overtimeTimer,
                 });
-                console.log(`Reconnected: ${user.username} rejoined match ${activeMatch.id} (timer resumed with ${activeMatch.pausedTimerMs ?? 'N/A'}ms remaining)`);
+                console.log(`Reconnected: ${user.username} rejoined match ${activeMatch.id} (status: ${activeMatch.status}, timer: ${activeMatch.pausedTimerMs ?? 'N/A'}ms remaining)`);
             }
         } catch {
             socket.emit('error', { message: 'Invalid token' });
@@ -549,8 +552,9 @@ function endRound(matchId) {
     const s2Sok = activeSockets.get(p2.username);
 
     const hasWinner = (s1 >= 2 || s2 >= 2) && s1 !== s2;
-    if (s1Sok) s1Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p1.username, yourScore: s1, opponentScore: s2, targetWord: match.targetWord, matchOver: hasWinner });
-    if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p2.username, yourScore: s2, opponentScore: s1, targetWord: match.targetWord, matchOver: hasWinner });
+    const noWinner  = roundWinner === null; // tiebreaker produced no point
+    if (s1Sok) s1Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p1.username, noWinner, yourScore: s1, opponentScore: s2, targetWord: match.targetWord, matchOver: hasWinner });
+    if (s2Sok) s2Sok.emit('round_end', { roundNumber: match.currentRound, roundWon: roundWinner === p2.username, noWinner, yourScore: s2, opponentScore: s1, targetWord: match.targetWord, matchOver: hasWinner });
 
     console.log(`Round ${match.currentRound}: ${p1.username}=${s1} ${p2.username}=${s2}${hasWinner ? ' → MATCH OVER' : ''}`);
 
@@ -570,11 +574,13 @@ function scheduleNextRoundOrEnd(matchId, s1, s2) {
         match.targetWord = getRandomWord();
         match.players.forEach(p => { p.guesses = []; p.solved = false; p.solveTime = null; });
         setTimeout(() => {
+            // Guard: match may have been ended by forfeit during the between_rounds window
+            if (!match || match.status !== 'between_rounds') return;
             match.status = 'active';
             match.currentRoundStartTime = Date.now();
             match.roundTimer = setTimeout(() => endRound(matchId), 3 * 60 * 1000);
-            // Re-fetch sockets here — stale refs captured before the delay cause
-            // round_start to be silently lost if a player's socket reconnected.
+            // Re-fetch sockets — stale refs before the delay cause round_start to be lost
+            // if a player's socket reconnected. Any player currently connected gets the event.
             const freshP1Sok = activeSockets.get(p1.username);
             const freshP2Sok = activeSockets.get(p2.username);
             if (freshP1Sok) freshP1Sok.emit('round_start', { round: match.currentRound, targetWord: match.targetWord, yourScore: s1, opponentScore: s2 });

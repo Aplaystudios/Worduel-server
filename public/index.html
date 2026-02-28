@@ -5782,12 +5782,14 @@ h1, h2, h3, h4, h5, h6,
             // Best-of-3: round finished, show score overlay
             socket.on('round_end', (data) => {
                 if (game.timerInterval) { clearInterval(game.timerInterval); game.timerInterval = null; }
-                document.getElementById('battleTimer').style.color = '';
-                document.getElementById('roundScore').textContent = `R${data.roundNumber} · ${data.yourScore} – ${data.opponentScore}`;
+                const timerEl = document.getElementById('battleTimer');
+                if (timerEl) timerEl.style.color = '';
+                const scoreEl = document.getElementById('roundScore');
+                if (scoreEl) scoreEl.textContent = `R${data.roundNumber} · ${data.yourScore} – ${data.opponentScore}`;
                 const overlay = document.getElementById('roundOverlay');
                 const titleEl = document.getElementById('roundOverlayTitle');
-                if (data.draw) {
-                    titleEl.textContent = 'DRAW — OVERTIME!';
+                if (data.noWinner) {
+                    titleEl.textContent = 'NO WINNER — TIEBREAKER';
                     titleEl.style.color = '#ff9800';
                 } else {
                     titleEl.textContent = data.roundWon ? 'YOU WON THE ROUND!' : 'OPPONENT WON THE ROUND';
@@ -5808,6 +5810,8 @@ h1, h2, h3, h4, h5, h6,
                 game.currentRow = 0; game.opponentRow = 0; game.currentGuess = '';
                 createGrid('yourGrid'); createGrid('opponentGrid');
                 setupKeyboard(); // re-attach handlers + clear key colours
+                // Also clear mobile letter tracker colours
+                document.querySelectorAll('.ml').forEach(el => el.classList.remove('correct', 'present', 'absent'));
                 document.getElementById('roundScore').textContent = `R${data.round} · ${data.yourScore} – ${data.opponentScore}`;
                 startRoundTimer(180); // reset 3-min clock for new round
             });
@@ -5850,6 +5854,10 @@ h1, h2, h3, h4, h5, h6,
             // You reconnected mid-match — restore full game state
             socket.on('match_reconnect', (data) => {
                 if (disconnectCountdown) { clearInterval(disconnectCountdown); disconnectCountdown = null; }
+
+                // Always hide any leftover overlay (round_end may have shown it before disconnect)
+                document.getElementById('roundOverlay').style.display = 'none';
+
                 currentMatch = { mode: data.mode, opponent: { username: data.opponentUsername } };
                 game.targetWord   = data.targetWord;
                 game.currentRow   = data.guesses.length;
@@ -5884,7 +5892,7 @@ h1, h2, h3, h4, h5, h6,
                     updateKeyboard(g.word, g.evaluation);
                 });
 
-                // Restore opponent grid tiles (no letters shown)
+                // Restore opponent grid tiles (no letters shown, just colours)
                 data.opponentGuesses.forEach((g, row) => {
                     g.evaluation.forEach((status, col) => {
                         const tile = document.getElementById(`opponentGrid-${row}-${col}`);
@@ -5892,7 +5900,7 @@ h1, h2, h3, h4, h5, h6,
                     });
                 });
 
-                // Restore timer at approximate remaining time
+                // Restore timer using actual elapsed time from server
                 if (data.mode === 'best_of_3') {
                     if (data.inOvertime) {
                         startRoundTimer(Math.max(1, 120 - (data.roundElapsed - 180)), true);
@@ -5900,7 +5908,8 @@ h1, h2, h3, h4, h5, h6,
                         startRoundTimer(Math.max(1, 180 - data.roundElapsed));
                     }
                 } else if (data.mode === 'blitz') {
-                    startRoundTimer(300);
+                    // Use actual remaining blitz time — roundElapsed is seconds elapsed since match start
+                    startRoundTimer(Math.max(1, 300 - data.roundElapsed));
                 }
             });
 
