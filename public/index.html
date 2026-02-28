@@ -2744,22 +2744,13 @@ h1, h2, h3, h4, h5, h6,
             overflow: hidden;
         }
 
-        /* Stats + icons side by side */
-        .home-stats-icons-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            width: 100%;
-        }
-        .home-stats-icons-row .home-stats-row { flex: 1; }
-
-        /* Icon column: stacked to the right of stats */
+        /* Icon column: stacked, right-aligned, beneath stats */
         .home-side-icons {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-end;
             gap: 10px;
-            flex-shrink: 0;
+            width: 100%;
         }
 
         /* Animated tiles fill the middle void */
@@ -2952,11 +2943,11 @@ h1, h2, h3, h4, h5, h6,
             0%, 100% { box-shadow: 0 0 10px rgba(0,255,136,0.25), 0 4px 16px rgba(0,0,0,0.35); }
             50% { box-shadow: 0 0 20px rgba(0,255,136,0.5), 0 4px 16px rgba(0,0,0,0.35); }
         }
-        /* Claimed: grey */
+        /* Claimed: same size/shape, just visually muted */
         .home-icon-btn.daily-reward-btn.claimed {
-            opacity: 0.38;
-            border-color: rgba(255,255,255,0.15);
-            box-shadow: none;
+            opacity: 0.55;
+            border-color: rgba(255,215,0,0.3);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
             animation: none;
         }
 
@@ -3245,11 +3236,11 @@ h1, h2, h3, h4, h5, h6,
         #battleScreen .key.present { background: var(--present) !important; border-color: var(--present) !important; color: var(--bg-primary) !important; }
         #battleScreen .key.absent  { background: var(--absent)  !important; border-color: var(--absent)  !important; }
 
-        /* ── Home: Battle button centered ── */
+        /* ── Home: Battle button full width ── */
         .battle-btn {
             display: block !important;
-            width: 85% !important;
-            margin: 0 auto !important;
+            width: 100% !important;
+            margin: 0 !important;
         }
     </style>
 
@@ -3323,30 +3314,30 @@ h1, h2, h3, h4, h5, h6,
                 </div>
             </div>
 
-            <!-- Stat cards + icon buttons side by side -->
-            <div class="home-stats-icons-row">
-                <div class="home-stats-row">
-                    <div class="home-stat-card">
-                        <div class="stat-value" id="statWins">0</div>
-                        <div class="stat-label">WINS</div>
-                    </div>
-                    <div class="home-stat-card">
-                        <div class="stat-value" id="statLosses">0</div>
-                        <div class="stat-label">LOSSES</div>
-                    </div>
-                    <div class="home-stat-card">
-                        <div class="stat-value" id="statWinRate">—</div>
-                        <div class="stat-label">WIN %</div>
-                    </div>
+            <!-- Stat cards: full width end-to-end -->
+            <div class="home-stats-row">
+                <div class="home-stat-card">
+                    <div class="stat-value" id="statWins">0</div>
+                    <div class="stat-label">WINS</div>
                 </div>
-                <div class="home-side-icons">
-                    <button class="home-icon-btn" onclick="showStore()">
-                        <span class="icon-btn-emoji">🛍️</span>
-                    </button>
-                    <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
-                        <span class="icon-btn-emoji">🎁</span>
-                    </button>
+                <div class="home-stat-card">
+                    <div class="stat-value" id="statLosses">0</div>
+                    <div class="stat-label">LOSSES</div>
                 </div>
+                <div class="home-stat-card">
+                    <div class="stat-value" id="statWinRate">—</div>
+                    <div class="stat-label">WIN %</div>
+                </div>
+            </div>
+
+            <!-- Icons: stacked column, right-aligned, beneath stats -->
+            <div class="home-side-icons">
+                <button class="home-icon-btn" onclick="showStore()">
+                    <span class="icon-btn-emoji">🛍️</span>
+                </button>
+                <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
+                    <span class="icon-btn-emoji">🎁</span>
+                </button>
             </div>
 
             <!-- Animated Wordle tiles: two rows fill the middle -->
@@ -3784,12 +3775,20 @@ h1, h2, h3, h4, h5, h6,
             if (elWinRate) elWinRate.textContent = winRate;
         }
 
-        /* ── Animated logo tiles ── */
-        const LOGO_WORDS = [
-            { word: 'BRAVE', colors: ['tile-absent','tile-present','tile-correct','tile-absent','tile-correct'] },
-            { word: 'CLASH', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] },
-            { word: 'SMART', colors: ['tile-present','tile-absent','tile-correct','tile-present','tile-absent'] },
-            { word: 'WORDS', colors: ['tile-correct','tile-present','tile-absent','tile-absent','tile-correct'] },
+        /* ── Animated logo tiles: word discovery (guess → answer) ── */
+        const LOGO_PAIRS = [
+            {
+                guess:  { word: 'CRANE', colors: ['tile-absent','tile-present','tile-correct','tile-absent','tile-present'] },
+                answer: { word: 'BRAVE', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {
+                guess:  { word: 'STORK', colors: ['tile-present','tile-absent','tile-correct','tile-absent','tile-absent'] },
+                answer: { word: 'WORDS', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {
+                guess:  { word: 'PLANT', colors: ['tile-absent','tile-present','tile-absent','tile-correct','tile-absent'] },
+                answer: { word: 'CLASH', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
         ];
         let _logoIdx = 0;
         let _logoTimer = null;
@@ -3797,25 +3796,27 @@ h1, h2, h3, h4, h5, h6,
             const row1 = document.querySelectorAll('#logoTiles .logo-tile');
             const row2 = document.querySelectorAll('#logoTiles2 .logo-tile');
             if (!row1.length) return;
-            const e1 = LOGO_WORDS[_logoIdx % LOGO_WORDS.length];
-            const e2 = LOGO_WORDS[(_logoIdx + 1) % LOGO_WORDS.length];
-            _logoIdx += 2;
+            const pair = LOGO_PAIRS[_logoIdx % LOGO_PAIRS.length];
+            _logoIdx++;
             [...row1, ...row2].forEach(t => { t.className = 'logo-tile'; t.textContent = ''; });
-            e1.word.split('').forEach((letter, i) => {
+            // Row 1: guess letters appear one by one with mixed colors
+            pair.guess.word.split('').forEach((letter, i) => {
                 setTimeout(() => {
                     row1[i].textContent = letter;
                     row1[i].classList.add('flipping');
-                    setTimeout(() => { row1[i].classList.add(e1.colors[i]); row1[i].classList.remove('flipping'); }, 250);
-                }, i * 250);
+                    setTimeout(() => { row1[i].classList.add(pair.guess.colors[i]); row1[i].classList.remove('flipping'); }, 250);
+                }, i * 220);
             });
-            e2.word.split('').forEach((letter, i) => {
+            // Row 2: answer appears after guess, all green (word solved!)
+            const answerDelay = 5 * 220 + 500;
+            pair.answer.word.split('').forEach((letter, i) => {
                 setTimeout(() => {
                     row2[i].textContent = letter;
                     row2[i].classList.add('flipping');
-                    setTimeout(() => { row2[i].classList.add(e2.colors[i]); row2[i].classList.remove('flipping'); }, 250);
-                }, 300 + i * 250);
+                    setTimeout(() => { row2[i].classList.add(pair.answer.colors[i]); row2[i].classList.remove('flipping'); }, 250);
+                }, answerDelay + i * 220);
             });
-            const cycleDuration = 300 + 5 * 250 + 2200;
+            const cycleDuration = answerDelay + 5 * 220 + 2500;
             _logoTimer = setTimeout(animateLogoTiles, cycleDuration);
         }
         setTimeout(animateLogoTiles, 800);
