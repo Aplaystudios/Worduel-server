@@ -2744,13 +2744,22 @@ h1, h2, h3, h4, h5, h6,
             overflow: hidden;
         }
 
-        /* Icon row — in normal flow, below stat cards */
+        /* Stats + icons side by side */
+        .home-stats-icons-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            width: 100%;
+        }
+        .home-stats-icons-row .home-stats-row { flex: 1; }
+
+        /* Icon column: stacked to the right of stats */
         .home-side-icons {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
             gap: 10px;
-            width: 100%;
+            flex-shrink: 0;
         }
 
         /* Animated tiles fill the middle void */
@@ -3041,7 +3050,7 @@ h1, h2, h3, h4, h5, h6,
         #battleScreen .battle-container::before,
         #battleScreen .battle-container::after { display: none !important; }
 
-        /* ── Header: 3 equal columns — YOU | SCORE/POT | TIME ── */
+        /* ── Header: 3 equal columns — NAME | SCORE/POT | TIMER ── */
         #battleScreen .battle-header {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr !important;
@@ -3051,7 +3060,7 @@ h1, h2, h3, h4, h5, h6,
             height: auto !important;
             min-height: auto !important;
             max-height: none !important;
-            padding: 6px 12px !important;
+            padding: 4px 12px !important;
             margin: 0 !important;
             flex-shrink: 0 !important;
             background: rgba(0,0,0,0.25) !important;
@@ -3063,11 +3072,15 @@ h1, h2, h3, h4, h5, h6,
             z-index: 2 !important;
         }
 
+        /* Hide YOU/TIME labels — show only name + timer for compactness */
+        #battleScreen .battle-header-label { display: none !important; }
+
         .battle-header-you,
         .battle-header-time {
             display: flex !important;
-            flex-direction: column !important;
-            gap: 2px !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 4px !important;
         }
 
         .battle-header-time { align-items: flex-end !important; }
@@ -3161,10 +3174,10 @@ h1, h2, h3, h4, h5, h6,
         }
         #battleScreen .tile {
             flex: none !important;
-            /* height-aware: 12 rows (2 grids×6) + 256px overhead (header+keyboard+label+padding) must fit in 100dvh */
-            width: min(38px, calc((100dvh - 256px) / 12)) !important;
-            height: min(38px, calc((100dvh - 256px) / 12)) !important;
-            font-size: min(17px, calc((100dvh - 256px) / 12 * 0.45)) !important;
+            /* height-aware: 12 rows (2 grids×6) fit in available space after header+keyboard+overhead */
+            width: min(38px, calc((100dvh - 260px) / 12)) !important;
+            height: min(38px, calc((100dvh - 260px) / 12)) !important;
+            font-size: min(17px, calc((100dvh - 260px) / 12 * 0.45)) !important;
             font-weight: 900 !important;
             background: rgba(255,255,255,0.12) !important;
             border: 2px solid rgba(255,255,255,0.22) !important;
@@ -3203,7 +3216,7 @@ h1, h2, h3, h4, h5, h6,
             border: none !important;
             border-top: 1px solid rgba(255,255,255,0.12) !important;
             border-radius: 0 !important;
-            padding: 12px 6px 16px !important;
+            padding: 6px 6px 8px !important;
             flex-shrink: 0 !important;
             box-shadow: none !important;
             position: relative !important;
@@ -3211,7 +3224,7 @@ h1, h2, h3, h4, h5, h6,
         }
 
         #battleScreen .key {
-            height: 48px !important;
+            height: 42px !important;
             min-width: 30px !important;
             font-size: 15px !important;
             font-weight: 800 !important;
@@ -3310,33 +3323,33 @@ h1, h2, h3, h4, h5, h6,
                 </div>
             </div>
 
-            <!-- Stat cards: directly below the frame -->
-            <div class="home-stats-row">
-                <div class="home-stat-card">
-                    <div class="stat-value" id="statWins">0</div>
-                    <div class="stat-label">WINS</div>
+            <!-- Stat cards + icon buttons side by side -->
+            <div class="home-stats-icons-row">
+                <div class="home-stats-row">
+                    <div class="home-stat-card">
+                        <div class="stat-value" id="statWins">0</div>
+                        <div class="stat-label">WINS</div>
+                    </div>
+                    <div class="home-stat-card">
+                        <div class="stat-value" id="statLosses">0</div>
+                        <div class="stat-label">LOSSES</div>
+                    </div>
+                    <div class="home-stat-card">
+                        <div class="stat-value" id="statWinRate">—</div>
+                        <div class="stat-label">WIN %</div>
+                    </div>
                 </div>
-                <div class="home-stat-card">
-                    <div class="stat-value" id="statLosses">0</div>
-                    <div class="stat-label">LOSSES</div>
-                </div>
-                <div class="home-stat-card">
-                    <div class="stat-value" id="statWinRate">—</div>
-                    <div class="stat-label">WIN %</div>
+                <div class="home-side-icons">
+                    <button class="home-icon-btn" onclick="showStore()">
+                        <span class="icon-btn-emoji">🛍️</span>
+                    </button>
+                    <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
+                        <span class="icon-btn-emoji">🎁</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Icon row: store + daily reward, below stats, above wordmark -->
-            <div class="home-side-icons">
-                <button class="home-icon-btn" onclick="showStore()">
-                    <span class="icon-btn-emoji">🛍️</span>
-                </button>
-                <button class="home-icon-btn daily-reward-btn" id="dailyRewardBtn" onclick="claimDailyReward()">
-                    <span class="icon-btn-emoji">🎁</span>
-                </button>
-            </div>
-
-            <!-- Animated Wordle tiles: fills dead space in the middle -->
+            <!-- Animated Wordle tiles: two rows fill the middle -->
             <div class="home-wordmark-area">
                 <div class="home-logo-tiles" id="logoTiles">
                     <div class="logo-tile" id="lt0"></div>
@@ -3345,7 +3358,13 @@ h1, h2, h3, h4, h5, h6,
                     <div class="logo-tile" id="lt3"></div>
                     <div class="logo-tile" id="lt4"></div>
                 </div>
-                <div class="home-logo-sub">COMPETE · GUESS · WIN</div>
+                <div class="home-logo-tiles" id="logoTiles2">
+                    <div class="logo-tile" id="lt5"></div>
+                    <div class="logo-tile" id="lt6"></div>
+                    <div class="logo-tile" id="lt7"></div>
+                    <div class="logo-tile" id="lt8"></div>
+                    <div class="logo-tile" id="lt9"></div>
+                </div>
             </div>
 
             <!-- Mode + Battle -->
@@ -3775,27 +3794,28 @@ h1, h2, h3, h4, h5, h6,
         let _logoIdx = 0;
         let _logoTimer = null;
         function animateLogoTiles() {
-            const tiles = document.querySelectorAll('.logo-tile');
-            if (!tiles.length) return;
-            const entry = LOGO_WORDS[_logoIdx % LOGO_WORDS.length];
-            _logoIdx++;
-            tiles.forEach(t => {
-                t.className = 'logo-tile';
-                t.textContent = '';
-            });
-            entry.word.split('').forEach((letter, i) => {
+            const row1 = document.querySelectorAll('#logoTiles .logo-tile');
+            const row2 = document.querySelectorAll('#logoTiles2 .logo-tile');
+            if (!row1.length) return;
+            const e1 = LOGO_WORDS[_logoIdx % LOGO_WORDS.length];
+            const e2 = LOGO_WORDS[(_logoIdx + 1) % LOGO_WORDS.length];
+            _logoIdx += 2;
+            [...row1, ...row2].forEach(t => { t.className = 'logo-tile'; t.textContent = ''; });
+            e1.word.split('').forEach((letter, i) => {
                 setTimeout(() => {
-                    const tile = tiles[i];
-                    if (!tile) return;
-                    tile.textContent = letter;
-                    tile.classList.add('flipping');
-                    setTimeout(() => {
-                        tile.classList.add(entry.colors[i]);
-                        tile.classList.remove('flipping');
-                    }, 250);
+                    row1[i].textContent = letter;
+                    row1[i].classList.add('flipping');
+                    setTimeout(() => { row1[i].classList.add(e1.colors[i]); row1[i].classList.remove('flipping'); }, 250);
                 }, i * 250);
             });
-            const cycleDuration = 5 * 250 + 2200;
+            e2.word.split('').forEach((letter, i) => {
+                setTimeout(() => {
+                    row2[i].textContent = letter;
+                    row2[i].classList.add('flipping');
+                    setTimeout(() => { row2[i].classList.add(e2.colors[i]); row2[i].classList.remove('flipping'); }, 250);
+                }, 300 + i * 250);
+            });
+            const cycleDuration = 300 + 5 * 250 + 2200;
             _logoTimer = setTimeout(animateLogoTiles, cycleDuration);
         }
         setTimeout(animateLogoTiles, 800);
