@@ -516,22 +516,32 @@ function createMatch(socket, user, opponent, betAmount, mode) {
     console.log(`Match created: ${user.username} vs ${opponent.username} [${mode}] matchId=${matchId} oppSocketFound=${!!oppSocket}`);
 
     setTimeout(() => {
-        // Re-fetch fresh sockets — the references captured above can be stale if a player's
-        // socket briefly disconnected and reconnected during this 1-second delay (common on mobile).
         const m = activeMatches.get(matchId);
-        if (!m || m.status === 'ended') return; // match ended (forfeit) before it could start
+        if (!m || m.status === 'ended') return;
 
         const p1Word = mode === 'blitz' ? m.players[0].currentWord : m.targetWord;
         const p2Word = mode === 'blitz' ? m.players[1].currentWord : m.targetWord;
 
-        const freshP1Sock = activeSockets.get(user.username);
-        const freshP2Sock = activeSockets.get(opponent.username);
-
-        // Stamp matchId on fresh sockets in case they reconnected during the delay
-        if (freshP1Sock) { freshP1Sock.matchId = matchId; freshP1Sock.emit('match_start', { targetWord: p1Word, mode }); }
-        if (freshP2Sock) { freshP2Sock.matchId = matchId; freshP2Sock.emit('match_start', { targetWord: p2Word, mode }); }
-
-        console.log(`Match started: ${user.username}(${freshP1Sock ? 'ok' : 'MISSING'}) vs ${opponent.username}(${freshP2Sock ? 'ok' : 'MISSING'}) [${mode}]`);
+        // Retry delivery up to 4 attempts (1s apart) in case a socket briefly dropped mid-startup.
+        let p1Sent = false, p2Sent = false;
+        function tryDeliver(attempt) {
+            const m2 = activeMatches.get(matchId);
+            if (!m2 || m2.status === 'ended') return;
+            if (!p1Sent) {
+                const s = activeSockets.get(user.username);
+                if (s) { s.matchId = matchId; s.emit('match_start', { targetWord: p1Word, mode }); p1Sent = true; }
+            }
+            if (!p2Sent) {
+                const s = activeSockets.get(opponent.username);
+                if (s) { s.matchId = matchId; s.emit('match_start', { targetWord: p2Word, mode }); p2Sent = true; }
+            }
+            if ((!p1Sent || !p2Sent) && attempt < 4) {
+                setTimeout(() => tryDeliver(attempt + 1), 1500);
+            } else {
+                console.log(`Match started: ${user.username}(${p1Sent ? 'ok' : 'MISSING'}) vs ${opponent.username}(${p2Sent ? 'ok' : 'MISSING'}) [${mode}]`);
+            }
+        }
+        tryDeliver(1);
     }, 1000);
 }
 

@@ -2252,7 +2252,7 @@ h1, h2, h3, h4, h5, h6,
         position: relative !important;
         z-index: 10 !important;
     }
-    #battleScreen .keyboard-row { gap: 3px !important; margin-bottom: 3px !important; }
+    #battleScreen .keyboard-row { gap: 6px !important; margin-bottom: 8px !important; }
     #battleScreen .key {
         flex: 1 !important;
         min-width: 0 !important;
@@ -3229,7 +3229,7 @@ h1, h2, h3, h4, h5, h6,
             border: none !important;
             border-top: 1px solid rgba(255,255,255,0.12) !important;
             border-radius: 0 !important;
-            padding: 6px 6px 8px !important;
+            padding: 6px 8px 10px !important;
             flex-shrink: 0 !important;
             box-shadow: none !important;
             position: relative !important;
@@ -3237,21 +3237,27 @@ h1, h2, h3, h4, h5, h6,
         }
 
         #battleScreen .key {
-            height: 42px !important;
-            min-width: 30px !important;
-            font-size: 15px !important;
-            font-weight: 800 !important;
+            height: 58px !important;
+            flex: 1 !important;
+            flex-basis: 43px !important;
+            max-width: 43px !important;
+            min-width: 0 !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
             background: rgba(255,255,255,0.18) !important;
             border: 1px solid rgba(255,255,255,0.25) !important;
             color: #fff !important;
-            border-radius: 7px !important;
+            border-radius: 4px !important;
             box-shadow: none !important;
             text-shadow: none !important;
         }
 
         #battleScreen .key.wide {
-            font-size: 12px !important;
-            min-width: 44px !important;
+            flex: 1.5 !important;
+            flex-basis: 65px !important;
+            max-width: 65px !important;
+            font-size: 13px !important;
+            min-width: 0 !important;
         }
 
         #battleScreen .key.correct { background: var(--correct) !important; border-color: var(--correct) !important; color: var(--bg-primary) !important; }
@@ -5795,10 +5801,19 @@ h1, h2, h3, h4, h5, h6,
                 console.log('🎯 Match found!', data);
                 currentMatch = data;
                 document.getElementById('battlePot').textContent = data.pot;
-                // Stay on matchmaking screen, wait for match_start
+                // Fallback: if match_start never arrives within 10s, re-auth → triggers match_reconnect
+                if (window._matchStartTimer) clearTimeout(window._matchStartTimer);
+                window._matchStartTimer = setTimeout(() => {
+                    window._matchStartTimer = null;
+                    if (document.getElementById('matchmakingScreen').classList.contains('active')) {
+                        console.warn('match_start not received — re-authenticating to recover');
+                        socket.emit('authenticate', { token });
+                    }
+                }, 10000);
             });
 
             socket.on('match_start', (data) => {
+                if (window._matchStartTimer) { clearTimeout(window._matchStartTimer); window._matchStartTimer = null; }
                 console.log('🎮 Match starting! Target:', data.targetWord, 'Mode:', data.mode || currentMatch?.mode);
                 game.isTraining = false; // always false in multiplayer
                 game.yourSolves = 0;
