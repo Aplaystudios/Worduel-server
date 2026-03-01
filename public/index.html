@@ -2585,7 +2585,22 @@ h1, h2, h3, h4, h5, h6,
             white-space: nowrap;
         }
         .store-card-floatbadge.best { background: #4ade80; }
-        .store-card-icon { font-size: 38px; margin-bottom: 6px; }
+        .store-card-icon {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 82px;
+            margin-bottom: 8px;
+        }
+        .store-card-icon svg { width: 68px; height: auto; filter: drop-shadow(0 3px 12px rgba(255,180,0,0.55)); }
+        .bet-coin-pile {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 46px;
+            margin-bottom: 5px;
+        }
+        .bet-coin-pile svg { width: 42px; height: auto; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); }
         .store-card-amount {
             font-family: 'JetBrains Mono', monospace;
             font-size: 26px;
@@ -3575,32 +3590,38 @@ h1, h2, h3, h4, h5, h6,
         <div class="bet-container">
             <div class="bet-header">
                 <h2 class="bet-title">Select Your Bet</h2>
-                <p class="bet-balance">Balance: <span id="userBalance">1000</span> <span class="gc">👑</span></p>
+                <p class="bet-balance">Balance: <span id="userBalance">1000</span> <span class="gc"></span></p>
             </div>
 
             <div class="bet-grid">
                 <div class="bet-option" onclick="selectBet(10)">
-                    <div class="bet-amount"><span class="gc">👑</span> 10</div>
+                    <div class="bet-coin-pile" data-coins="1"></div>
+                    <div class="bet-amount"><span class="gc"></span> 10</div>
                     <div class="bet-label">Bronze</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(25)">
-                    <div class="bet-amount"><span class="gc">👑</span> 25</div>
+                    <div class="bet-coin-pile" data-coins="2"></div>
+                    <div class="bet-amount"><span class="gc"></span> 25</div>
                     <div class="bet-label">Silver</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(50)">
-                    <div class="bet-amount"><span class="gc">👑</span> 50</div>
+                    <div class="bet-coin-pile" data-coins="3"></div>
+                    <div class="bet-amount"><span class="gc"></span> 50</div>
                     <div class="bet-label">Gold</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(100)">
-                    <div class="bet-amount"><span class="gc">👑</span> 100</div>
+                    <div class="bet-coin-pile" data-coins="3"></div>
+                    <div class="bet-amount"><span class="gc"></span> 100</div>
                     <div class="bet-label">Platinum</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(250)">
-                    <div class="bet-amount"><span class="gc">👑</span> 250</div>
+                    <div class="bet-coin-pile" data-coins="4"></div>
+                    <div class="bet-amount"><span class="gc"></span> 250</div>
                     <div class="bet-label">Diamond</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(500)">
-                    <div class="bet-amount"><span class="gc">👑</span> 500</div>
+                    <div class="bet-coin-pile" data-coins="5"></div>
+                    <div class="bet-amount"><span class="gc"></span> 500</div>
                     <div class="bet-label">Legend</div>
                 </div>
             </div>
@@ -3617,7 +3638,7 @@ h1, h2, h3, h4, h5, h6,
             <h2 class="matchmaking-title">Searching for Opponent...</h2>
             <p class="matchmaking-info">
                 Looking for players with similar skill<br>
-                Bet: <span class="matchmaking-bet" id="matchmakingBet"><span class="gc">👑</span> 50</span>
+                Bet: <span class="matchmaking-bet" id="matchmakingBet"><span class="gc"></span> 50</span>
             </p>
             <button class="btn btn-secondary" onclick="cancelSearch()" style="margin-top: 32px;">CANCEL</button>
         </div>
@@ -3636,7 +3657,7 @@ h1, h2, h3, h4, h5, h6,
                 <div class="battle-header-score">
                     <div id="roundScore" style="display:none"></div>
                     <div id="blitzScore" style="display:none"></div>
-                    <div class="battle-pot" id="potDisplay">POT <span id="battlePot">100</span><span class="gc">👑</span></div>
+                    <div class="battle-pot" id="potDisplay">POT <span id="battlePot">100</span><span class="gc"></span></div>
                 </div>
                 <div class="battle-header-time">
                     <span class="battle-header-label">TIME</span>
@@ -3714,7 +3735,7 @@ h1, h2, h3, h4, h5, h6,
         <div class="reward-popup-box" onclick="event.stopPropagation()">
             <span class="reward-popup-gift">🎁</span>
             <div class="reward-popup-label">Daily Reward</div>
-            <div class="reward-popup-amount" id="rewardPopupAmount">+100 <span class="gc">👑</span></div>
+            <div class="reward-popup-amount" id="rewardPopupAmount">+100 <span class="gc"></span></div>
             <div class="reward-popup-balance" id="rewardPopupBalance"></div>
             <div class="reward-popup-tap">TAP ANYWHERE TO CLOSE</div>
         </div>
@@ -3729,11 +3750,11 @@ h1, h2, h3, h4, h5, h6,
             <div class="result-stats" id="resultStats">
                 <div class="result-stat">
                     <span class="result-label">WINNINGS</span>
-                    <span class="result-value positive" id="resultWinnings">+<span class="gc">👑</span>100</span>
+                    <span class="result-value positive" id="resultWinnings">+<span class="gc"></span>100</span>
                 </div>
                 <div class="result-stat">
                     <span class="result-label">NEW BALANCE</span>
-                    <span class="result-value" id="resultBalance"><span class="gc">👑</span>1100</span>
+                    <span class="result-value" id="resultBalance"><span class="gc"></span>1100</span>
                 </div>
                 <div class="result-stat">
                     <span class="result-label">MMR CHANGE</span>
@@ -3769,11 +3790,11 @@ h1, h2, h3, h4, h5, h6,
             <div class="blitz-end-stats">
                 <div class="blitz-end-stat-row">
                     <span class="blitz-end-stat-label">WINNINGS</span>
-                    <span class="blitz-end-stat-value" id="blitzEndWinnings">+<span class="gc">👑</span>0</span>
+                    <span class="blitz-end-stat-value" id="blitzEndWinnings">+<span class="gc"></span>0</span>
                 </div>
                 <div class="blitz-end-stat-row">
                     <span class="blitz-end-stat-label">NEW BALANCE</span>
-                    <span class="blitz-end-stat-value" id="blitzEndBalance"><span class="gc">👑</span>0</span>
+                    <span class="blitz-end-stat-value" id="blitzEndBalance"><span class="gc"></span>0</span>
                 </div>
                 <div class="blitz-end-stat-row">
                     <span class="blitz-end-stat-label">MMR CHANGE</span>
@@ -3791,7 +3812,7 @@ h1, h2, h3, h4, h5, h6,
     <div id="storeModal">
         <div class="store-container">
             <div class="store-header">
-                <div class="store-title"><span class="gc">👑</span> COIN STORE</div>
+                <div class="store-title"><span class="gc"></span> COIN STORE</div>
                 <div class="store-subtitle">FUEL YOUR DUELS</div>
             </div>
 
@@ -3799,7 +3820,7 @@ h1, h2, h3, h4, h5, h6,
             <div class="store-daily-deal">
                 <div class="store-daily-left">
                     <div class="store-daily-badge">⚡ DAILY FREE</div>
-                    <div class="store-daily-coins">+100 <span class="gc">👑</span></div>
+                    <div class="store-daily-coins">+100 <span class="gc"></span></div>
                     <div class="store-daily-info">Watch an ad — once per day</div>
                 </div>
                 <button class="store-daily-btn" onclick="claimDailyReward(); closeStore();">WATCH AD</button>
@@ -3808,7 +3829,7 @@ h1, h2, h3, h4, h5, h6,
             <!-- 2-column packages grid -->
             <div class="store-grid">
                 <div class="store-card">
-                    <div class="store-card-icon">💰</div>
+                    <div class="store-card-icon" data-coins="2"></div>
                     <div class="store-card-amount">100</div>
                     <div class="store-card-label">COINS</div>
                     <button class="store-card-btn" onclick="purchasePackage('bronze')">$0.99</button>
@@ -3816,7 +3837,7 @@ h1, h2, h3, h4, h5, h6,
                 </div>
                 <div class="store-card featured">
                     <div class="store-card-floatbadge">POPULAR</div>
-                    <div class="store-card-icon">💎</div>
+                    <div class="store-card-icon" data-coins="3"></div>
                     <div class="store-card-amount">500</div>
                     <div class="store-card-label">COINS</div>
                     <button class="store-card-btn featured-btn" onclick="purchasePackage('silver')">$4.99</button>
@@ -3824,14 +3845,14 @@ h1, h2, h3, h4, h5, h6,
                 </div>
                 <div class="store-card">
                     <div class="store-card-floatbadge best">BEST VALUE</div>
-                    <div class="store-card-icon">👑</div>
+                    <div class="store-card-icon" data-coins="4"></div>
                     <div class="store-card-amount">1,000</div>
                     <div class="store-card-label">COINS</div>
                     <button class="store-card-btn" onclick="purchasePackage('gold')">$9.99</button>
                     <div class="store-card-soon">COMING SOON</div>
                 </div>
                 <div class="store-card">
-                    <div class="store-card-icon">🚀</div>
+                    <div class="store-card-icon" data-coins="5"></div>
                     <div class="store-card-amount">5,000</div>
                     <div class="store-card-label">COINS</div>
                     <button class="store-card-btn" onclick="purchasePackage('platinum')">$39.99</button>
@@ -3846,12 +3867,47 @@ h1, h2, h3, h4, h5, h6,
     <script>
         const SERVER_URL = window.location.origin;
 
+        // ── Coin pile SVG generator ──────────────────────────────────────────
+        function coinPileSVG(n) {
+            const W = 80, rx = 30, ry = 10, x = 10;
+            const step = 13, sideH0 = 11, topCoinY = 30;
+            const botCoinY = topCoinY + (n - 1) * step;
+            const viewH = botCoinY + sideH0 + 2;
+            const sid = `cpS${n}`, tid = `cpT${n}`;
+            const defs = `<defs>
+                <linearGradient id="${sid}" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#c8820a"/>
+                    <stop offset="100%" stop-color="#5c3200"/>
+                </linearGradient>
+                <radialGradient id="${tid}" cx="38%" cy="28%" r="68%">
+                    <stop offset="0%" stop-color="#fffde7"/>
+                    <stop offset="30%" stop-color="#ffd700"/>
+                    <stop offset="72%" stop-color="#c8820a"/>
+                    <stop offset="100%" stop-color="#8a5200"/>
+                </radialGradient>
+            </defs>`;
+            let coins = '';
+            for (let i = 0; i < n; i++) {
+                const cy = botCoinY - i * step;
+                const sideH = i === 0 ? sideH0 : step;
+                coins += `
+                <rect x="${x}" y="${cy}" width="${rx * 2}" height="${sideH}" rx="2" fill="url(#${sid})" stroke="#4a2800" stroke-width="0.8"/>
+                <ellipse cx="40" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${tid})" stroke="#4a2800" stroke-width="0.8"/>
+                <ellipse cx="32" cy="${cy - 4}" rx="9" ry="3.5" fill="rgba(255,255,255,0.22)"/>`;
+            }
+            return `<svg viewBox="0 0 ${W} ${viewH}" xmlns="http://www.w3.org/2000/svg">${defs}${coins}</svg>`;
+        }
+        document.querySelectorAll('[data-coins]').forEach(el => {
+            el.innerHTML = coinPileSVG(+el.dataset.coins);
+        });
+        // ─────────────────────────────────────────────────────────────────────
+
         let socket = null;
         let user = null;
         let token = null;
         let selectedMode = null;
         let selectedBet = null;
-        const GC = '<span class="gc">👑</span>';
+        const GC = '<span class="gc"></span>';
         let currentMatch = null;
         let disconnectCountdown = null;
 
