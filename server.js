@@ -454,6 +454,19 @@ function createMatch(socket, user, opponent, betAmount, mode) {
     const matchId      = `match_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const oppSocket    = activeSockets.get(opponent.username);
 
+    // Safety: opponent's socket vanished between queue-splice and now (very rare edge case).
+    // Abort to avoid creating a match only one player can enter.
+    if (!oppSocket) {
+        console.warn(`createMatch aborted: no socket for ${opponent.username}`);
+        socket.emit('matchmaking', { message: 'Opponent unavailable. Re-queuing...' });
+        matchmakingQueue.push({
+            username: user.username, socketId: socket.id,
+            betAmount, mode, mmr: user.mmr, rank: getRank(user.mmr),
+            mmrRange: [user.mmr - 200, user.mmr + 200]
+        });
+        return;
+    }
+
     const makePlayer = (u, sockId) => ({
         username: u.username, socketId: sockId,
         mmr: u.mmr, betAmount,
@@ -500,11 +513,25 @@ function createMatch(socket, user, opponent, betAmount, mode) {
     socket.emit('match_found',    { matchId, mode, opponent: oppProfile, pot: match.pot });
     if (oppSocket) oppSocket.emit('match_found', { matchId, mode, opponent: myProfile,  pot: match.pot });
 
+    console.log(`Match created: ${user.username} vs ${opponent.username} [${mode}] matchId=${matchId} oppSocketFound=${!!oppSocket}`);
+
     setTimeout(() => {
-        const p1Word = mode === 'blitz' ? match.players[0].currentWord : match.targetWord;
-        const p2Word = mode === 'blitz' ? match.players[1].currentWord : match.targetWord;
-        socket.emit('match_start',    { targetWord: p1Word, mode });
-        if (oppSocket) oppSocket.emit('match_start', { targetWord: p2Word, mode });
+        // Re-fetch fresh sockets — the references captured above can be stale if a player's
+        // socket briefly disconnected and reconnected during this 1-second delay (common on mobile).
+        const m = activeMatches.get(matchId);
+        if (!m || m.status === 'ended') return; // match ended (forfeit) before it could start
+
+        const p1Word = mode === 'blitz' ? m.players[0].currentWord : m.targetWord;
+        const p2Word = mode === 'blitz' ? m.players[1].currentWord : m.targetWord;
+
+        const freshP1Sock = activeSockets.get(user.username);
+        const freshP2Sock = activeSockets.get(opponent.username);
+
+        // Stamp matchId on fresh sockets in case they reconnected during the delay
+        if (freshP1Sock) { freshP1Sock.matchId = matchId; freshP1Sock.emit('match_start', { targetWord: p1Word, mode }); }
+        if (freshP2Sock) { freshP2Sock.matchId = matchId; freshP2Sock.emit('match_start', { targetWord: p2Word, mode }); }
+
+        console.log(`Match started: ${user.username}(${freshP1Sock ? 'ok' : 'MISSING'}) vs ${opponent.username}(${freshP2Sock ? 'ok' : 'MISSING'}) [${mode}]`);
     }, 1000);
 }
 
