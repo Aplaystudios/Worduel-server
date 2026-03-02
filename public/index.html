@@ -3374,6 +3374,42 @@ h1, h2, h3, h4, h5, h6,
         #battleScreen .key.present { background: var(--present) !important; border-color: var(--present) !important; color: var(--bg-primary) !important; }
         #battleScreen .key.absent  { background: var(--absent)  !important; border-color: var(--absent)  !important; }
 
+        /* ── Desktop battle layout: grid keeps keyboard always on-screen ── */
+        @media (min-width: 769px) {
+            #battleScreen {
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+            #battleScreen .battle-container {
+                height: 100dvh !important;
+                display: grid !important;
+                grid-template-rows: auto 1fr auto !important;
+                overflow: hidden !important;
+                padding: 12px 16px 0 !important;
+                gap: 8px !important;
+                box-sizing: border-box !important;
+            }
+            #battleScreen .battle-grid {
+                grid-row: 2 !important;
+                margin-bottom: 0 !important;
+                overflow: hidden !important;
+                min-height: 0 !important;
+                align-content: center !important;
+            }
+            #battleScreen .keyboard {
+                grid-row: 3 !important;
+                padding-bottom: 10px !important;
+            }
+            /* Scale tile size so both grids + keyboard always fit the viewport */
+            #battleScreen .tile {
+                width: min(56px, calc((100dvh - 220px) / 12)) !important;
+                height: min(56px, calc((100dvh - 220px) / 12)) !important;
+                font-size: min(22px, calc((100dvh - 220px) / 12 * 0.42)) !important;
+            }
+        }
+
         /* ── Daily Reward Popup ── */
         #dailyRewardPopup {
             position: fixed;
@@ -4328,9 +4364,10 @@ h1, h2, h3, h4, h5, h6,
             scheduleNext();
         }
 
+        let _trainingWordArr = null;
         function getRandomWord() {
-            const words = ['CRANE','SLATE','TRACE','STARE','RAISE','SHINE','STONE','BRAVE','GLOVE','PROVE','SHARE','SPARE','PHASE','SHAPE','GRAPE','TRADE','CHASE','HOUSE','MOUSE','PLACE','PLANT','PIANO','CRIME','PRIME','CLIMB','ROUND','SOUND','POUND','MOUNT','CLOUD','PROUD','FLOUR','WORLD','WORTH','WRITE','WRONG','WROTE','FRESH','FLESH','FLASH','TRASH','CRASH'];
-            return words[Math.floor(Math.random() * words.length)];
+            if (!_trainingWordArr) _trainingWordArr = [...VALID_WORDS];
+            return _trainingWordArr[Math.floor(Math.random() * _trainingWordArr.length)];
         }
 
         // Valid English words for gameplay
@@ -6317,7 +6354,7 @@ h1, h2, h3, h4, h5, h6,
                 game.yourSolves = data.yourSolves;
                 game.currentRow = 0; game.currentGuess = '';
                 createGrid('yourGrid');
-                document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
+                setupKeyboard();
                 document.getElementById('blitzScore').textContent = `${data.yourSolves} – ${data.opponentSolves} SOLVED`;
             });
 
@@ -6326,7 +6363,7 @@ h1, h2, h3, h4, h5, h6,
                 game.targetWord = data.newWord;
                 game.currentRow = 0; game.currentGuess = '';
                 createGrid('yourGrid');
-                document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'present', 'absent'));
+                setupKeyboard();
             });
 
             // Blitz: opponent solved a word
@@ -6474,15 +6511,7 @@ h1, h2, h3, h4, h5, h6,
 
                 key.classList.remove('correct', 'present', 'absent');
             });
-            
-            document.onkeydown = (e) => {
-                // If the event came from mobileInput, skip it —
-                // the input event listener already called handleKey.
-                if (e.target && e.target.id === 'mobileInput') return;
-                if (e.key === 'Enter') handleKey('Enter');
-                else if (e.key === 'Backspace') handleKey('Backspace');
-                else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
-            };
+            // Physical keyboard is handled by the global listener below (added once at startup).
         }
 
         function handleKey(key) {
@@ -6591,14 +6620,7 @@ h1, h2, h3, h4, h5, h6,
             guess.evaluation.forEach((status, i) => {
                 setTimeout(() => {
                     const tile = document.getElementById(`${gridId}-${row}-${i}`);
-                    
-                    // Only show letters on YOUR grid, not opponent's
-                    if (gridId === 'yourGrid') {
-                        tile.textContent = guess.word[i];
-                    } else {
-                        tile.textContent = ''; // Hide opponent's letters!
-                    }
-                    
+                    tile.textContent = guess.word[i];
                     tile.classList.add(status);
                 }, i * 140);
             });
@@ -7084,6 +7106,17 @@ h1, h2, h3, h4, h5, h6,
 
         // Initialise once the DOM is ready
         initMobileInput();
+
+        // ── Physical keyboard — registered once, always active during battle ──
+        document.addEventListener('keydown', (e) => {
+            // Only process when battle screen is showing
+            if (!document.getElementById('battleScreen').classList.contains('active')) return;
+            // Skip if the event originated from mobileInput (already handled by input listener)
+            if (e.target && e.target.id === 'mobileInput') return;
+            if (e.key === 'Enter')               { e.preventDefault(); handleKey('Enter'); }
+            else if (e.key === 'Backspace')      { e.preventDefault(); handleKey('Backspace'); }
+            else if (/^[a-zA-Z]$/.test(e.key))  { handleKey(e.key.toUpperCase()); }
+        });
     </script>
 
     <!-- INTERSTITIAL AD OVERLAY -->

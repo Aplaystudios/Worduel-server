@@ -389,8 +389,10 @@ io.on('connection', (socket) => {
             if (!player || player.solved) return;
 
             const guess = data.word.toUpperCase();
-            if (guess.length !== 5)      return socket.emit('error', { message: 'Guess must be 5 letters' });
-            if (!VALID_WORDS.has(guess)) return socket.emit('invalid_word', { word: guess });
+            if (guess.length !== 5 || !/^[A-Z]+$/.test(guess))
+                return socket.emit('error', { message: 'Guess must be 5 letters' });
+            // Client validates against the full ~14k word list before sending;
+            // server accepts any 5-letter alphabetic string to avoid false rejections.
 
             const targetWord = match.mode === 'blitz' ? player.currentWord : match.targetWord;
             const evaluation = evaluateGuess(guess, targetWord);
@@ -655,8 +657,11 @@ function scheduleNextRoundOrEnd(matchId, s1, s2) {
     const [p1, p2] = match.players;
 
     const hasWinner = (s1 >= 2 || s2 >= 2) && s1 !== s2;
-    if (hasWinner) {
-        setTimeout(() => endMatch(matchId, s1 > s2 ? p1.username : p2.username), 4000);
+    // Hard cap: end after round 3 — whoever has more points wins; p1 wins a true tie
+    const roundCapReached = match.currentRound >= 3;
+    if (hasWinner || roundCapReached) {
+        const forcedWinner = s1 > s2 ? p1.username : s2 > s1 ? p2.username : p1.username;
+        setTimeout(() => endMatch(matchId, hasWinner ? (s1 > s2 ? p1.username : p2.username) : forcedWinner), 4000);
     } else {
         match.currentRound++;
         match.targetWord = getRandomWord();
