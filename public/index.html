@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#0a0e14">
     <title>Worduel - Multiplayer</title>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Barlow:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         * {
@@ -906,6 +907,31 @@ body::after {
 
         .auth-form.active {
             display: block;
+        }
+
+        .google-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0 16px;
+        }
+        .google-divider span {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        .google-divider::before,
+        .google-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .google-signin-wrapper {
+            display: flex;
+            justify-content: center;
         }
 
         .form-group {
@@ -3605,6 +3631,23 @@ h1, h2, h3, h4, h5, h6,
                 </div>
                 <button type="submit" class="btn">CREATE ACCOUNT</button>
             </form>
+
+            <!-- Google Sign-In -->
+            <div class="google-divider"><span>OR</span></div>
+            <div class="google-signin-wrapper">
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                     data-callback="handleGoogleSignIn"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-theme="filled_black"
+                     data-text="signin_with"
+                     data-shape="pill"
+                     data-width="280">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -5743,6 +5786,29 @@ h1, h2, h3, h4, h5, h6,
                     showError(data.error);
                 }
             } catch (error) {
+                showError('Connection failed');
+            }
+        }
+
+        async function handleGoogleSignIn(response) {
+            try {
+                const res = await fetch(`${SERVER_URL}/api/auth/google`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ credential: response.credential })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    token = data.token;
+                    user = data.user;
+                    localStorage.setItem('worduel_token', token);
+                    localStorage.setItem('worduel_user', JSON.stringify(user));
+                    connectSocket();
+                    showScreen('homeScreen');
+                } else {
+                    showError(data.error || 'Google sign-in failed. Please try again.');
+                }
+            } catch {
                 showError('Connection failed');
             }
         }

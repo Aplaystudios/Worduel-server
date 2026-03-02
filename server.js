@@ -5,6 +5,8 @@ const http      = require('http');
 const socketIo  = require('socket.io');
 const bcrypt    = require('bcryptjs');
 const jwt       = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const { getRank, getRandomWord, evaluateGuess, calculateMMRChange } = require('./src/game');
 const VALID_WORDS = require('./src/words');
@@ -48,6 +50,7 @@ app.post('/api/register', async (req, res) => {
         const user = {
             username,
             password: hashedPassword,
+            googleId: null,
             balance: 1000,
             mmr: 1000,
             gamesPlayed: 0,
@@ -83,6 +86,54 @@ app.post('/api/login', async (req, res) => {
         res.json({ success: true, token, user: publicProfile(user) });
     } catch {
         res.json({ success: false, error: 'Login failed' });
+    }
+});
+
+app.post('/api/auth/google', async (req, res) => {
+    try {
+        const { credential } = req.body;
+        if (!credential) return res.json({ success: false, error: 'No credential provided' });
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const { sub: googleId, name } = ticket.getPayload();
+
+        // Find existing user by googleId
+        let user = [...users.values()].find(u => u.googleId === googleId);
+
+        if (!user) {
+            // Derive username from Google display name
+            let base = (name || 'player').replace(/\s+/g, '').toLowerCase().slice(0, 14);
+            let username = base;
+            let i = 1;
+            while (users.has(username)) username = base + i++;
+
+            user = {
+                username,
+                password: null,
+                googleId,
+                balance: 1000,
+                mmr: 1000,
+                gamesPlayed: 0,
+                gamesWon: 0,
+                createdAt: Date.now(),
+                lastDailyRewardAt:    null,
+                lastMatchBet:         0,
+                lastMatchWon:         false,
+                lastMatchWinnings:    0,
+                consolationClaimed:   false,
+                doubleWinningsClaimed: false,
+            };
+            users.set(username, user);
+        }
+
+        const token = jwt.sign({ username: user.username }, JWT_SECRET);
+        res.json({ success: true, token, user: publicProfile(user) });
+    } catch (err) {
+        console.error('Google auth error:', err.message);
+        res.json({ success: false, error: 'Google sign-in failed' });
     }
 });
 
