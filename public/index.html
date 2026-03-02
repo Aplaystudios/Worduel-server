@@ -2592,7 +2592,7 @@ h1, h2, h3, h4, h5, h6,
             height: 82px;
             margin-bottom: 8px;
         }
-        .store-card-icon svg { width: 68px; height: auto; filter: drop-shadow(0 3px 12px rgba(255,180,0,0.55)); }
+        .store-card-icon img { height: 82px; width: auto; object-fit: contain; filter: drop-shadow(0 3px 12px rgba(255,180,0,0.55)); }
         .bet-coin-pile {
             display: flex;
             align-items: flex-end;
@@ -2600,7 +2600,7 @@ h1, h2, h3, h4, h5, h6,
             height: 46px;
             margin-bottom: 5px;
         }
-        .bet-coin-pile svg { width: 42px; height: auto; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); }
+        .bet-coin-pile img { height: 46px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); }
         .store-card-amount {
             font-family: 'JetBrains Mono', monospace;
             font-size: 26px;
@@ -2880,12 +2880,16 @@ h1, h2, h3, h4, h5, h6,
         }
 
         .home-balance-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,170,0,0.2));
             border: 2px solid rgba(255,215,0,0.5);
             border-radius: 12px;
             padding: 6px 12px;
-            text-align: right;
         }
+        .home-balance-coin { width: 36px; height: 36px; flex-shrink: 0; }
+        .home-balance-coin img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
         .home-balance-amount {
             font-size: 20px;
@@ -3462,8 +3466,13 @@ h1, h2, h3, h4, h5, h6,
                     </div>
                 </div>
                 <div class="home-balance-box">
-                    <div class="home-balance-amount"><span id="profileBalance">1000</span></div>
-                    <div class="home-balance-label">COINS</div>
+                    <div class="home-balance-coin">
+                        <img src="/Images/coin-single.png" alt="coins">
+                    </div>
+                    <div>
+                        <div class="home-balance-amount"><span id="profileBalance">1000</span></div>
+                        <div class="home-balance-label">COINS</div>
+                    </div>
                 </div>
             </div>
 
@@ -3876,38 +3885,17 @@ h1, h2, h3, h4, h5, h6,
     <script>
         const SERVER_URL = window.location.origin;
 
-        // ── Coin pile SVG generator ──────────────────────────────────────────
-        function coinPileSVG(n) {
-            const W = 80, rx = 30, ry = 10, x = 10;
-            const step = 13, sideH0 = 11, topCoinY = 30;
-            const botCoinY = topCoinY + (n - 1) * step;
-            const viewH = botCoinY + sideH0 + 2;
-            const sid = `cpS${n}`, tid = `cpT${n}`;
-            const defs = `<defs>
-                <linearGradient id="${sid}" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#c8820a"/>
-                    <stop offset="100%" stop-color="#5c3200"/>
-                </linearGradient>
-                <radialGradient id="${tid}" cx="38%" cy="28%" r="68%">
-                    <stop offset="0%" stop-color="#fffde7"/>
-                    <stop offset="30%" stop-color="#ffd700"/>
-                    <stop offset="72%" stop-color="#c8820a"/>
-                    <stop offset="100%" stop-color="#8a5200"/>
-                </radialGradient>
-            </defs>`;
-            let coins = '';
-            for (let i = 0; i < n; i++) {
-                const cy = botCoinY - i * step;
-                const sideH = i === 0 ? sideH0 : step;
-                coins += `
-                <rect x="${x}" y="${cy}" width="${rx * 2}" height="${sideH}" rx="2" fill="url(#${sid})" stroke="#4a2800" stroke-width="0.8"/>
-                <ellipse cx="40" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${tid})" stroke="#4a2800" stroke-width="0.8"/>
-                <ellipse cx="32" cy="${cy - 4}" rx="9" ry="3.5" fill="rgba(255,255,255,0.22)"/>`;
-            }
-            return `<svg viewBox="0 0 ${W} ${viewH}" xmlns="http://www.w3.org/2000/svg">${defs}${coins}</svg>`;
-        }
+        // ── Coin pile images ──────────────────────────────────────────────────
+        const COIN_PILE_IMGS = {
+            1: '/Images/coinpile1.png',
+            2: '/Images/coinpile2.png',
+            3: '/Images/Coinpile3.png',
+            4: '/Images/Coinpile4.png',
+            5: '/Images/Coinpile4.png',
+        };
         document.querySelectorAll('[data-coins]').forEach(el => {
-            el.innerHTML = coinPileSVG(+el.dataset.coins);
+            const src = COIN_PILE_IMGS[+el.dataset.coins] || COIN_PILE_IMGS[4];
+            el.innerHTML = `<img src="${src}" alt="coins">`;
         });
         // ─────────────────────────────────────────────────────────────────────
 
