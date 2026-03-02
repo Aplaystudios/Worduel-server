@@ -934,6 +934,78 @@ body::after {
             justify-content: center;
         }
 
+        /* Training mode picker overlay */
+        .training-picker-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 9500;
+            align-items: center;
+            justify-content: center;
+        }
+        .training-picker-overlay.active { display: flex; }
+        .training-picker-container {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-primary);
+            border-radius: 20px;
+            padding: 36px 28px;
+            max-width: 360px;
+            width: 90%;
+            text-align: center;
+        }
+        .training-picker-title {
+            font-family: 'Lilita One', cursive;
+            font-size: 26px;
+            color: #d8961b;
+            margin-bottom: 6px;
+        }
+        .training-picker-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+        .training-picker-modes {
+            display: flex;
+            gap: 14px;
+        }
+        .training-mode-card {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 14px;
+            padding: 20px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .training-mode-card:hover {
+            border-color: #d8961b;
+            background: rgba(216,150,27,0.1);
+            transform: translateY(-2px);
+        }
+        .training-mode-card-icon { font-size: 32px; margin-bottom: 10px; }
+        .training-mode-card-name {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+        .training-mode-card-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .training-picker-back {
+            margin-top: 18px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
         .form-group {
             margin-bottom: 16px;
         }
@@ -3796,6 +3868,27 @@ h1, h2, h3, h4, h5, h6,
         <div id="roundOverlayNext" style="font-family:'Barlow',sans-serif; font-size:11px; color:#4a5568; margin-top:4px;">NEXT ROUND STARTING...</div>
     </div>
 
+    <!-- Training mode picker -->
+    <div id="trainingModePicker" class="training-picker-overlay">
+        <div class="training-picker-container">
+            <div class="training-picker-title">TRAINING</div>
+            <div class="training-picker-sub">CHOOSE YOUR FORMAT</div>
+            <div class="training-picker-modes">
+                <div class="training-mode-card" onclick="startTrainingMode('best_of_3')">
+                    <div class="training-mode-card-icon">🏆</div>
+                    <div class="training-mode-card-name">BEST OF 3</div>
+                    <div class="training-mode-card-desc">First to win 2 rounds · 3 min each</div>
+                </div>
+                <div class="training-mode-card" onclick="startTrainingMode('blitz')">
+                    <div class="training-mode-card-icon">⚡</div>
+                    <div class="training-mode-card-name">BLITZ</div>
+                    <div class="training-mode-card-desc">Most words solved in 5 minutes</div>
+                </div>
+            </div>
+            <button class="training-picker-back" onclick="document.getElementById('trainingModePicker').classList.remove('active')">CANCEL</button>
+        </div>
+    </div>
+
     <!-- DAILY REWARD POPUP -->
     <div id="dailyRewardPopup" onclick="closeDailyRewardPopup()">
         <div class="reward-popup-box" onclick="event.stopPropagation()">
@@ -4100,7 +4193,7 @@ h1, h2, h3, h4, h5, h6,
             if (!selectedMode) return;
 
             if (selectedMode === 'training') {
-                startTrainingMode();
+                document.getElementById('trainingModePicker').classList.add('active');
                 return;
             }
 
@@ -4111,21 +4204,128 @@ h1, h2, h3, h4, h5, h6,
             showScreen('betScreen');
         }
 
-        function startTrainingMode() {
-            // Training mode - no bets, no matchmaking, just practice
-            game.targetWord = getRandomWord();
+        function startTrainingMode(subMode) {
+            document.getElementById('trainingModePicker').classList.remove('active');
+            trainingSubMode = subMode;
             game.isTraining = true;
-            console.log('Training mode - Target word:', game.targetWord);
-            
+
+            // Stop any leftover AI timers from a previous session
+            if (aiInterval) { clearInterval(aiInterval); aiInterval = null; }
+            if (aiBlitzInterval) { clearInterval(aiBlitzInterval); aiBlitzInterval = null; }
+            if (trainingRoundTimeout) { clearTimeout(trainingRoundTimeout); trainingRoundTimeout = null; }
+
             setupBattle();
-            document.getElementById('battleTimer').textContent = '∞';
-            // Hide pot display for training mode
             document.getElementById('battlePot').parentElement.style.display = 'none';
             document.getElementById('opponentName').textContent = 'AI OPPONENT';
             showScreen('battleScreen');
-            
-            // Start AI opponent
+
+            const roundScoreEl = document.getElementById('roundScore');
+            const blitzScoreEl = document.getElementById('blitzScore');
+
+            if (subMode === 'blitz') {
+                trainingBlitzSolves = { player: 0, ai: 0 };
+                roundScoreEl.style.display = 'none';
+                blitzScoreEl.style.display = 'block';
+                blitzScoreEl.textContent = '0 – 0 SOLVED';
+                game.targetWord = getRandomWord();
+                startRoundTimer(300);
+                // End blitz when timer runs out
+                trainingRoundTimeout = setTimeout(() => {
+                    stopTrainingAI();
+                    showTrainingResult(trainingBlitzSolves.player > trainingBlitzSolves.ai);
+                }, 300000);
+                startTrainingBlitzAI();
+            } else {
+                // best_of_3
+                trainingScores = { player: 0, ai: 0 };
+                trainingRound = 1;
+                roundScoreEl.style.display = 'block';
+                blitzScoreEl.style.display = 'none';
+                startTrainingRound();
+            }
+        }
+
+        function startTrainingRound() {
+            game.targetWord = getRandomWord();
+            game.currentRow = 0;
+            game.opponentRow = 0;
+            game.currentGuess = '';
+            aiRow = 0;
+            createGrid('yourGrid');
+            createGrid('opponentGrid');
+            setupKeyboard();
+
+            document.getElementById('roundScore').textContent =
+                `R${trainingRound} · ${trainingScores.player} – ${trainingScores.ai}`;
+            startRoundTimer(180);
+
+            // If player doesn't solve in time, AI wins the round
+            trainingRoundTimeout = setTimeout(() => {
+                if (game.isTraining && trainingSubMode === 'best_of_3') {
+                    stopTrainingAI();
+                    trainingScores.ai++;
+                    endTrainingRound('time');
+                }
+            }, 180000);
+
             startAIOpponent();
+        }
+
+        function endTrainingRound(winner) {
+            if (aiInterval) { clearInterval(aiInterval); aiInterval = null; }
+            if (trainingRoundTimeout) { clearTimeout(trainingRoundTimeout); trainingRoundTimeout = null; }
+            if (game.timerInterval) { clearInterval(game.timerInterval); game.timerInterval = null; }
+
+            const overlay = document.getElementById('roundOverlay');
+            const titleEl = document.getElementById('roundOverlayTitle');
+            const nextEl  = document.getElementById('roundOverlayNext');
+
+            if (winner === 'player') {
+                titleEl.textContent = 'ROUND WIN!';
+                titleEl.style.color = '#4ade80';
+            } else {
+                titleEl.textContent = 'ROUND LOSS';
+                titleEl.style.color = '#f87171';
+            }
+            document.getElementById('roundOverlayScore').textContent =
+                `${trainingScores.player} – ${trainingScores.ai}`;
+            document.getElementById('roundOverlayWord').textContent =
+                `The word was: ${game.targetWord}`;
+
+            const matchOver = trainingScores.player >= 2 || trainingScores.ai >= 2;
+            nextEl.textContent = matchOver ? '' : 'NEXT ROUND STARTING...';
+            overlay.style.display = 'flex';
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                if (matchOver) {
+                    showTrainingResult(trainingScores.player >= 2);
+                } else {
+                    trainingRound++;
+                    startTrainingRound();
+                }
+            }, 3500);
+        }
+
+        function stopTrainingAI() {
+            if (aiInterval) { clearInterval(aiInterval); aiInterval = null; }
+            if (aiBlitzInterval) { clearInterval(aiBlitzInterval); aiBlitzInterval = null; }
+        }
+
+        function startTrainingBlitzAI() {
+            // AI solves a word roughly every 28-42 seconds
+            const scheduleNext = () => {
+                aiBlitzInterval = setTimeout(() => {
+                    if (!game.isTraining || trainingSubMode !== 'blitz') return;
+                    trainingBlitzSolves.ai++;
+                    document.getElementById('blitzScore').textContent =
+                        `${trainingBlitzSolves.player} – ${trainingBlitzSolves.ai} SOLVED`;
+                    // Show a flash on opponent grid
+                    createGrid('opponentGrid');
+                    scheduleNext();
+                }, 28000 + Math.random() * 14000);
+            };
+            scheduleNext();
         }
 
         function getRandomWord() {
@@ -5630,33 +5830,41 @@ h1, h2, h3, h4, h5, h6,
 
         let aiInterval = null;
         let aiRow = 0;
+        let trainingSubMode = 'best_of_3';
+        let trainingScores = { player: 0, ai: 0 };
+        let trainingRound = 1;
+        let trainingBlitzSolves = { player: 0, ai: 0 };
+        let aiBlitzInterval = null;
+        let trainingRoundTimeout = null;
 
         function startAIOpponent() {
             aiRow = 0;
-            
+
             const makeAIGuess = () => {
                 if (aiRow >= 6) return;
-                
-                // AI has 25% chance of guessing correctly
+
+                // AI has 25% chance of guessing correctly each turn
                 const aiWord = Math.random() < 0.25 ? game.targetWord : getRandomWord();
                 const evaluation = evaluateGuess(aiWord, game.targetWord);
-                
-                // Show AI guess
+
                 setTimeout(() => {
                     revealGuess({ word: aiWord, evaluation }, aiRow, 'opponentGrid');
-                    
-                    // Check if AI won
+
                     if (evaluation.every(e => e === 'correct')) {
                         clearInterval(aiInterval);
-                        setTimeout(() => {
-                            showTrainingResult(false);
-                        }, 1500);
+                        aiInterval = null;
+                        if (trainingSubMode === 'best_of_3') {
+                            trainingScores.ai++;
+                            setTimeout(() => endTrainingRound('ai'), 1500);
+                        } else {
+                            setTimeout(() => showTrainingResult(false), 1500);
+                        }
                     }
-                    
+
                     aiRow++;
                 }, 500);
             };
-            
+
             // AI makes a guess every 10-15 seconds
             aiInterval = setInterval(makeAIGuess, 10000 + Math.random() * 5000);
         }
@@ -5686,28 +5894,42 @@ h1, h2, h3, h4, h5, h6,
         }
 
         function showTrainingResult(won) {
-            if (aiInterval) clearInterval(aiInterval);
-            
-            document.getElementById('resultIcon').textContent = won ? '🏆' : '🛡️';
+            stopTrainingAI();
+            if (trainingRoundTimeout) { clearTimeout(trainingRoundTimeout); trainingRoundTimeout = null; }
+            if (game.timerInterval) { clearInterval(game.timerInterval); game.timerInterval = null; }
+
+            const tied = trainingSubMode === 'blitz' &&
+                trainingBlitzSolves.player === trainingBlitzSolves.ai;
+
+            document.getElementById('resultIcon').textContent = won ? '🏆' : tied ? '🤝' : '🛡️';
             const titleEl = document.getElementById('resultTitle');
-            titleEl.textContent = won ? 'VICTORY!' : 'DEFEAT';
+            titleEl.textContent = won ? 'VICTORY!' : tied ? 'TIE' : 'DEFEAT';
             titleEl.className = 'result-title ' + (won ? 'win' : 'lose');
-            
-            document.getElementById('resultStats').innerHTML = `
-                <div class="result-stat">
-                    <span class="result-label">SOLUTION</span>
-                    <span class="result-value">${game.targetWord}</span>
-                </div>
-                <div class="result-stat">
-                    <span class="result-label">YOUR GUESSES</span>
-                    <span class="result-value">${game.currentRow + 1}</span>
-                </div>
-                <div class="result-stat">
-                    <span class="result-label">AI GUESSES</span>
-                    <span class="result-value">${aiRow}</span>
-                </div>
-            `;
-            
+
+            let statsHtml;
+            if (trainingSubMode === 'blitz') {
+                statsHtml = `
+                    <div class="result-stat">
+                        <span class="result-label">YOUR SOLVES</span>
+                        <span class="result-value">${trainingBlitzSolves.player}</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">AI SOLVES</span>
+                        <span class="result-value">${trainingBlitzSolves.ai}</span>
+                    </div>`;
+            } else {
+                statsHtml = `
+                    <div class="result-stat">
+                        <span class="result-label">FINAL SCORE</span>
+                        <span class="result-value">${trainingScores.player} – ${trainingScores.ai}</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">ROUNDS PLAYED</span>
+                        <span class="result-value">${trainingRound}</span>
+                    </div>`;
+            }
+            document.getElementById('resultStats').innerHTML = statsHtml;
+            document.getElementById('resultAdButtons').style.display = 'none';
             document.getElementById('resultModal').classList.add('active');
         }
 
@@ -6310,25 +6532,54 @@ h1, h2, h3, h4, h5, h6,
             }
             
             if (game.isTraining) {
-                // Training mode - handle locally
                 const evaluation = evaluateGuess(game.currentGuess, game.targetWord);
-                
                 revealGuess({ word: game.currentGuess, evaluation }, game.currentRow, 'yourGrid');
                 updateKeyboard(game.currentGuess, evaluation);
-                
-                if (evaluation.every(e => e === 'correct')) {
-                    // Won!
-                    setTimeout(() => {
-                        showTrainingResult(true);
-                    }, 1500);
-                } else if (game.currentRow >= 5) {
-                    // Lost
-                    setTimeout(() => {
-                        showTrainingResult(false);
-                    }, 1500);
+
+                const solved = evaluation.every(e => e === 'correct');
+                const lastRow = game.currentRow >= 5;
+
+                if (trainingSubMode === 'blitz') {
+                    if (solved) {
+                        trainingBlitzSolves.player++;
+                        document.getElementById('blitzScore').textContent =
+                            `${trainingBlitzSolves.player} – ${trainingBlitzSolves.ai} SOLVED`;
+                        setTimeout(() => {
+                            game.targetWord = getRandomWord();
+                            game.currentRow = 0;
+                            game.currentGuess = '';
+                            createGrid('yourGrid');
+                            setupKeyboard();
+                        }, 600);
+                    } else if (lastRow) {
+                        // Failed word — brief pause then new word
+                        setTimeout(() => {
+                            game.targetWord = getRandomWord();
+                            game.currentRow = 0;
+                            game.currentGuess = '';
+                            createGrid('yourGrid');
+                            setupKeyboard();
+                        }, 1500);
+                    } else {
+                        game.currentRow++;
+                        game.currentGuess = '';
+                    }
                 } else {
-                    game.currentRow++;
-                    game.currentGuess = '';
+                    // best_of_3
+                    if (solved) {
+                        stopTrainingAI();
+                        if (trainingRoundTimeout) { clearTimeout(trainingRoundTimeout); trainingRoundTimeout = null; }
+                        trainingScores.player++;
+                        setTimeout(() => endTrainingRound('player'), 1000);
+                    } else if (lastRow) {
+                        stopTrainingAI();
+                        if (trainingRoundTimeout) { clearTimeout(trainingRoundTimeout); trainingRoundTimeout = null; }
+                        trainingScores.ai++;
+                        setTimeout(() => endTrainingRound('ai'), 1500);
+                    } else {
+                        game.currentRow++;
+                        game.currentGuess = '';
+                    }
                 }
             } else {
                 // Multiplayer mode - send to server
@@ -6488,7 +6739,7 @@ h1, h2, h3, h4, h5, h6,
         function playAgain() {
             document.getElementById('resultModal').classList.remove('active');
             if (game.isTraining) {
-                startTrainingMode();
+                startTrainingMode(trainingSubMode);
             } else {
                 showInterstitial(() => showScreen('betScreen'));
             }
