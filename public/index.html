@@ -2587,26 +2587,20 @@ h1, h2, h3, h4, h5, h6,
         .store-card-floatbadge.best { background: #4ade80; }
         .store-card-icon {
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
             height: 82px;
             margin-bottom: 8px;
         }
+        .store-card-icon svg { width: 68px; height: auto; filter: drop-shadow(0 3px 12px rgba(255,180,0,0.55)); }
         .bet-coin-pile {
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
             height: 46px;
             margin-bottom: 5px;
         }
-        /* Coin sprite crop containers */
-        .coin-pile-sprite {
-            background-repeat: no-repeat;
-            border-radius: 6px;
-            filter: drop-shadow(0 3px 12px rgba(255,180,0,0.55));
-        }
-        .store-card-icon .coin-pile-sprite { width: 90px; height: 74px; }
-        .bet-coin-pile   .coin-pile-sprite { width: 56px; height: 42px; }
+        .bet-coin-pile svg { width: 42px; height: auto; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); }
         .store-card-amount {
             font-family: 'JetBrains Mono', monospace;
             font-size: 26px;
@@ -2990,27 +2984,28 @@ h1, h2, h3, h4, h5, h6,
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 6px;
+            padding: 5px;
             border-radius: 16px;
             border: 3px solid rgba(255,255,255,0.3);
             background: transparent;
             cursor: pointer;
             transition: all 0.15s;
             -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
         }
 
         .mode-pill:active { transform: scale(0.95); }
 
-        .mode-pill.ranked  { border-color: rgba(255,215,0,0.6); }
-        .mode-pill.speed   { border-color: rgba(0,217,255,0.6); }
-        .mode-pill.practice{ border-color: rgba(0,255,136,0.6); }
+        .mode-pill.ranked  { border-color: rgba(255,215,0,0.55); }
+        .mode-pill.speed   { border-color: rgba(0,217,255,0.55); }
+        .mode-pill.practice{ border-color: rgba(0,255,136,0.55); }
 
         .mode-pill.selected,
         .mode-pill.ranked.selected  { border-color: #ffd700;  box-shadow: 0 0 18px rgba(255,215,0,0.7); }
         .mode-pill.speed.selected   { border-color: #00d9ff;  box-shadow: 0 0 18px rgba(0,217,255,0.7); }
         .mode-pill.practice.selected{ border-color: #00ff88;  box-shadow: 0 0 18px rgba(0,255,136,0.7); }
 
-        .mode-pill-badge { width: 100%; height: auto; display: block; border-radius: 10px; }
+        .mode-pill svg { width: 100%; height: auto; display: block; }
 
         /* Battle button */
         .battle-btn {
@@ -3522,15 +3517,9 @@ h1, h2, h3, h4, h5, h6,
             <!-- Mode + Battle -->
             <div class="home-bottom">
                 <div class="mode-row">
-                    <div class="mode-pill ranked" id="modeCard_best_of_3" onclick="selectMode('best_of_3')">
-                        <img class="mode-pill-badge" src="/Images/Gemini_Generated_Image_p32frmp32frmp32f.png" alt="Best of 3">
-                    </div>
-                    <div class="mode-pill speed" id="modeCard_blitz" onclick="selectMode('blitz')">
-                        <img class="mode-pill-badge" src="/Images/Gemini_Generated_Image_5v8nhv5v8nhv5v8n.png" alt="Blitz">
-                    </div>
-                    <div class="mode-pill practice" id="modeCard_training" onclick="selectMode('training')">
-                        <img class="mode-pill-badge" src="/Images/Gemini_Generated_Image_2s5s8l2s5s8l2s5s.png" alt="Training">
-                    </div>
+                    <div class="mode-pill ranked"  id="modeCard_best_of_3" onclick="selectMode('best_of_3')"></div>
+                    <div class="mode-pill speed"   id="modeCard_blitz"     onclick="selectMode('blitz')"></div>
+                    <div class="mode-pill practice" id="modeCard_training"  onclick="selectMode('training')"></div>
                 </div>
                 <button class="battle-btn" id="battleBtn" onclick="startBattle()" disabled>Battle!</button>
             </div>
@@ -3876,30 +3865,157 @@ h1, h2, h3, h4, h5, h6,
     <script>
         const SERVER_URL = window.location.origin;
 
-        // ── Coin pile image renderer ─────────────────────────────────────────
-        // The sprite sheet contains 5 coin arrangements from left to right.
-        // background-size zooms in; background-position focuses the visible crop.
-        // Tweak pos/size values if the crop needs adjusting after testing.
-        const COIN_SPRITE = '/Images/Gemini_Generated_Image_vewdrcvewdrcvewd.png';
-        const COIN_CROPS = {
-            1: { pos: '2% 8%',   size: '500%' },   // single coin  (top-left)
-            2: { pos: '35% 5%',  size: '460%' },   // small cluster (top-center)
-            3: { pos: '8% 94%',  size: '400%' },   // medium pile   (bottom-left)
-            4: { pos: '54% 90%', size: '370%' },   // large pile    (bottom-center)
-            5: { pos: '98% 52%', size: '310%' },   // huge mountain (right)
-        };
-        function coinPileEl(n) {
-            const c = COIN_CROPS[n] || COIN_CROPS[3];
-            const d = document.createElement('div');
-            d.className = 'coin-pile-sprite';
-            d.style.backgroundImage = `url('${COIN_SPRITE}')`;
-            d.style.backgroundPosition = c.pos;
-            d.style.backgroundSize = c.size;
-            return d;
+        // ── Coin pile SVG generator ──────────────────────────────────────────
+        // Renders a stack of n gold coins with a W-crown crest on the top face.
+        function coinPileSVG(n) {
+            const W = 80, rx = 30, ry = 10, x = 10;
+            const step = 13, sideH0 = 11, topCoinY = 30;
+            const botCoinY = topCoinY + (n - 1) * step;
+            const viewH = botCoinY + sideH0 + 4;
+            const sid = `cpS${n}`, tid = `cpT${n}`, rid = `cpR${n}`;
+            const defs = `<defs>
+                <linearGradient id="${sid}" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#c8820a"/>
+                    <stop offset="100%" stop-color="#5c3200"/>
+                </linearGradient>
+                <radialGradient id="${tid}" cx="38%" cy="28%" r="68%">
+                    <stop offset="0%" stop-color="#fffde7"/>
+                    <stop offset="30%" stop-color="#ffd700"/>
+                    <stop offset="72%" stop-color="#c8820a"/>
+                    <stop offset="100%" stop-color="#8a5200"/>
+                </radialGradient>
+                <radialGradient id="${rid}" cx="38%" cy="28%" r="68%">
+                    <stop offset="0%" stop-color="rgba(255,253,231,0.55)"/>
+                    <stop offset="60%" stop-color="rgba(255,215,0,0.25)"/>
+                    <stop offset="100%" stop-color="rgba(180,100,0,0)"/>
+                </radialGradient>
+            </defs>`;
+            let coins = '';
+            for (let i = 0; i < n; i++) {
+                const cy = botCoinY - i * step;
+                const sideH = i === 0 ? sideH0 : step;
+                coins += `
+                <rect x="${x}" y="${cy}" width="${rx*2}" height="${sideH}" rx="2" fill="url(#${sid})" stroke="#4a2800" stroke-width="0.8"/>
+                <ellipse cx="40" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${tid})" stroke="#4a2800" stroke-width="0.8"/>
+                <ellipse cx="40" cy="${cy}" rx="22" ry="6.5" fill="none" stroke="rgba(80,40,0,0.35)" stroke-width="0.7"/>
+                <ellipse cx="32" cy="${cy-3.5}" rx="9" ry="3" fill="rgba(255,255,255,0.2)"/>`;
+                // W-crown crest on the top coin only
+                if (i === n - 1) {
+                    coins += `
+                <path d="M33,${cy-5} L33,${cy-8} L36,${cy-6.5} L38.5,${cy-9.5} L40,${cy-7} L41.5,${cy-9.5} L44,${cy-6.5} L47,${cy-8} L47,${cy-5}Z"
+                      fill="rgba(255,248,200,0.55)" stroke="none"/>
+                <text x="40" y="${cy+3.5}" text-anchor="middle" dominant-baseline="middle"
+                      font-family="Georgia,serif" font-size="6.5" font-weight="bold"
+                      fill="rgba(255,248,200,0.75)">W</text>`;
+                }
+            }
+            return `<svg viewBox="0 0 ${W} ${viewH}" xmlns="http://www.w3.org/2000/svg">${defs}${coins}</svg>`;
         }
         document.querySelectorAll('[data-coins]').forEach(el => {
-            el.innerHTML = '';
-            el.appendChild(coinPileEl(+el.dataset.coins));
+            el.innerHTML = coinPileSVG(+el.dataset.coins);
+        });
+        // ─────────────────────────────────────────────────────────────────────
+
+        // ── Mode badge SVG generator ──────────────────────────────────────────
+        // Heraldic shield badge using the game's own color palette:
+        //   bg: #0a0e14 / #151922  |  gold: #ffd700  |  neon per-mode accent
+        function modeBadgeSVG(mode) {
+            const uid = mode;
+            const cfg = {
+                best_of_3: { label: 'BEST OF 3', accent: '#ffd700', b0: '#ffe566', b1: '#ffd700', b2: '#b87820' },
+                blitz:     { label: 'BLITZ',     accent: '#00d9ff', b0: '#80efff', b1: '#00d9ff', b2: '#006f99' },
+                training:  { label: 'TRAINING',  accent: '#00ff88', b0: '#80ffbe', b1: '#00ff88', b2: '#007a40' },
+            }[mode] || { label: mode.toUpperCase(), accent: '#ffd700', b0: '#ffe566', b1: '#ffd700', b2: '#b87820' };
+
+            // Gold gradient (crown + W always gold)
+            const goldGrad = `<linearGradient id="sg_${uid}" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"   stop-color="#ffe566"/>
+                    <stop offset="45%"  stop-color="#ffd700"/>
+                    <stop offset="100%" stop-color="#b87820"/>
+                </linearGradient>`;
+            // Per-mode border gradient
+            const borderGrad = `<linearGradient id="sb_${uid}" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"   stop-color="${cfg.b0}"/>
+                    <stop offset="50%"  stop-color="${cfg.b1}"/>
+                    <stop offset="100%" stop-color="${cfg.b2}"/>
+                </linearGradient>`;
+
+            // Mode-specific icons
+            let icon = '';
+            if (mode === 'best_of_3') {
+                const ms = (cx, filled) => {
+                    const f = filled ? '#ffd700' : 'none', s = filled ? '#b87820' : '#444';
+                    return `<path d="M${cx},65 C${cx+5},65 ${cx+7},67 ${cx+7},70 C${cx+7},74 ${cx+5},76 ${cx},78 C${cx-5},76 ${cx-7},74 ${cx-7},70 C${cx-7},67 ${cx-5},65 ${cx},65Z" fill="${f}" stroke="${s}" stroke-width="1.5"/>`
+                         + (filled ? `<text x="${cx}" y="75.5" text-anchor="middle" font-size="6.5" font-weight="bold" fill="#0a0e14">✓</text>` : '');
+                };
+                icon = ms(32,true) + ms(50,true) + ms(68,false)
+                     + `<text x="50" y="96" text-anchor="middle" font-size="13">🏆</text>`;
+            } else if (mode === 'blitz') {
+                icon = `
+                <circle cx="50" cy="75" r="13.5" fill="rgba(0,217,255,0.1)"  stroke="${cfg.accent}" stroke-width="2"/>
+                <circle cx="50" cy="75" r="10"   fill="none" stroke="rgba(0,217,255,0.2)" stroke-width="0.8"/>
+                <rect x="46" y="60.5" width="8" height="4" rx="2" fill="#ffd700"/>
+                <line x1="43" y1="62.5" x2="41" y2="60.5" stroke="#ffd700" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="57" y1="62.5" x2="59" y2="60.5" stroke="#ffd700" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="50" y1="75"   x2="50" y2="68"   stroke="#ffd700" stroke-width="2"   stroke-linecap="round"/>
+                <line x1="50" y1="75"   x2="56" y2="78"   stroke="${cfg.accent}" stroke-width="1.8" stroke-linecap="round"/>
+                <circle cx="50" cy="75" r="2.5" fill="#ffd700"/>`;
+            } else if (mode === 'training') {
+                icon = `
+                <rect x="34" y="76" width="32" height="5.5" rx="2" fill="#ffd700"/>
+                <rect x="36" y="70" width="28" height="5.5" rx="2" fill="#b87820"/>
+                <rect x="38" y="64" width="24" height="5.5" rx="2" fill="#ffd700"/>
+                <line x1="50" y1="62" x2="50" y2="55" stroke="${cfg.accent}" stroke-width="2.2" stroke-linecap="round"/>
+                <polyline points="46,59 50,54 54,59" fill="none" stroke="${cfg.accent}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+            }
+
+            return `<svg viewBox="0 0 100 106" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
+            <defs>
+                <linearGradient id="sbg_${uid}" x1="0.15" y1="0" x2="0" y2="1">
+                    <stop offset="0%"   stop-color="#151922"/>
+                    <stop offset="100%" stop-color="#0a0e14"/>
+                </linearGradient>
+                ${goldGrad}
+                ${borderGrad}
+                <filter id="glow_${uid}">
+                    <feGaussianBlur stdDeviation="1.8" result="b"/>
+                    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+            </defs>
+            <!-- Drop shadow -->
+            <path d="M50,5 C83,5 96,17 96,37 C96,67 77,87 50,104 C23,87 4,67 4,37 C4,17 17,5 50,5Z"
+                  fill="rgba(0,0,0,0.45)" transform="translate(2,3)"/>
+            <!-- Shield body -->
+            <path d="M50,3 C83,3 96,15 96,35 C96,65 77,85 50,102 C23,85 4,65 4,35 C4,15 17,3 50,3Z"
+                  fill="url(#sbg_${uid})" stroke="url(#sb_${uid})" stroke-width="3.5"/>
+            <!-- Inner border highlight -->
+            <path d="M50,7 C80,7 92,18 92,37 C92,64 74,82 50,99 C26,82 8,64 8,37 C8,18 20,7 50,7Z"
+                  fill="none" stroke="${cfg.accent}" stroke-width="0.8" stroke-opacity="0.2"/>
+            <!-- Crown (always gold) -->
+            <g filter="url(#glow_${uid})">
+                <path d="M30,29 L30,21 L37.5,16 L44,24 L50,12 L56,24 L62.5,16 L70,21 L70,29Z"
+                      fill="url(#sg_${uid})" stroke="#b87820" stroke-width="0.8" stroke-linejoin="round"/>
+                <rect x="29" y="28" width="42" height="5" rx="2.5" fill="url(#sg_${uid})"/>
+            </g>
+            <!-- W (always gold) -->
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle"
+                  font-family="Georgia,'Times New Roman',serif"
+                  font-size="20" font-weight="bold"
+                  fill="url(#sg_${uid})" filter="url(#glow_${uid})">W</text>
+            <!-- Mode name (neon accent) -->
+            <text x="50" y="61" text-anchor="middle"
+                  font-family="'Barlow Condensed','Arial Narrow',sans-serif"
+                  font-size="9" font-weight="900"
+                  fill="${cfg.accent}" letter-spacing="1.5">${cfg.label}</text>
+            <!-- Mode icon -->
+            ${icon}
+            </svg>`;
+        }
+
+        // Inject badges into mode pills
+        ['best_of_3', 'blitz', 'training'].forEach(mode => {
+            const el = document.getElementById('modeCard_' + mode);
+            if (el) el.innerHTML = modeBadgeSVG(mode);
         });
         // ─────────────────────────────────────────────────────────────────────
 
