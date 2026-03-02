@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0a0e14">
+    <meta name="theme-color" content="#ffffff">
     <title>Worduel - Multiplayer</title>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Barlow:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700;900&display=swap" rel="stylesheet">
@@ -17,22 +17,22 @@
         }
 
         :root {
-            --bg-primary: #0a0e14;
-            --bg-secondary: #151922;
-            --bg-elevated: #222831;
-            --neon-green: #00ff88;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f0f0f0;
+            --bg-elevated: #e4e4e4;
+            --neon-green: #00cc70;
             --neon-yellow: #d8961b;
-            --neon-cyan: #00d9ff;
+            --neon-cyan: #0099cc;
             --neon-red: #ff3366;
-            --correct: #00ff88;
+            --correct: #00cc70;
             --present: #d8961b;
-            --absent: #2d3748;
-            --border-primary: #2d3748;
-            --text-primary: #e5e7eb;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
-            --glow-green: 0 0 20px rgba(0, 255, 136, 0.4);
-            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+            --absent: #aaaaaa;
+            --border-primary: #cccccc;
+            --text-primary: #111111;
+            --text-secondary: #444444;
+            --text-muted: #777777;
+            --glow-green: 0 0 20px rgba(0, 200, 100, 0.3);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
         }
 
         body {
@@ -2972,7 +2972,7 @@ h1, h2, h3, h4, h5, h6,
             height: 12px;
             background: #00ff88;
             border-radius: 50%;
-            border: 2px solid #0a0e14;
+            border: 2px solid #ffffff;
             pointer-events: none;
             display: none;
         }
@@ -3843,7 +3843,7 @@ h1, h2, h3, h4, h5, h6,
             <div class="store-daily-deal">
                 <div class="store-daily-left">
                     <div class="store-daily-badge">⚡ DAILY FREE</div>
-                    <div class="store-daily-coins">+100 <span class="gc"></span></div>
+                    <div class="store-daily-coins">+100 <img src="/Images/coin-single.png" style="width:22px;height:22px;vertical-align:middle;object-fit:contain;"></div>
                     <div class="store-daily-info">Watch an ad — once per day</div>
                 </div>
                 <button class="store-daily-btn" onclick="claimDailyReward(); closeStore();">WATCH AD</button>
