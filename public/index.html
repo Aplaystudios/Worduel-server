@@ -2587,20 +2587,26 @@ h1, h2, h3, h4, h5, h6,
         .store-card-floatbadge.best { background: #4ade80; }
         .store-card-icon {
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
             height: 82px;
             margin-bottom: 8px;
         }
-        .store-card-icon svg { width: 68px; height: auto; filter: drop-shadow(0 3px 12px rgba(255,180,0,0.55)); }
         .bet-coin-pile {
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
             height: 46px;
             margin-bottom: 5px;
         }
-        .bet-coin-pile svg { width: 42px; height: auto; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); }
+        /* Coin sprite crop containers */
+        .coin-pile-sprite {
+            background-repeat: no-repeat;
+            border-radius: 6px;
+            filter: drop-shadow(0 3px 12px rgba(255,180,0,0.55));
+        }
+        .store-card-icon .coin-pile-sprite { width: 90px; height: 74px; }
+        .bet-coin-pile   .coin-pile-sprite { width: 56px; height: 42px; }
         .store-card-amount {
             font-family: 'JetBrains Mono', monospace;
             font-size: 26px;
@@ -2982,14 +2988,12 @@ h1, h2, h3, h4, h5, h6,
 
         .mode-pill {
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            padding: 16px 8px;
+            padding: 6px;
             border-radius: 16px;
             border: 3px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.1);
+            background: transparent;
             cursor: pointer;
             transition: all 0.15s;
             -webkit-tap-highlight-color: transparent;
@@ -2997,17 +3001,16 @@ h1, h2, h3, h4, h5, h6,
 
         .mode-pill:active { transform: scale(0.95); }
 
-        .mode-pill.ranked  { border-color: rgba(255,215,0,0.5);  background: rgba(255,215,0,0.12); }
-        .mode-pill.speed   { border-color: rgba(0,217,255,0.5);  background: rgba(0,217,255,0.12); }
-        .mode-pill.practice{ border-color: rgba(0,255,136,0.5);  background: rgba(0,255,136,0.12); }
+        .mode-pill.ranked  { border-color: rgba(255,215,0,0.6); }
+        .mode-pill.speed   { border-color: rgba(0,217,255,0.6); }
+        .mode-pill.practice{ border-color: rgba(0,255,136,0.6); }
 
         .mode-pill.selected,
-        .mode-pill.ranked.selected  { border-color: #ffd700;  box-shadow: 0 0 14px rgba(255,215,0,0.5);  background: rgba(255,215,0,0.25); }
-        .mode-pill.speed.selected   { border-color: #00d9ff;  box-shadow: 0 0 14px rgba(0,217,255,0.5);  background: rgba(0,217,255,0.25); }
-        .mode-pill.practice.selected{ border-color: #00ff88;  box-shadow: 0 0 14px rgba(0,255,136,0.5);  background: rgba(0,255,136,0.25); }
+        .mode-pill.ranked.selected  { border-color: #ffd700;  box-shadow: 0 0 18px rgba(255,215,0,0.7); }
+        .mode-pill.speed.selected   { border-color: #00d9ff;  box-shadow: 0 0 18px rgba(0,217,255,0.7); }
+        .mode-pill.practice.selected{ border-color: #00ff88;  box-shadow: 0 0 18px rgba(0,255,136,0.7); }
 
-        .mode-pill-icon { font-size: 28px; line-height: 1; }
-        .mode-pill-name { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        .mode-pill-badge { width: 100%; height: auto; display: block; border-radius: 10px; }
 
         /* Battle button */
         .battle-btn {
@@ -3520,16 +3523,13 @@ h1, h2, h3, h4, h5, h6,
             <div class="home-bottom">
                 <div class="mode-row">
                     <div class="mode-pill ranked" id="modeCard_best_of_3" onclick="selectMode('best_of_3')">
-                        <span class="mode-pill-icon">🏆</span>
-                        <span class="mode-pill-name">BEST OF 3</span>
+                        <img class="mode-pill-badge" src="/Images/Gemini_Generated_Image_p32frmp32frmp32f.png" alt="Best of 3">
                     </div>
                     <div class="mode-pill speed" id="modeCard_blitz" onclick="selectMode('blitz')">
-                        <span class="mode-pill-icon">⚡</span>
-                        <span class="mode-pill-name">BLITZ</span>
+                        <img class="mode-pill-badge" src="/Images/Gemini_Generated_Image_5v8nhv5v8nhv5v8n.png" alt="Blitz">
                     </div>
                     <div class="mode-pill practice" id="modeCard_training" onclick="selectMode('training')">
-                        <span class="mode-pill-icon">🎓</span>
-                        <span class="mode-pill-name">TRAINING</span>
+                        <img class="mode-pill-badge" src="/Images/Gemini_Generated_Image_2s5s8l2s5s8l2s5s.png" alt="Training">
                     </div>
                 </div>
                 <button class="battle-btn" id="battleBtn" onclick="startBattle()" disabled>Battle!</button>
@@ -3876,38 +3876,30 @@ h1, h2, h3, h4, h5, h6,
     <script>
         const SERVER_URL = window.location.origin;
 
-        // ── Coin pile SVG generator ──────────────────────────────────────────
-        function coinPileSVG(n) {
-            const W = 80, rx = 30, ry = 10, x = 10;
-            const step = 13, sideH0 = 11, topCoinY = 30;
-            const botCoinY = topCoinY + (n - 1) * step;
-            const viewH = botCoinY + sideH0 + 2;
-            const sid = `cpS${n}`, tid = `cpT${n}`;
-            const defs = `<defs>
-                <linearGradient id="${sid}" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#c8820a"/>
-                    <stop offset="100%" stop-color="#5c3200"/>
-                </linearGradient>
-                <radialGradient id="${tid}" cx="38%" cy="28%" r="68%">
-                    <stop offset="0%" stop-color="#fffde7"/>
-                    <stop offset="30%" stop-color="#ffd700"/>
-                    <stop offset="72%" stop-color="#c8820a"/>
-                    <stop offset="100%" stop-color="#8a5200"/>
-                </radialGradient>
-            </defs>`;
-            let coins = '';
-            for (let i = 0; i < n; i++) {
-                const cy = botCoinY - i * step;
-                const sideH = i === 0 ? sideH0 : step;
-                coins += `
-                <rect x="${x}" y="${cy}" width="${rx * 2}" height="${sideH}" rx="2" fill="url(#${sid})" stroke="#4a2800" stroke-width="0.8"/>
-                <ellipse cx="40" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${tid})" stroke="#4a2800" stroke-width="0.8"/>
-                <ellipse cx="32" cy="${cy - 4}" rx="9" ry="3.5" fill="rgba(255,255,255,0.22)"/>`;
-            }
-            return `<svg viewBox="0 0 ${W} ${viewH}" xmlns="http://www.w3.org/2000/svg">${defs}${coins}</svg>`;
+        // ── Coin pile image renderer ─────────────────────────────────────────
+        // The sprite sheet contains 5 coin arrangements from left to right.
+        // background-size zooms in; background-position focuses the visible crop.
+        // Tweak pos/size values if the crop needs adjusting after testing.
+        const COIN_SPRITE = '/Images/Gemini_Generated_Image_vewdrcvewdrcvewd.png';
+        const COIN_CROPS = {
+            1: { pos: '2% 8%',   size: '500%' },   // single coin  (top-left)
+            2: { pos: '35% 5%',  size: '460%' },   // small cluster (top-center)
+            3: { pos: '8% 94%',  size: '400%' },   // medium pile   (bottom-left)
+            4: { pos: '54% 90%', size: '370%' },   // large pile    (bottom-center)
+            5: { pos: '98% 52%', size: '310%' },   // huge mountain (right)
+        };
+        function coinPileEl(n) {
+            const c = COIN_CROPS[n] || COIN_CROPS[3];
+            const d = document.createElement('div');
+            d.className = 'coin-pile-sprite';
+            d.style.backgroundImage = `url('${COIN_SPRITE}')`;
+            d.style.backgroundPosition = c.pos;
+            d.style.backgroundSize = c.size;
+            return d;
         }
         document.querySelectorAll('[data-coins]').forEach(el => {
-            el.innerHTML = coinPileSVG(+el.dataset.coins);
+            el.innerHTML = '';
+            el.appendChild(coinPileEl(+el.dataset.coins));
         });
         // ─────────────────────────────────────────────────────────────────────
 
