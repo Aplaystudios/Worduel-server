@@ -804,7 +804,7 @@ async function connectDB() {
     }
     await mongoose.connect(process.env.MONGODB_URI);
     const allUsers = await User.find({}).lean();
-    allUsers.forEach(u => { delete u._id; users.set(u.username, u); });
+    allUsers.forEach(u => { delete u._id; users.set(u.username.toLowerCase(), u); });
     console.log(`MongoDB connected — ${allUsers.length} user(s) loaded`);
 }
 
