@@ -3374,7 +3374,7 @@ h1, h2, h3, h4, h5, h6,
         #battleScreen .key.present { background: var(--present) !important; border-color: var(--present) !important; color: var(--bg-primary) !important; }
         #battleScreen .key.absent  { background: var(--absent)  !important; border-color: var(--absent)  !important; }
 
-        /* ── Desktop battle layout: grid keeps keyboard always on-screen ── */
+        /* ── Desktop battle layout: CSS Grid pins keyboard below grids ── */
         @media (min-width: 769px) {
             #battleScreen {
                 align-items: stretch !important;
@@ -3386,27 +3386,34 @@ h1, h2, h3, h4, h5, h6,
                 height: 100dvh !important;
                 display: grid !important;
                 grid-template-rows: auto 1fr auto !important;
+                grid-template-columns: 1fr !important;
                 overflow: hidden !important;
-                padding: 12px 16px 0 !important;
-                gap: 8px !important;
+                padding: 8px 16px 0 !important;
+                gap: 6px !important;
                 box-sizing: border-box !important;
             }
-            #battleScreen .battle-grid {
+            /* Explicit row assignments — no reliance on auto-placement */
+            #battleScreen .battle-header {
+                grid-row: 1 !important;
+                grid-column: 1 !important;
+            }
+            #battleScreen .battle-grids {
                 grid-row: 2 !important;
-                margin-bottom: 0 !important;
+                grid-column: 1 !important;
                 overflow: hidden !important;
                 min-height: 0 !important;
-                align-content: center !important;
             }
             #battleScreen .keyboard {
                 grid-row: 3 !important;
+                grid-column: 1 !important;
                 padding-bottom: 10px !important;
+                flex-shrink: 0 !important;
             }
-            /* Scale tile size so both grids + keyboard always fit the viewport */
+            /* Tiles scale so 12 rows + header + keyboard always fit */
             #battleScreen .tile {
-                width: min(56px, calc((100dvh - 220px) / 12)) !important;
-                height: min(56px, calc((100dvh - 220px) / 12)) !important;
-                font-size: min(22px, calc((100dvh - 220px) / 12 * 0.42)) !important;
+                width: min(52px, calc((100dvh - 290px) / 12)) !important;
+                height: min(52px, calc((100dvh - 290px) / 12)) !important;
+                font-size: min(20px, calc((100dvh - 290px) / 12 * 0.4)) !important;
             }
         }
 
@@ -6136,6 +6143,7 @@ h1, h2, h3, h4, h5, h6,
                 if (window._matchStartTimer) { clearTimeout(window._matchStartTimer); window._matchStartTimer = null; }
                 console.log('🎮 Match starting! Target:', data.targetWord, 'Mode:', data.mode || currentMatch?.mode);
                 game.isTraining = false; // always false in multiplayer
+                game.awaitingResult = false;
                 game.yourSolves = 0;
                 game.targetWord = data.targetWord;
                 setupBattle();
@@ -6168,10 +6176,12 @@ h1, h2, h3, h4, h5, h6,
             });
 
             socket.on('invalid_word', () => {
+                game.awaitingResult = false;
                 showInvalidWord();
             });
 
             socket.on('guess_result', (data) => {
+                game.awaitingResult = false;
                 revealGuess(data.guess, game.currentRow, 'yourGrid');
                 updateKeyboard(game.currentGuess, data.guess.evaluation);
 
@@ -6232,6 +6242,7 @@ h1, h2, h3, h4, h5, h6,
             socket.on('round_start', (data) => {
                 document.getElementById('roundOverlay').style.display = 'none';
                 game.targetWord = data.targetWord;
+                game.awaitingResult = false;
                 game.currentRow = 0; game.opponentRow = 0; game.currentGuess = '';
                 createGrid('yourGrid'); createGrid('opponentGrid');
                 setupKeyboard(); // re-attach handlers + clear key colours
@@ -6553,12 +6564,12 @@ h1, h2, h3, h4, h5, h6,
         }
 
         function submitGuess() {
-            // Client-side: only check length; server validates the word
-            if (!isValidWord(game.currentGuess)) {
+            // Training: validate locally. Multiplayer: server accepts any 5-letter word.
+            if (game.isTraining && !isValidWord(game.currentGuess)) {
                 showInvalidWord();
                 return;
             }
-            
+
             if (game.isTraining) {
                 const evaluation = evaluateGuess(game.currentGuess, game.targetWord);
                 revealGuess({ word: game.currentGuess, evaluation }, game.currentRow, 'yourGrid');
@@ -6611,6 +6622,8 @@ h1, h2, h3, h4, h5, h6,
                 }
             } else {
                 // Multiplayer mode - send to server
+                if (game.awaitingResult) return; // prevent double-submission
+                game.awaitingResult = true;
                 socket.emit('submit_guess', { word: game.currentGuess });
             }
         }
