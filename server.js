@@ -8,6 +8,9 @@ const jwt       = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const mongoose = require('mongoose');
+const User     = require('./src/models/User');
+
 const { getRank, getRandomWord, evaluateGuess, calculateMMRChange } = require('./src/game');
 const VALID_WORDS = require('./src/words');
 
@@ -24,7 +27,7 @@ const io     = socketIo(server, {
 const PORT       = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'worduel-secret-key-change-in-production';
 
-// ── In-memory store (replace with a real DB before production) ──────────────
+// ── In-memory store (write-through cache — persisted to MongoDB) ─────────────
 const users           = new Map(); // username.toLowerCase() → user object
 const activeSockets   = new Map(); // username → socket
 const matchmakingQueue = [];
@@ -65,6 +68,7 @@ app.post('/api/register', async (req, res) => {
             doubleWinningsClaimed: false,
         };
         users.set(username.toLowerCase(), user);
+        saveUser(user);
 
         const token = jwt.sign({ username: user.username }, JWT_SECRET);
         res.json({ success: true, token, user: publicProfile(user) });
@@ -127,6 +131,7 @@ app.post('/api/auth/google', async (req, res) => {
                 doubleWinningsClaimed: false,
             };
             users.set(username, user);
+            saveUser(user);
         }
 
         const token = jwt.sign({ username: user.username }, JWT_SECRET);
@@ -180,6 +185,7 @@ app.post('/api/ads/reward', (req, res) => {
             }
             user.balance += 100;
             user.lastDailyRewardAt = now;
+            saveUser(user);
             if (socket) socket.emit('ad_reward_granted', { type: 'daily', coinsEarned: 100, newBalance: user.balance });
             return res.json({ success: true, coinsEarned: 100, newBalance: user.balance });
         }
@@ -190,6 +196,7 @@ app.post('/api/ads/reward', (req, res) => {
             const bonus = user.lastMatchWinnings;
             user.balance += bonus;
             user.doubleWinningsClaimed = true;
+            saveUser(user);
             if (socket) socket.emit('ad_reward_granted', { type: 'double_winnings', coinsEarned: bonus, newBalance: user.balance });
             return res.json({ success: true, coinsEarned: bonus, newBalance: user.balance });
         }
@@ -201,6 +208,7 @@ app.post('/api/ads/reward', (req, res) => {
             const consolation = Math.floor(user.lastMatchBet * 0.25);
             user.balance += consolation;
             user.consolationClaimed = true;
+            saveUser(user);
             if (socket) socket.emit('ad_reward_granted', { type: 'consolation', coinsEarned: consolation, newBalance: user.balance });
             return res.json({ success: true, coinsEarned: consolation, newBalance: user.balance });
         }
@@ -731,6 +739,7 @@ function endMatch(matchId, forfeitWinner = null) {
     winnerUser.lastMatchWinnings     = loser.betAmount;
     winnerUser.doubleWinningsClaimed = false;
     winnerUser.consolationClaimed    = false;
+    saveUser(winnerUser);
 
     loserUser.balance   -= loser.betAmount;
     loserUser.mmr       -= mmrChange;
@@ -740,6 +749,7 @@ function endMatch(matchId, forfeitWinner = null) {
     loserUser.lastMatchWinnings     = 0;
     loserUser.consolationClaimed    = false;
     loserUser.doubleWinningsClaimed = false;
+    saveUser(loserUser);
 
     console.log(`Match ended: ${winner.username} defeats ${loser.username} (+${mmrChange} MMR)`);
 
@@ -773,9 +783,39 @@ function publicProfile(user) {
     };
 }
 
+// ── MongoDB ───────────────────────────────────────────────────────────────────
+
+// Persist a single user object back to MongoDB (upsert by username).
+async function saveUser(user) {
+    try {
+        const plain = { ...user };
+        await User.replaceOne({ username: plain.username }, plain, { upsert: true });
+    } catch (err) {
+        console.error('saveUser error:', err.message);
+    }
+}
+
+// Connect to MongoDB and warm the in-memory users Map from the DB.
+// If MONGODB_URI is not set, the server runs fine with in-memory storage only.
+async function connectDB() {
+    if (!process.env.MONGODB_URI) {
+        console.warn('MONGODB_URI not set — running with in-memory storage only (data resets on restart)');
+        return;
+    }
+    await mongoose.connect(process.env.MONGODB_URI);
+    const allUsers = await User.find({}).lean();
+    allUsers.forEach(u => { delete u._id; users.set(u.username, u); });
+    console.log(`MongoDB connected — ${allUsers.length} user(s) loaded`);
+}
+
 // ── Start ────────────────────────────────────────────────────────────────────
 
-server.listen(PORT, () => {
-    console.log(`Worduel Server running on port ${PORT}`);
-    console.log(`Health: http://localhost:${PORT}/health`);
-});
+connectDB()
+    .then(() => server.listen(PORT, () => {
+        console.log(`Worduel Server running on port ${PORT}`);
+        console.log(`Health: http://localhost:${PORT}/health`);
+    }))
+    .catch(err => {
+        console.error('Failed to connect to MongoDB:', err.message);
+        process.exit(1);
+    });
