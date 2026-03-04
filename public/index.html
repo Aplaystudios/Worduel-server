@@ -2695,7 +2695,7 @@ h1, h2, h3, h4, h5, h6,
             height: 82px;
             margin-bottom: 8px;
         }
-        .store-card-icon img { height: 82px; width: auto; object-fit: contain; filter: drop-shadow(0 3px 12px rgba(255,180,0,0.55)); }
+        .store-card-icon img { height: 82px; width: auto; object-fit: contain; filter: drop-shadow(0 3px 12px rgba(255,180,0,0.55)); mix-blend-mode: multiply; }
         .bet-coin-pile {
             display: flex;
             align-items: flex-end;
@@ -2703,7 +2703,7 @@ h1, h2, h3, h4, h5, h6,
             height: 46px;
             margin-bottom: 5px;
         }
-        .bet-coin-pile img { height: 46px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); }
+        .bet-coin-pile img { height: 46px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); mix-blend-mode: multiply; }
         .store-card-amount {
             font-family: 'JetBrains Mono', monospace;
             font-size: 26px;
@@ -3114,6 +3114,7 @@ h1, h2, h3, h4, h5, h6,
         .mode-pill.practice.selected{ border-color: #00ff88;  box-shadow: 0 0 14px rgba(0,255,136,0.5);  background: rgba(0,255,136,0.25); }
 
         .mode-pill-icon { font-size: 28px; line-height: 1; }
+        .mode-icon-img { width: 32px; height: 32px; object-fit: contain; display: block; }
         .mode-pill-name { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
 
         /* Battle button */
@@ -3549,14 +3550,15 @@ h1, h2, h3, h4, h5, h6,
         /* Coin-single image — replaces the old CSS-drawn .gc circle */
         .gc-img {
             display: inline-block;
-            width: 1.15em;
-            height: 1.15em;
-            min-width: 14px;
-            min-height: 14px;
+            width: 1.8em;
+            height: 1.8em;
+            min-width: 18px;
+            min-height: 18px;
             vertical-align: middle;
             margin: 0 0.12em;
             flex-shrink: 0;
             object-fit: contain;
+            mix-blend-mode: multiply;
         }
     </style>
 
@@ -3688,7 +3690,7 @@ h1, h2, h3, h4, h5, h6,
             <div class="home-bottom">
                 <div class="mode-row">
                     <div class="mode-pill ranked" id="modeCard_best_of_3" onclick="selectMode('best_of_3')">
-                        <span class="mode-pill-icon">🏆</span>
+                        <span class="mode-pill-icon"><img src="/Images/Bestof3.png" class="mode-icon-img" alt=""></span>
                         <span class="mode-pill-name">BEST OF 3</span>
                     </div>
                     <div class="mode-pill speed" id="modeCard_blitz" onclick="selectMode('blitz')">
@@ -3931,7 +3933,7 @@ h1, h2, h3, h4, h5, h6,
             <div class="training-picker-sub">CHOOSE YOUR FORMAT</div>
             <div class="training-picker-modes">
                 <div class="training-mode-card" onclick="startTrainingMode('best_of_3')">
-                    <div class="training-mode-card-icon">🏆</div>
+                    <div class="training-mode-card-icon"><img src="/Images/Bestof3.png" class="mode-icon-img" alt=""></div>
                     <div class="training-mode-card-name">BEST OF 3</div>
                     <div class="training-mode-card-desc">First to win 2 rounds · 3 min each</div>
                 </div>
