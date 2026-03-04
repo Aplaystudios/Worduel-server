@@ -811,11 +811,8 @@ async function connectDB() {
 // ── Start ────────────────────────────────────────────────────────────────────
 
 connectDB()
-    .then(() => server.listen(PORT, () => {
+    .catch(err => console.error('MongoDB connection failed (running without DB):', err.message))
+    .finally(() => server.listen(PORT, () => {
         console.log(`Worduel Server running on port ${PORT}`);
         console.log(`Health: http://localhost:${PORT}/health`);
-    }))
-    .catch(err => {
-        console.error('Failed to connect to MongoDB:', err.message);
-        process.exit(1);
-    });
+    }));
