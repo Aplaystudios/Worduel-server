@@ -1471,6 +1471,12 @@ body::after {
             margin-bottom: 20px;
             filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
         }
+        .result-icon img, .blitz-end-emoji img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            display: block;
+        }
 
         .result-title {
             font-family: 'Lilita One', cursive;
@@ -3951,7 +3957,7 @@ h1, h2, h3, h4, h5, h6,
     <!-- RESULT MODAL -->
     <div class="result-modal" id="resultModal">
         <div class="result-container">
-            <div class="result-icon" id="resultIcon">🏆</div>
+            <div class="result-icon" id="resultIcon"><img src="/Images/Win_Shield.png" alt=""></div>
             <h2 class="result-title" id="resultTitle">VICTORY</h2>
 
             <div class="result-stats" id="resultStats">
@@ -3989,7 +3995,7 @@ h1, h2, h3, h4, h5, h6,
     <!-- BLITZ END SCREEN -->
     <div id="blitzEndScreen">
         <div class="blitz-end-container">
-            <span class="blitz-end-emoji">🎉</span>
+            <span class="blitz-end-emoji" id="blitzEndIcon"><img src="/Images/Win_Shield.png" alt=""></span>
             <div class="blitz-end-title">WELL DONE!</div>
             <div class="blitz-end-subtitle">TIME'S UP</div>
             <div class="blitz-end-solves" id="blitzEndSolves">0</div>
@@ -5994,7 +6000,7 @@ h1, h2, h3, h4, h5, h6,
             const tied = trainingSubMode === 'blitz' &&
                 trainingBlitzSolves.player === trainingBlitzSolves.ai;
 
-            document.getElementById('resultIcon').textContent = won ? '🏆' : tied ? '🤝' : '🛡️';
+            document.getElementById('resultIcon').innerHTML = won ? '<img src="/Images/Win_Shield.png" alt="">' : '<img src="/Images/Defeat_Shield.png" alt="">';
             const titleEl = document.getElementById('resultTitle');
             titleEl.textContent = won ? 'VICTORY!' : tied ? 'TIE' : 'DEFEAT';
             titleEl.className = 'result-title ' + (won ? 'win' : 'lose');
@@ -6770,7 +6776,7 @@ h1, h2, h3, h4, h5, h6,
         }
 
         function showResult(data) {
-            document.getElementById('resultIcon').textContent = data.won ? '🏆' : '🛡️';
+            document.getElementById('resultIcon').innerHTML = data.won ? '<img src="/Images/Win_Shield.png" alt="">' : '<img src="/Images/Defeat_Shield.png" alt="">';
             const titleEl = document.getElementById('resultTitle');
             titleEl.textContent = data.won ? 'VICTORY!' : 'DEFEAT';
             titleEl.className = 'result-title ' + (data.won ? 'win' : 'lose');
@@ -6854,6 +6860,8 @@ h1, h2, h3, h4, h5, h6,
             updateHomeScreen();
 
             // Populate screen
+            const blitzIcon = document.getElementById('blitzEndIcon');
+            if (blitzIcon) blitzIcon.innerHTML = data.won ? '<img src="/Images/Win_Shield.png" alt="">' : '<img src="/Images/Defeat_Shield.png" alt="">';
             document.getElementById('blitzEndSolves').textContent = data.yourSolves ?? 0;
             document.getElementById('blitzEndWinnings').innerHTML = data.won ? `+${GC}${data.winnings}` : `${GC}0`;
             document.getElementById('blitzEndBalance').innerHTML = `${GC}${data.newBalance}`;
