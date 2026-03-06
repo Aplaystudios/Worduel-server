@@ -1110,11 +1110,11 @@ body::after {
         }
 
         .bet-balance {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Lilita One', cursive;
             font-size: 18px;
-            font-weight: 700;
-            color: #00cc6f;
-            text-shadow: 0 0 10px rgba(0, 204, 111, 0.4);
+            font-weight: 400;
+            color: #ffffff;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
 
         .bet-grid {
@@ -1148,9 +1148,9 @@ body::after {
 
         .bet-amount {
             font-size: 28px;
-            font-weight: 900;
-            font-family: 'JetBrains Mono', monospace;
-            color: #00cc6f;
+            font-weight: 400;
+            font-family: 'Lilita One', cursive;
+            color: #ffffff;
             text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
 
@@ -1592,25 +1592,31 @@ body::after {
     /* Bet selection screen mobile fixes */
     .bet-container {
         width: 95% !important;
-        padding: 24px !important;
+        padding: 16px !important;
         max-width: 100% !important;
     }
-    
+
+    .bet-header {
+        margin-bottom: 16px !important;
+    }
+
     .bet-grid {
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 10px !important;
+        gap: 8px !important;
+        margin-bottom: 16px !important;
     }
-    
+
     .bet-option {
-        padding: 18px 12px !important;
+        padding: 12px 8px !important;
     }
-    
+
     .bet-amount {
-        font-size: 24px !important;
+        font-size: 22px !important;
     }
-    
+
     .bet-title {
-        font-size: 28px !important;
+        font-size: 26px !important;
+        margin-bottom: 6px !important;
     }
     
     /* Show on-screen keyboard on mobile with compact sizing */
@@ -2707,10 +2713,10 @@ h1, h2, h3, h4, h5, h6,
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            height: 64px;
-            margin-bottom: 8px;
+            height: 52px;
+            margin-bottom: 6px;
         }
-        .bet-coin-pile img { height: 64px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); mix-blend-mode: multiply; }
+        .bet-coin-pile img { height: 52px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); mix-blend-mode: multiply; }
         .store-card-amount {
             font-family: 'JetBrains Mono', monospace;
             font-size: 26px;
@@ -3116,8 +3122,8 @@ h1, h2, h3, h4, h5, h6,
         .mode-pill.selected,
         .mode-pill.ranked.selected, .mode-pill.speed.selected, .mode-pill.practice.selected { border-color: #FFA800; box-shadow: 0 0 14px rgba(255,168,0,0.5); background: rgba(255,168,0,0.25); }
 
-        .mode-pill-icon { font-size: 28px; line-height: 1; }
-        .mode-icon-img { width: 120px; height: 65px; object-fit: contain; display: block; margin: 0 auto; }
+        .mode-pill-icon { font-size: 28px; line-height: 1; height: 64px; display: flex; align-items: center; justify-content: center; }
+        .mode-icon-img { height: 64px; width: auto; max-width: 130px; object-fit: contain; display: block; }
         .mode-pill-name { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
 
         /* Battle button */
