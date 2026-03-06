@@ -1042,12 +1042,13 @@ body::after {
         .btn {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #FFA800, #FFA800);
-            color: #1e3a66;
+            background: linear-gradient(135deg, #FFA800, #ff9800);
+            color: #fff;
             border: none;
             border-radius: 12px;
-            font-weight: 800;
-            font-size: 15px;
+            font-family: 'Lilita One', 'Barlow', sans-serif;
+            font-weight: 900;
+            font-size: 18px;
             cursor: pointer;
             transition: all 0.2s;
             text-transform: uppercase;
@@ -2700,10 +2701,10 @@ h1, h2, h3, h4, h5, h6,
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            height: 46px;
-            margin-bottom: 5px;
+            height: 64px;
+            margin-bottom: 8px;
         }
-        .bet-coin-pile img { height: 46px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); mix-blend-mode: multiply; }
+        .bet-coin-pile img { height: 64px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(255,180,0,0.5)); mix-blend-mode: multiply; }
         .store-card-amount {
             font-family: 'JetBrains Mono', monospace;
             font-size: 26px;
@@ -2991,7 +2992,7 @@ h1, h2, h3, h4, h5, h6,
             border-radius: 12px;
             padding: 6px 12px;
         }
-        .home-balance-coin { width: 44px; height: 44px; flex-shrink: 0; }
+        .home-balance-coin { width: 58px; height: 58px; flex-shrink: 0; }
         .home-balance-coin img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
         .home-balance-amount {
@@ -3110,7 +3111,7 @@ h1, h2, h3, h4, h5, h6,
         .mode-pill.ranked.selected, .mode-pill.speed.selected, .mode-pill.practice.selected { border-color: #FFA800; box-shadow: 0 0 14px rgba(255,168,0,0.5); background: rgba(255,168,0,0.25); }
 
         .mode-pill-icon { font-size: 28px; line-height: 1; }
-        .mode-icon-img { width: 90px; height: 50px; object-fit: contain; display: block; margin: 0 auto; }
+        .mode-icon-img { width: 120px; height: 65px; object-fit: contain; display: block; margin: 0 auto; }
         .mode-pill-name { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
 
         /* Battle button */
@@ -3787,33 +3788,27 @@ h1, h2, h3, h4, h5, h6,
             <div class="bet-grid">
                 <div class="bet-option" onclick="selectBet(10)">
                     <div class="bet-coin-pile" data-coins="1"></div>
-                    <div class="bet-amount"><img class="gc-img" src="/Images/CP1.png" alt=""> 10</div>
-                    <div class="bet-label">Bronze</div>
+                    <div class="bet-amount">10</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(25)">
                     <div class="bet-coin-pile" data-coins="2"></div>
-                    <div class="bet-amount"><img class="gc-img" src="/Images/CP1.png" alt=""> 25</div>
-                    <div class="bet-label">Silver</div>
+                    <div class="bet-amount">25</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(50)">
                     <div class="bet-coin-pile" data-coins="3"></div>
-                    <div class="bet-amount"><img class="gc-img" src="/Images/CP1.png" alt=""> 50</div>
-                    <div class="bet-label">Gold</div>
+                    <div class="bet-amount">50</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(100)">
                     <div class="bet-coin-pile" data-coins="4"></div>
-                    <div class="bet-amount"><img class="gc-img" src="/Images/CP1.png" alt=""> 100</div>
-                    <div class="bet-label">Platinum</div>
+                    <div class="bet-amount">100</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(250)">
                     <div class="bet-coin-pile" data-coins="5"></div>
-                    <div class="bet-amount"><img class="gc-img" src="/Images/CP1.png" alt=""> 250</div>
-                    <div class="bet-label">Diamond</div>
+                    <div class="bet-amount">250</div>
                 </div>
                 <div class="bet-option" onclick="selectBet(500)">
                     <div class="bet-coin-pile" data-coins="6"></div>
-                    <div class="bet-amount"><img class="gc-img" src="/Images/CP1.png" alt=""> 500</div>
-                    <div class="bet-label">Legend</div>
+                    <div class="bet-amount">500</div>
                 </div>
             </div>
 
@@ -4172,17 +4167,41 @@ h1, h2, h3, h4, h5, h6,
         /* ── Animated logo tiles: word discovery (guess → answer) ── */
         // Row 1 = guess (mixed colors showing hints), Row 2 = answer (all green = solved!)
         const LOGO_PAIRS = [
-            {   // STALE → CLASH: S present, T absent, A correct, L present, E absent
+            {   // STALE → CLASH
                 guess:  { word: 'STALE', colors: ['tile-present','tile-absent','tile-correct','tile-present','tile-absent'] },
                 answer: { word: 'CLASH', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
             },
-            {   // GRAPE → BRAVE: G absent, R correct(pos2), A correct(pos3), P absent, E correct(pos5)
+            {   // GRAPE → BRAVE
                 guess:  { word: 'GRAPE', colors: ['tile-absent','tile-correct','tile-correct','tile-absent','tile-correct'] },
                 answer: { word: 'BRAVE', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
             },
-            {   // TWIST → WORDS: T absent, W present, I absent, S present, T absent
+            {   // TWIST → WORDS
                 guess:  { word: 'TWIST', colors: ['tile-absent','tile-present','tile-absent','tile-present','tile-absent'] },
                 answer: { word: 'WORDS', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {   // CHAMP → CLASH: C correct, H present, A correct, M absent, P absent
+                guess:  { word: 'CHAMP', colors: ['tile-correct','tile-present','tile-correct','tile-absent','tile-absent'] },
+                answer: { word: 'CLASH', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {   // SCORE → SWORD: S correct, C absent, O correct, R correct, E absent
+                guess:  { word: 'SCORE', colors: ['tile-correct','tile-absent','tile-correct','tile-correct','tile-absent'] },
+                answer: { word: 'SWORD', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {   // FLAME → BLAZE: F absent, L correct, A correct, M absent, E correct
+                guess:  { word: 'FLAME', colors: ['tile-absent','tile-correct','tile-correct','tile-absent','tile-correct'] },
+                answer: { word: 'BLAZE', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {   // PRIZE → PRIDE: P correct, R correct, I correct, Z absent, E correct
+                guess:  { word: 'PRIZE', colors: ['tile-correct','tile-correct','tile-correct','tile-absent','tile-correct'] },
+                answer: { word: 'PRIDE', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {   // BLEND → BLITZ: B correct, L correct, E absent, N absent, D absent
+                guess:  { word: 'BLEND', colors: ['tile-correct','tile-correct','tile-absent','tile-absent','tile-absent'] },
+                answer: { word: 'BLITZ', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
+            },
+            {   // MATCH → BATCH: M absent, A correct, T correct, C correct, H correct
+                guess:  { word: 'MATCH', colors: ['tile-absent','tile-correct','tile-correct','tile-correct','tile-correct'] },
+                answer: { word: 'BATCH', colors: ['tile-correct','tile-correct','tile-correct','tile-correct','tile-correct'] }
             },
         ];
         let _logoIdx = 0;
@@ -6449,7 +6468,7 @@ h1, h2, h3, h4, h5, h6,
             
             const btn = document.getElementById('findMatchBtn');
             btn.disabled = false;
-            btn.innerHTML = `FIND MATCH (${GC}${amount})`;
+            btn.textContent = 'FIND MATCH';
         }
 
         function findMatch() {
