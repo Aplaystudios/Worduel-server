@@ -815,4 +815,18 @@ connectDB()
     .finally(() => server.listen(PORT, () => {
         console.log(`Worduel Server running on port ${PORT}`);
         console.log(`Health: http://localhost:${PORT}/health`);
+
+        // Keep Render free tier awake — ping /health every 10 minutes
+        const pingUrl = process.env.RENDER_EXTERNAL_URL || 'https://worduel-server.onrender.com';
+        if (pingUrl) {
+            const https = require('https');
+            setInterval(() => {
+                https.get(`${pingUrl}/health`, res => {
+                    console.log(`Keep-alive ping → ${res.statusCode}`);
+                }).on('error', err => {
+                    console.error('Keep-alive ping failed:', err.message);
+                });
+            }, 10 * 60 * 1000);
+            console.log(`Keep-alive pinging ${pingUrl}/health every 10 min`);
+        }
     }));
