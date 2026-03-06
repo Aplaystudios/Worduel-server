@@ -4309,10 +4309,13 @@ h1, h2, h3, h4, h5, h6,
 
             if (subMode === 'blitz') {
                 trainingBlitzSolves = { player: 0, ai: 0 };
+                trainingBlitzWordList = Array.from({ length: 60 }, () => getRandomWord());
+                trainingPlayerWordIndex = 0;
+                trainingAiWordIndex = 0;
                 roundScoreEl.style.display = 'none';
                 blitzScoreEl.style.display = 'block';
                 blitzScoreEl.textContent = '0 – 0 SOLVED';
-                game.targetWord = getRandomWord();
+                game.targetWord = trainingBlitzWordList[0];
                 startRoundTimer(300);
                 // End blitz when timer runs out
                 trainingRoundTimeout = setTimeout(() => {
@@ -4399,7 +4402,7 @@ h1, h2, h3, h4, h5, h6,
 
         function startTrainingBlitzAI() {
             let aiRow = 0;
-            let aiWord = getRandomWord();
+            let aiWord = trainingBlitzWordList[trainingAiWordIndex] || getRandomWord();
             const aiGuess = () => {
                 if (!game.isTraining || trainingSubMode !== 'blitz') return;
                 const guessWord = getRandomWord();
@@ -4407,14 +4410,14 @@ h1, h2, h3, h4, h5, h6,
                     const r = Math.random();
                     return r < 0.15 ? 'correct' : r < 0.35 ? 'present' : 'absent';
                 });
-                revealGuess({ word: guessWord, evaluation }, aiRow, 'opponentGrid');
+                revealGuess({ word: guessWord, evaluation }, aiRow, 'opponentGrid', true);
                 aiRow++;
                 const shouldSolve = aiRow >= 2 && (Math.random() < 0.4 || aiRow >= 5);
                 if (shouldSolve) {
                     // Show the solve row then tally it
                     setTimeout(() => {
                         if (!game.isTraining || trainingSubMode !== 'blitz') return;
-                        revealGuess({ word: aiWord, evaluation: Array(5).fill('correct') }, aiRow, 'opponentGrid');
+                        revealGuess({ word: aiWord, evaluation: Array(5).fill('correct') }, aiRow, 'opponentGrid', true);
                         setTimeout(() => {
                             if (!game.isTraining || trainingSubMode !== 'blitz') return;
                             trainingBlitzSolves.ai++;
@@ -4422,7 +4425,8 @@ h1, h2, h3, h4, h5, h6,
                                 `${trainingBlitzSolves.player} – ${trainingBlitzSolves.ai} SOLVED`;
                             createGrid('opponentGrid');
                             aiRow = 0;
-                            aiWord = getRandomWord();
+                            trainingAiWordIndex++;
+                            aiWord = trainingBlitzWordList[trainingAiWordIndex] || getRandomWord();
                             aiBlitzInterval = setTimeout(aiGuess, 4000 + Math.random() * 4000);
                         }, 1500);
                     }, 700);
@@ -5941,6 +5945,9 @@ h1, h2, h3, h4, h5, h6,
         let trainingBlitzSolves = { player: 0, ai: 0 };
         let aiBlitzInterval = null;
         let trainingRoundTimeout = null;
+        let trainingBlitzWordList = [];
+        let trainingPlayerWordIndex = 0;
+        let trainingAiWordIndex = 0;
 
         function startAIOpponent() {
             aiRow = 0;
@@ -5953,7 +5960,7 @@ h1, h2, h3, h4, h5, h6,
                 const evaluation = evaluateGuess(aiWord, game.targetWord);
 
                 setTimeout(() => {
-                    revealGuess({ word: aiWord, evaluation }, aiRow, 'opponentGrid');
+                    revealGuess({ word: aiWord, evaluation }, aiRow, 'opponentGrid', true);
 
                     if (evaluation.every(e => e === 'correct')) {
                         clearInterval(aiInterval);
@@ -6258,7 +6265,7 @@ h1, h2, h3, h4, h5, h6,
             });
 
             socket.on('opponent_guess', (data) => {
-                revealGuess(data.guess, game.opponentRow, 'opponentGrid');
+                revealGuess(data.guess, game.opponentRow, 'opponentGrid', true);
                 if (data.solved) {
                     setTimeout(() => { createGrid('opponentGrid'); game.opponentRow = 0; }, 1400);
                 } else {
@@ -6649,7 +6656,8 @@ h1, h2, h3, h4, h5, h6,
                         document.getElementById('blitzScore').textContent =
                             `${trainingBlitzSolves.player} – ${trainingBlitzSolves.ai} SOLVED`;
                         setTimeout(() => {
-                            game.targetWord = getRandomWord();
+                            trainingPlayerWordIndex++;
+                            game.targetWord = trainingBlitzWordList[trainingPlayerWordIndex] || getRandomWord();
                             game.currentRow = 0;
                             game.currentGuess = '';
                             createGrid('yourGrid');
@@ -6658,7 +6666,8 @@ h1, h2, h3, h4, h5, h6,
                     } else if (lastRow) {
                         // Failed word — brief pause then new word
                         setTimeout(() => {
-                            game.targetWord = getRandomWord();
+                            trainingPlayerWordIndex++;
+                            game.targetWord = trainingBlitzWordList[trainingPlayerWordIndex] || getRandomWord();
                             game.currentRow = 0;
                             game.currentGuess = '';
                             createGrid('yourGrid');
@@ -6693,11 +6702,11 @@ h1, h2, h3, h4, h5, h6,
             }
         }
 
-        function revealGuess(guess, row, gridId) {
+        function revealGuess(guess, row, gridId, hideLetters = false) {
             guess.evaluation.forEach((status, i) => {
                 setTimeout(() => {
                     const tile = document.getElementById(`${gridId}-${row}-${i}`);
-                    tile.textContent = guess.word[i];
+                    if (!hideLetters) tile.textContent = guess.word[i];
                     tile.classList.add(status);
                 }, i * 140);
             });

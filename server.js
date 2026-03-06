@@ -422,7 +422,9 @@ io.on('connection', (socket) => {
             if (match.mode === 'blitz') {
                 if (solved) {
                     player.solves++;
-                    Object.assign(player, { currentWord: getRandomWord(), guesses: [], solved: false, solveTime: null });
+                    player.wordIndex = (player.wordIndex || 0) + 1;
+                    player.currentWord = match.blitzWordList[player.wordIndex] || getRandomWord();
+                    Object.assign(player, { guesses: [], solved: false, solveTime: null });
                     socket.emit('blitz_word_solved', {
                         newWord:        player.currentWord,
                         yourSolves:     player.solves,
@@ -433,7 +435,9 @@ io.on('connection', (socket) => {
                         yourSolves:     opp.solves
                     });
                 } else if (player.guesses.length >= 6) {
-                    Object.assign(player, { currentWord: getRandomWord(), guesses: [], solved: false });
+                    player.wordIndex = (player.wordIndex || 0) + 1;
+                    player.currentWord = match.blitzWordList[player.wordIndex] || getRandomWord();
+                    Object.assign(player, { guesses: [], solved: false });
                     socket.emit('blitz_word_failed', { newWord: player.currentWord });
                 }
                 return;
@@ -556,8 +560,12 @@ function createMatch(socket, user, opponent, betAmount, mode) {
     };
 
     if (mode === 'blitz') {
-        match.players[0].currentWord = getRandomWord();
-        match.players[1].currentWord = getRandomWord();
+        // Shared word sequence so both players face the same words in order
+        match.blitzWordList = Array.from({ length: 60 }, () => getRandomWord());
+        match.players[0].wordIndex = 0;
+        match.players[1].wordIndex = 0;
+        match.players[0].currentWord = match.blitzWordList[0];
+        match.players[1].currentWord = match.blitzWordList[0];
         match.blitzTimeout = setTimeout(() => endBlitz(matchId), 5 * 60 * 1000);
     }
     if (mode === 'best_of_3') {
