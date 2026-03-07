@@ -946,13 +946,14 @@ body::after {
         }
         .training-picker-overlay.active { display: flex; }
         .training-picker-container {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-primary);
+            background: linear-gradient(160deg, #1e3a66 0%, #2c5aa0 55%, #1e4080 100%);
+            border: 2px solid rgba(255,168,0,0.5);
             border-radius: 20px;
             padding: 36px 28px;
             max-width: 360px;
             width: 90%;
             text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         .training-picker-title {
             font-family: 'Lilita One', cursive;
@@ -972,8 +973,8 @@ body::after {
         }
         .training-mode-card {
             flex: 1;
-            background: rgba(255,255,255,0.05);
-            border: 2px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.12);
+            border: 1.5px solid rgba(255,255,255,0.22);
             border-radius: 14px;
             padding: 20px 12px;
             cursor: pointer;
@@ -3443,12 +3444,12 @@ h1, h2, h3, h4, h5, h6,
         #dailyRewardPopup.active { display: flex; }
 
         .reward-popup-box {
-            background: linear-gradient(160deg, #0d1f0d 0%, #0a1a1a 100%);
-            border: 2px solid #00ff88;
+            background: linear-gradient(160deg, #1e3a66 0%, #2c5aa0 55%, #1e4080 100%);
+            border: 2px solid rgba(255,168,0,0.6);
             border-radius: 28px;
             padding: 36px 48px 32px;
             text-align: center;
-            box-shadow: 0 0 80px rgba(0,255,136,0.35), 0 20px 60px rgba(0,0,0,0.6);
+            box-shadow: 0 0 80px rgba(255,168,0,0.25), 0 20px 60px rgba(0,0,0,0.6);
             animation: rewardBoxIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
             position: relative;
         }
@@ -6425,6 +6426,7 @@ h1, h2, h3, h4, h5, h6,
 
             // Blitz: you solved a word — reset your grid with new word
             socket.on('blitz_word_solved', (data) => {
+                launchQuickConfetti();
                 const toast = document.getElementById('wordToast');
                 toast.textContent = 'SOLVED! +1';
                 toast.style.background = '#00ff88'; toast.style.color = '#000';
@@ -6654,6 +6656,7 @@ h1, h2, h3, h4, h5, h6,
 
                 if (trainingSubMode === 'blitz') {
                     if (solved) {
+                        launchQuickConfetti();
                         trainingBlitzSolves.player++;
                         document.getElementById('blitzScore').textContent =
                             `${trainingBlitzSolves.player} – ${trainingBlitzSolves.ai} SOLVED`;
@@ -6787,6 +6790,23 @@ h1, h2, h3, h4, h5, h6,
                 el.style.borderRadius = Math.random() > 0.4 ? '50%' : '2px';
                 el.style.animationDuration = (1.4 + Math.random() * 2) + 's';
                 el.style.animationDelay = (Math.random() * 1.2) + 's';
+                document.body.appendChild(el);
+                el.addEventListener('animationend', () => el.remove());
+            }
+        }
+
+        function launchQuickConfetti() {
+            const colors = ['#FFA800','#00ff88','#ffffff','#ff9800','#4a9eff'];
+            for (let i = 0; i < 45; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti-piece';
+                el.style.left = (Math.random() * 100) + 'vw';
+                el.style.width = (4 + Math.random() * 6) + 'px';
+                el.style.height = (6 + Math.random() * 8) + 'px';
+                el.style.background = colors[Math.floor(Math.random() * colors.length)];
+                el.style.borderRadius = Math.random() > 0.4 ? '50%' : '2px';
+                el.style.animationDuration = (0.5 + Math.random() * 0.6) + 's';
+                el.style.animationDelay = (Math.random() * 0.2) + 's';
                 document.body.appendChild(el);
                 el.addEventListener('animationend', () => el.remove());
             }
