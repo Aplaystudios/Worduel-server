@@ -3926,11 +3926,14 @@ h1, h2, h3, h4, h5, h6,
     <div id="wordToast">NOT IN WORD LIST</div>
 
     <!-- Round end overlay (best-of-3) -->
-    <div id="roundOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9000; flex-direction:column; align-items:center; justify-content:center; gap:14px;">
-        <div id="roundOverlayTitle" style="font-family:'Barlow',sans-serif; font-weight:900; font-size:26px; letter-spacing:3px;"></div>
-        <div id="roundOverlayScore" style="font-family:'JetBrains Mono',monospace; font-weight:900; font-size:52px; color:#fff; letter-spacing:4px;"></div>
-        <div id="roundOverlayWord" style="font-family:'Barlow',sans-serif; font-size:13px; color:#9ca3af; letter-spacing:1px;"></div>
-        <div id="roundOverlayNext" style="font-family:'Barlow',sans-serif; font-size:11px; color:#4a5568; margin-top:4px;">NEXT ROUND STARTING...</div>
+    <div id="roundOverlay" style="display:none; position:fixed; inset:0; background:rgba(5,15,35,0.92); z-index:9000; flex-direction:column; align-items:center; justify-content:center;">
+        <div style="background:linear-gradient(160deg,#1e3a66 0%,#2c5aa0 55%,#1e4080 100%); border:2px solid rgba(255,168,0,0.55); border-radius:24px; padding:36px 40px 30px; text-align:center; min-width:280px; box-shadow:0 12px 48px rgba(0,0,0,0.6);">
+            <div id="roundOverlayTitle" style="font-family:'Lilita One',cursive; font-size:32px; letter-spacing:2px; margin-bottom:8px;"></div>
+            <div id="roundOverlayScore" style="font-family:'Lilita One',cursive; font-size:54px; color:#fff; letter-spacing:6px; margin-bottom:20px;"></div>
+            <div style="font-family:'Barlow',sans-serif; font-size:11px; color:rgba(255,255,255,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">THE WORD WAS</div>
+            <div id="roundOverlayWord" style="font-family:'Lilita One',cursive; font-size:44px; color:#FFA800; letter-spacing:6px; text-shadow:0 0 24px rgba(255,168,0,0.6);"></div>
+            <div id="roundOverlayNext" style="font-family:'Barlow',sans-serif; font-size:11px; color:rgba(255,255,255,0.4); margin-top:18px; letter-spacing:1px;">NEXT ROUND STARTING...</div>
+        </div>
     </div>
 
     <!-- Training mode picker -->
@@ -4340,6 +4343,7 @@ h1, h2, h3, h4, h5, h6,
         }
 
         function startTrainingRound() {
+            trainingRoundEnding = false;
             game.targetWord = getRandomWord();
             game.currentRow = 0;
             game.opponentRow = 0;
@@ -4366,6 +4370,10 @@ h1, h2, h3, h4, h5, h6,
         }
 
         function endTrainingRound(winner) {
+            // Guard: prevent double-call if both player and AI solve simultaneously
+            if (trainingRoundEnding) return;
+            trainingRoundEnding = true;
+
             if (aiInterval) { clearInterval(aiInterval); aiInterval = null; }
             if (trainingRoundTimeout) { clearTimeout(trainingRoundTimeout); trainingRoundTimeout = null; }
             if (game.timerInterval) { clearInterval(game.timerInterval); game.timerInterval = null; }
@@ -4374,24 +4382,36 @@ h1, h2, h3, h4, h5, h6,
             const titleEl = document.getElementById('roundOverlayTitle');
             const nextEl  = document.getElementById('roundOverlayNext');
 
-            if (winner === 'player') {
+            const playerWins = trainingScores.player >= 2;
+            const aiWins     = trainingScores.ai >= 2;
+            const isTie      = playerWins && aiWins; // both solved simultaneously
+
+            if (isTie) {
+                // Simultaneous solve on deciding round — show DRAW and continue
+                titleEl.textContent = 'DRAW!';
+                titleEl.style.color = '#FFA800';
+                // Revert the double-increment: treat as no-score for this round
+                trainingScores.player--;
+                trainingScores.ai--;
+            } else if (winner === 'player') {
                 titleEl.textContent = 'ROUND WIN!';
                 titleEl.style.color = '#4ade80';
             } else {
                 titleEl.textContent = 'ROUND LOSS';
                 titleEl.style.color = '#f87171';
             }
+
             document.getElementById('roundOverlayScore').textContent =
                 `${trainingScores.player} – ${trainingScores.ai}`;
-            document.getElementById('roundOverlayWord').textContent =
-                `The word was: ${game.targetWord}`;
+            document.getElementById('roundOverlayWord').textContent = game.targetWord;
 
-            const matchOver = trainingScores.player >= 2 || trainingScores.ai >= 2;
+            const matchOver = !isTie && (trainingScores.player >= 2 || trainingScores.ai >= 2);
             nextEl.textContent = matchOver ? '' : 'NEXT ROUND STARTING...';
             overlay.style.display = 'flex';
 
             setTimeout(() => {
                 overlay.style.display = 'none';
+                trainingRoundEnding = false;
                 if (matchOver) {
                     showTrainingResult(trainingScores.player >= 2);
                 } else {
@@ -5948,6 +5968,7 @@ h1, h2, h3, h4, h5, h6,
         let trainingSubMode = 'best_of_3';
         let trainingScores = { player: 0, ai: 0 };
         let trainingRound = 1;
+        let trainingRoundEnding = false;
         let trainingBlitzSolves = { player: 0, ai: 0 };
         let aiBlitzInterval = null;
         let trainingRoundTimeout = null;
@@ -6309,7 +6330,7 @@ h1, h2, h3, h4, h5, h6,
                     titleEl.style.color = data.roundWon ? '#00ff88' : '#ff3366';
                 }
                 document.getElementById('roundOverlayScore').textContent = `${data.yourScore} – ${data.opponentScore}`;
-                document.getElementById('roundOverlayWord').textContent = `The word was: ${data.targetWord}`;
+                document.getElementById('roundOverlayWord').textContent = data.targetWord;
                 const nextEl = document.getElementById('roundOverlayNext');
                 nextEl.textContent = data.matchOver ? 'MATCH OVER!' : 'NEXT ROUND STARTING...';
                 nextEl.style.color  = data.matchOver ? '#FFA800'   : '#4a5568';
