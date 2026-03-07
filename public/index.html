@@ -3128,7 +3128,7 @@ h1, h2, h3, h4, h5, h6,
         .mode-pill.ranked.selected, .mode-pill.speed.selected, .mode-pill.practice.selected { border-color: #FFA800; box-shadow: 0 0 14px rgba(255,168,0,0.5); background: rgba(255,168,0,0.25); }
 
         .mode-pill-icon { font-size: 36px; line-height: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-        .mode-icon-img { width: 92%; height: auto; object-fit: contain; display: block; margin: 0 auto; }
+        .mode-icon-img { width: 92%; height: auto; object-fit: contain; display: block; margin: 0 auto; transform: scale(1.6); }
         .mode-pill-name { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
 
         /* Battle button */
@@ -6808,8 +6808,8 @@ h1, h2, h3, h4, h5, h6,
                 el.style.height = (6 + Math.random() * 8) + 'px';
                 el.style.background = colors[Math.floor(Math.random() * colors.length)];
                 el.style.borderRadius = Math.random() > 0.4 ? '50%' : '2px';
-                el.style.animationDuration = (0.5 + Math.random() * 0.6) + 's';
-                el.style.animationDelay = (Math.random() * 0.2) + 's';
+                el.style.animationDuration = (1.5 + Math.random() * 0.6) + 's';
+                el.style.animationDelay = (Math.random() * 0.3) + 's';
                 document.body.appendChild(el);
                 el.addEventListener('animationend', () => el.remove());
             }
