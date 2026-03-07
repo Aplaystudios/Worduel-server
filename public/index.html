@@ -1679,12 +1679,12 @@ body::after {
         overflow: hidden !important;
     }
     
-    /* Make tiles SMALLER to fit both grids */
+    /* Make tiles SMALLER to fit both grids — scale with viewport */
     .tile {
-        width: 28px !important;
-        height: 28px !important;
+        width: clamp(22px, calc((100dvh - 270px) / 14), 28px) !important;
+        height: clamp(22px, calc((100dvh - 270px) / 14), 28px) !important;
         border-radius: 4px !important;
-        font-size: 13px !important;
+        font-size: clamp(10px, calc((100dvh - 270px) / 14 * 0.45), 13px) !important;
         border: 2px solid rgba(100, 100, 100, 0.3) !important;
     }
     
@@ -6664,8 +6664,7 @@ h1, h2, h3, h4, h5, h6,
         }
 
         function submitGuess() {
-            // Training: validate locally. Multiplayer: server accepts any 5-letter word.
-            if (game.isTraining && !isValidWord(game.currentGuess)) {
+            if (!isValidWord(game.currentGuess)) {
                 showInvalidWord();
                 return;
             }
@@ -6735,6 +6734,7 @@ h1, h2, h3, h4, h5, h6,
             guess.evaluation.forEach((status, i) => {
                 setTimeout(() => {
                     const tile = document.getElementById(`${gridId}-${row}-${i}`);
+                    if (!tile) return;
                     if (!hideLetters) tile.textContent = guess.word[i];
                     tile.classList.add(status);
                 }, i * 140);

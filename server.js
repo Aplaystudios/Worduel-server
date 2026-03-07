@@ -399,8 +399,8 @@ io.on('connection', (socket) => {
             const guess = data.word.toUpperCase();
             if (guess.length !== 5 || !/^[A-Z]+$/.test(guess))
                 return socket.emit('error', { message: 'Guess must be 5 letters' });
-            // Client validates against the full ~14k word list before sending;
-            // server accepts any 5-letter alphabetic string to avoid false rejections.
+            if (!VALID_WORDS.has(guess))
+                return socket.emit('invalid_word', {});
 
             const targetWord = match.mode === 'blitz' ? player.currentWord : match.targetWord;
             const evaluation = evaluateGuess(guess, targetWord);
