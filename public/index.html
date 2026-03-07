@@ -1679,12 +1679,27 @@ body::after {
         overflow: hidden !important;
     }
     
-    /* Make tiles SMALLER to fit both grids — scale with viewport */
-    .tile {
-        width: clamp(22px, calc((100dvh - 270px) / 14), 28px) !important;
-        height: clamp(22px, calc((100dvh - 270px) / 14), 28px) !important;
+    /* Tiles auto-size to fill available grid height — no magic numbers */
+    #battleScreen .word-grid {
+        flex: 1 !important;
+        min-height: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+    }
+    #battleScreen .word-row {
+        flex: 1 !important;
+        min-height: 0 !important;
+        gap: 2px !important;
+    }
+    #battleScreen .tile {
+        height: 100% !important;
+        width: auto !important;
+        aspect-ratio: 1 !important;
+        max-width: 28px !important;
+        min-width: 0 !important;
         border-radius: 4px !important;
-        font-size: clamp(10px, calc((100dvh - 270px) / 14 * 0.45), 13px) !important;
+        font-size: 13px !important;
         border: 2px solid rgba(100, 100, 100, 0.3) !important;
     }
     
@@ -3281,10 +3296,13 @@ h1, h2, h3, h4, h5, h6,
 
         #battleScreen .your-grid-wrap,
         #battleScreen .opp-grid-wrap {
+            flex: 1 !important;
+            min-height: 0 !important;
             width: 100% !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
+            overflow: hidden !important;
         }
 
         .opp-label {
@@ -5081,14 +5099,16 @@ h1, h2, h3, h4, h5, h6,
 
                 currentMatch = { mode: data.mode, opponent: { username: data.opponentUsername } };
                 game.targetWord   = data.targetWord;
-                game.currentRow   = data.guesses.length;
-                game.opponentRow  = data.opponentGuesses.length;
                 game.currentGuess = '';
                 game.isTraining   = false;
                 game.yourSolves   = data.yourSolves || 0;
 
                 setupBattle();
                 showScreen('battleScreen');
+
+                // Restore row counters AFTER setupBattle() (which resets them to 0)
+                game.currentRow  = data.guesses.length;
+                game.opponentRow = data.opponentGuesses.length;
 
                 // Mode-specific header
                 const roundScoreEl = document.getElementById('roundScore');
