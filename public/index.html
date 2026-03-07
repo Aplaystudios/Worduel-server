@@ -4446,36 +4446,39 @@ h1, h2, h3, h4, h5, h6,
 
         function startTrainingBlitzAI() {
             let aiRow = 0;
-            let aiWord = trainingBlitzWordList[trainingAiWordIndex] || getRandomWord();
+            let aiState = makeAIState();
+
             const aiGuess = () => {
                 if (!game.isTraining || trainingSubMode !== 'blitz') return;
-                const guessWord = getRandomWord();
-                const evaluation = Array.from({length: 5}, () => {
-                    const r = Math.random();
-                    return r < 0.15 ? 'correct' : r < 0.35 ? 'present' : 'absent';
-                });
-                revealGuess({ word: guessWord, evaluation }, aiRow, 'opponentGrid', true);
+                const currentWord = trainingBlitzWordList[trainingAiWordIndex] || getRandomWord();
+                const aiWord = pickAIWord(aiState);
+                const evaluation = evaluateGuess(aiWord, currentWord);
+                updateAIState(aiState, aiWord, evaluation);
+
+                revealGuess({ word: aiWord, evaluation }, aiRow, 'opponentGrid', true);
                 aiRow++;
-                const shouldSolve = aiRow >= 2 && (Math.random() < 0.4 || aiRow >= 5);
-                if (shouldSolve) {
-                    // Show the solve row then tally it
+
+                if (evaluation.every(e => e === 'correct')) {
                     setTimeout(() => {
                         if (!game.isTraining || trainingSubMode !== 'blitz') return;
-                        revealGuess({ word: aiWord, evaluation: Array(5).fill('correct') }, aiRow, 'opponentGrid', true);
-                        setTimeout(() => {
-                            if (!game.isTraining || trainingSubMode !== 'blitz') return;
-                            trainingBlitzSolves.ai++;
-                            document.getElementById('blitzScore').textContent =
-                                `${trainingBlitzSolves.player} – ${trainingBlitzSolves.ai} SOLVED`;
-                            createGrid('opponentGrid');
-                            aiRow = 0;
-                            trainingAiWordIndex++;
-                            aiWord = trainingBlitzWordList[trainingAiWordIndex] || getRandomWord();
-                            aiBlitzInterval = setTimeout(aiGuess, 4000 + Math.random() * 4000);
-                        }, 1500);
-                    }, 700);
+                        trainingBlitzSolves.ai++;
+                        document.getElementById('blitzScore').textContent =
+                            `${trainingBlitzSolves.player} – ${trainingBlitzSolves.ai} SOLVED`;
+                        createGrid('opponentGrid');
+                        aiRow = 0;
+                        trainingAiWordIndex++;
+                        aiState = makeAIState();
+                        aiBlitzInterval = setTimeout(aiGuess, 4000 + Math.random() * 4000);
+                    }, 1500);
+                } else if (aiRow >= 6) {
+                    // Failed word — move on
+                    createGrid('opponentGrid');
+                    aiRow = 0;
+                    trainingAiWordIndex++;
+                    aiState = makeAIState();
+                    aiBlitzInterval = setTimeout(aiGuess, 5000 + Math.random() * 3000);
                 } else {
-                    aiBlitzInterval = setTimeout(aiGuess, 5000 + Math.random() * 4000);
+                    aiBlitzInterval = setTimeout(aiGuess, 10000 + Math.random() * 5000);
                 }
             };
             aiBlitzInterval = setTimeout(aiGuess, 7000 + Math.random() * 5000);
@@ -4680,19 +4683,49 @@ h1, h2, h3, h4, h5, h6,
         let trainingPlayerWordIndex = 0;
         let trainingAiWordIndex = 0;
 
+        // ── Smart AI helpers (word-elimination strategy) ──────────────────────
+        function makeAIState() {
+            return { candidates: [...CURATED_WORDS], guessCount: 0 };
+        }
+
+        function updateAIState(state, word, evaluation) {
+            state.candidates = state.candidates.filter(candidate => {
+                for (let i = 0; i < 5; i++) {
+                    const letter = word[i];
+                    if (evaluation[i] === 'correct' && candidate[i] !== letter) return false;
+                    if (evaluation[i] === 'present' && (!candidate.includes(letter) || candidate[i] === letter)) return false;
+                    if (evaluation[i] === 'absent' && candidate.includes(letter)) return false;
+                }
+                return true;
+            });
+            state.guessCount++;
+        }
+
+        function pickAIWord(state) {
+            if (state.guessCount === 0) {
+                const openers = ['CRANE', 'STARE', 'SLATE', 'CRATE', 'TRACE', 'AUDIO'];
+                return openers[Math.floor(Math.random() * openers.length)];
+            }
+            // 20% chance of random guess — simulates human error, keeps game winnable
+            if (Math.random() < 0.2 || state.candidates.length === 0) {
+                return getRandomWord();
+            }
+            return state.candidates[Math.floor(Math.random() * state.candidates.length)];
+        }
+        // ──────────────────────────────────────────────────────────────────────
+
         function startAIOpponent() {
             aiRow = 0;
+            const aiState = makeAIState();
 
             const makeAIGuess = () => {
                 if (aiRow >= 6) return;
-
-                // AI has 25% chance of guessing correctly each turn
-                const aiWord = Math.random() < 0.25 ? game.targetWord : getRandomWord();
+                const aiWord = pickAIWord(aiState);
                 const evaluation = evaluateGuess(aiWord, game.targetWord);
+                updateAIState(aiState, aiWord, evaluation);
 
                 setTimeout(() => {
                     revealGuess({ word: aiWord, evaluation }, aiRow, 'opponentGrid', true);
-
                     if (evaluation.every(e => e === 'correct')) {
                         clearInterval(aiInterval);
                         aiInterval = null;
@@ -4703,13 +4736,12 @@ h1, h2, h3, h4, h5, h6,
                             setTimeout(() => showTrainingResult(false), 1500);
                         }
                     }
-
                     aiRow++;
                 }, 500);
             };
 
-            // AI makes a guess every 10-15 seconds
-            aiInterval = setInterval(makeAIGuess, 10000 + Math.random() * 5000);
+            // 18–26 seconds per guess — slower than before, gives player a fair race
+            aiInterval = setInterval(makeAIGuess, 18000 + Math.random() * 8000);
         }
 
         function evaluateGuess(guess, target) {
