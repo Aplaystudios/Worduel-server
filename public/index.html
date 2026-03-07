@@ -963,7 +963,7 @@ body::after {
         }
         .training-picker-sub {
             font-size: 13px;
-            color: var(--text-muted);
+            color: rgba(255,255,255,0.7);
             margin-bottom: 24px;
             letter-spacing: 1px;
         }
@@ -1002,7 +1002,7 @@ body::after {
             margin-top: 18px;
             background: none;
             border: none;
-            color: var(--text-muted);
+            color: rgba(255,255,255,0.6);
             font-size: 12px;
             cursor: pointer;
             text-decoration: underline;
@@ -3102,8 +3102,6 @@ h1, h2, h3, h4, h5, h6,
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            max-width: 320px;
-            margin: 0 auto;
             width: 100%;
         }
 
@@ -3963,6 +3961,7 @@ h1, h2, h3, h4, h5, h6,
             <div class="reward-popup-label">Daily Reward</div>
             <div class="reward-popup-amount" id="rewardPopupAmount">+100 <img class="gc-img" src="/Images/CP1.png" alt=""></div>
             <div class="reward-popup-balance" id="rewardPopupBalance"></div>
+            <button class="btn" id="watchAdDailyBtn" onclick="watchAdForDailyReward()" style="margin-top:18px; font-size:15px; padding:14px;">📺 &nbsp;WATCH AD TO CLAIM</button>
             <div class="reward-popup-tap">TAP ANYWHERE TO CLOSE</div>
         </div>
     </div>
@@ -7024,10 +7023,27 @@ h1, h2, h3, h4, h5, h6,
 
         function claimDailyReward() {
             const btn = document.getElementById('dailyRewardBtn');
-            if (btn && btn.classList.contains('claimed')) return;
+            if (btn && btn.classList.contains('claimed')) {
+                showToast('Already claimed today. Come back tomorrow!');
+                return;
+            }
+            // Show the pre-claim popup
+            const watchBtn = document.getElementById('watchAdDailyBtn');
+            if (watchBtn) { watchBtn.textContent = '📺 \u00a0WATCH AD TO CLAIM'; watchBtn.disabled = false; watchBtn.style.background = ''; }
+            document.getElementById('rewardPopupBalance').textContent = '';
+            const popup = document.getElementById('dailyRewardPopup');
+            if (popup) {
+                const box = popup.querySelector('.reward-popup-box');
+                if (box) { box.style.animation = 'none'; box.offsetHeight; box.style.animation = ''; }
+                popup.classList.add('active');
+            }
+        }
+
+        function watchAdForDailyReward() {
+            const watchBtn = document.getElementById('watchAdDailyBtn');
+            if (watchBtn) { watchBtn.disabled = true; watchBtn.textContent = 'Loading...'; }
             showRewardedAd(
                 () => {
-                    // Ad watched — call server to grant coins
                     fetch(`${SERVER_URL}/api/ads/reward`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -7040,14 +7056,34 @@ h1, h2, h3, h4, h5, h6,
                             localStorage.setItem('worduel_daily_reward_claimed', Date.now().toString());
                             refreshDailyRewardBtn();
                             updateHomeScreen();
-                            showCoinRewardPopup(100, res.newBalance);
+                            if (watchBtn) { watchBtn.textContent = '✓ CLAIMED!'; watchBtn.style.background = 'linear-gradient(135deg,#00cc6f,#00a85a)'; }
+                            document.getElementById('rewardPopupBalance').innerHTML = 'New balance: ' + res.newBalance + ' ' + GC;
+                            for (let i = 0; i < 14; i++) {
+                                setTimeout(() => {
+                                    const coin = document.createElement('div');
+                                    coin.className = 'reward-coin-particle';
+                                    coin.textContent = '👑';
+                                    coin.style.left = (15 + Math.random() * 70) + 'vw';
+                                    coin.style.top = (45 + Math.random() * 25) + 'vh';
+                                    coin.style.setProperty('--dur', (1.1 + Math.random() * 0.6) + 's');
+                                    document.body.appendChild(coin);
+                                    setTimeout(() => coin.remove(), 1800);
+                                }, i * 90);
+                            }
+                            setTimeout(closeDailyRewardPopup, 2500);
                         } else if (res.error && res.error.includes('already claimed')) {
                             localStorage.setItem('worduel_daily_reward_claimed', Date.now().toString());
                             refreshDailyRewardBtn();
+                            closeDailyRewardPopup();
                             showToast('Already claimed today. Come back tomorrow!');
+                        } else {
+                            if (watchBtn) { watchBtn.disabled = false; watchBtn.textContent = '📺 \u00a0WATCH AD TO CLAIM'; watchBtn.style.background = ''; }
                         }
                     })
-                    .catch(() => showToast('Network error. Please try again.'));
+                    .catch(() => {
+                        showToast('Network error. Please try again.');
+                        if (watchBtn) { watchBtn.disabled = false; watchBtn.textContent = '📺 \u00a0WATCH AD TO CLAIM'; watchBtn.style.background = ''; }
+                    });
                 },
                 null
             );
