@@ -4935,7 +4935,13 @@ h1, h2, h3, h4, h5, h6,
         let isAuthenticated = false;
 
         function connectSocket() {
-            socket = io(SERVER_URL);
+            socket = io(SERVER_URL, {
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                reconnectionAttempts: 10,
+                timeout: 20000
+            });
             
             socket.on('connect', () => {
                 console.log('✅ Connected to server');
@@ -5257,8 +5263,24 @@ h1, h2, h3, h4, h5, h6,
                 refreshDailyRewardBtn();
             });
 
-            socket.on('disconnect', () => {
-                console.warn('⚠️ Disconnected from server');
+            socket.on('disconnect', (reason) => {
+                console.warn('⚠️ Disconnected from server. Reason:', reason);
+                isAuthenticated = false;
+            });
+
+            // Socket.IO auto-reconnects; re-authenticate once the connection is restored.
+            // Note: the 'connect' handler above also fires on reconnect, so this is a safety net.
+            socket.on('reconnect', (attemptNumber) => {
+                console.log('✅ Reconnected after', attemptNumber, 'attempt(s) — re-authenticating');
+                if (token) socket.emit('authenticate', { token });
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('❌ Connection error:', error.message);
+            });
+
+            socket.on('reconnect_error', (error) => {
+                console.error('❌ Reconnect failed:', error.message);
             });
         }
 

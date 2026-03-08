@@ -288,10 +288,14 @@ io.on('connection', (socket) => {
             if (activeMatch) {
                 socket.matchId = activeMatch.id;
 
-                // Cancel the forfeit timer — they made it back in time.
+                // Cancel both forfeit timer and pending opponent notification — they made it back in time.
                 if (activeMatch.reconnectTimeout) {
                     clearTimeout(activeMatch.reconnectTimeout);
                     activeMatch.reconnectTimeout = null;
+                }
+                if (activeMatch.notifyOpponentTimer) {
+                    clearTimeout(activeMatch.notifyOpponentTimer);
+                    activeMatch.notifyOpponentTimer = null;
                 }
 
                 // Restore the game timer that was paused on disconnect.
@@ -318,7 +322,8 @@ io.on('connection', (socket) => {
                 if (activeMatch.mode === 'blitz') {
                     roundElapsed = Math.floor((Date.now() - activeMatch.startTime) / 1000);
                 } else {
-                    roundElapsed = Math.floor((Date.now() - activeMatch.currentRoundStartTime) / 1000);
+                    const rStart = activeMatch.currentRoundStartTime || activeMatch.startTime;
+                    roundElapsed = Math.floor((Date.now() - rStart) / 1000);
                 }
 
                 // matchStatus tells the client whether we're in an active round or between rounds.
@@ -479,33 +484,37 @@ io.on('connection', (socket) => {
                 const opp     = match.players.find(p => p.username !== socket.username);
                 const oppSock = opp ? activeSockets.get(opp.username) : null;
 
-                // Pause the active game timer so it doesn't race against the reconnect window.
-                // The timer is restored if the player reconnects; otherwise endMatch forfeits.
-                if (match.status === 'active') {
-                    if (match.mode === 'best_of_3' && match.roundTimer) {
-                        clearTimeout(match.roundTimer);
-                        match.roundTimer = null;
-                        const elapsed = Date.now() - match.currentRoundStartTime;
-                        match.pausedTimerMs = Math.max(0, 3 * 60 * 1000 - elapsed);
-                    }
-                    if (match.mode === 'blitz' && match.blitzTimeout) {
-                        clearTimeout(match.blitzTimeout);
-                        match.blitzTimeout = null;
-                        const elapsed = Date.now() - match.startTime;
-                        match.pausedTimerMs = Math.max(0, 5 * 60 * 1000 - elapsed);
-                    }
+                // Pause game timers regardless of round status so they don't expire
+                // during the reconnect window. Restored on reconnect; match forfeits otherwise.
+                if (match.mode === 'best_of_3' && match.roundTimer) {
+                    clearTimeout(match.roundTimer);
+                    match.roundTimer = null;
+                    const elapsed = Date.now() - (match.currentRoundStartTime || match.startTime);
+                    match.pausedTimerMs = Math.max(0, 3 * 60 * 1000 - elapsed);
+                }
+                if (match.mode === 'blitz' && match.blitzTimeout) {
+                    clearTimeout(match.blitzTimeout);
+                    match.blitzTimeout = null;
+                    const elapsed = Date.now() - match.startTime;
+                    match.pausedTimerMs = Math.max(0, 5 * 60 * 1000 - elapsed);
                 }
 
-                // Notify opponent — 15-second grace window before forfeit.
-                if (oppSock) oppSock.emit('opponent_disconnected', { seconds: 15 });
+                // 3-second grace period before alerting opponent — absorbs micro-blips silently.
+                // If the player reconnects within 3s the timer is cancelled and opponent never sees it.
+                match.notifyOpponentTimer = setTimeout(() => {
+                    match.notifyOpponentTimer = null;
+                    const freshOppSock = opp ? activeSockets.get(opp.username) : null;
+                    if (freshOppSock) freshOppSock.emit('opponent_disconnected', { seconds: 30 });
+                }, 3000);
 
+                // Total forfeit window: 33s (3s notification delay + 30s reconnect window)
                 match.reconnectTimeout = setTimeout(() => {
                     const newSock = activeSockets.get(socket.username);
                     if (!newSock || newSock.matchId !== match.id) {
                         console.log(`Reconnect timeout: ${socket.username} forfeits to ${opp?.username}`);
                         endMatch(match.id, opp?.username);
                     }
-                }, 15000);
+                }, 33000);
             }
         }
 
@@ -555,6 +564,7 @@ function createMatch(socket, user, opponent, betAmount, mode) {
         roundTimer:            null,
         overtimeTimer:         null,
         reconnectTimeout:      null,
+        notifyOpponentTimer:   null,
         pausedTimerMs:         null,
         currentRoundStartTime: Date.now()
     };
