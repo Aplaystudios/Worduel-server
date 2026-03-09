@@ -4955,7 +4955,7 @@ h1, h2, h3, h4, h5, h6,
                 reconnection: true,
                 reconnectionDelay: 1000,
                 reconnectionDelayMax: 5000,
-                reconnectionAttempts: 10,
+                reconnectionAttempts: Infinity,
                 timeout: 20000
             });
             
@@ -5078,6 +5078,7 @@ h1, h2, h3, h4, h5, h6,
             });
 
             socket.on('match_end', (data) => {
+                if (window._roundStartFallback) { clearTimeout(window._roundStartFallback); window._roundStartFallback = null; }
                 if (game.timerInterval) { clearInterval(game.timerInterval); game.timerInterval = null; }
                 document.getElementById('roundOverlay').style.display = 'none';
                 if (currentMatch && currentMatch.mode === 'blitz') {
@@ -5109,10 +5110,19 @@ h1, h2, h3, h4, h5, h6,
                 nextEl.textContent = data.matchOver ? 'MATCH OVER!' : 'NEXT ROUND STARTING...';
                 nextEl.style.color  = data.matchOver ? '#D4A010'   : '#4a5568';
                 overlay.style.display = 'flex';
+                // Safety net: if round_start doesn't arrive in 6s, re-auth to recover match state
+                if (!data.matchOver) {
+                    if (window._roundStartFallback) clearTimeout(window._roundStartFallback);
+                    window._roundStartFallback = setTimeout(() => {
+                        window._roundStartFallback = null;
+                        if (token) socket.emit('authenticate', { token });
+                    }, 6000);
+                }
             });
 
             // Best-of-3: new round starting
             socket.on('round_start', (data) => {
+                if (window._roundStartFallback) { clearTimeout(window._roundStartFallback); window._roundStartFallback = null; }
                 document.getElementById('roundOverlay').style.display = 'none';
                 game.targetWord = data.targetWord;
                 game.awaitingResult = false;
@@ -5162,6 +5172,7 @@ h1, h2, h3, h4, h5, h6,
 
             // You reconnected mid-match — restore full game state
             socket.on('match_reconnect', (data) => {
+                if (window._roundStartFallback) { clearTimeout(window._roundStartFallback); window._roundStartFallback = null; }
                 if (disconnectCountdown) { clearInterval(disconnectCountdown); disconnectCountdown = null; }
 
                 // Always hide any leftover overlay (round_end may have shown it before disconnect)

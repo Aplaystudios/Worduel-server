@@ -20,8 +20,8 @@ const server = http.createServer(app);
 const io     = socketIo(server, {
     cors: { origin: '*', methods: ['GET', 'POST'] },
     transports: ['websocket', 'polling'],
-    pingTimeout:  60000,
-    pingInterval: 25000
+    pingTimeout:  5000,   // 5s — detect dead sockets fast (was 60s)
+    pingInterval: 10000   // 10s ping cadence (was 25s)
 });
 
 const PORT       = process.env.PORT || 3000;

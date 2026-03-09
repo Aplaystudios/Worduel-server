@@ -147,6 +147,31 @@ This document maps every scenario that can occur during a live multiplayer match
 
 ---
 
+### Scenario 9: Player stuck on "reveal word" overlay — round_start never received
+
+**Trigger:** Render.com micro-blip or phone network switch between `round_end` (t=0) and `round_start` (t=3.5s). The player's WebSocket becomes a **zombie** — appears alive to the server but dead on the network. The server emits `round_start` to the zombie socket at t=3.5s. The emit appears to succeed on the server, but the client never receives it. Player is frozen on the overlay.
+
+**Root cause:** Default Socket.IO `pingTimeout: 60000` + `pingInterval: 25000` = zombie connection can persist for up to 85 seconds undetected. `round_start` is fire-and-forget with no retry.
+
+| Step | What Happens |
+|------|-------------|
+| Round 1 ends | Both players receive `round_end`, see overlay ✓ |
+| Player B's WebSocket dies silently (zombie) | Server still thinks B is connected |
+| t=3.5s: `round_start` emitted to zombie socket | Server considers sent; client never receives |
+| Up to 85s later: ping/pong detects zombie | `disconnect` fires, B removed from `activeSockets` |
+| B reconnects | `match_reconnect` sent with `matchStatus: active` |
+| Client receives `match_reconnect` | Overlay dismissed, round 2 grids/timer restored |
+
+**Fixes applied:**
+1. **Server `pingTimeout: 5000, pingInterval: 10000`** — zombie detected in ≤15s (was ≤85s)
+2. **Client 6-second fallback after `round_end`** — if `round_start` doesn't arrive within 6s, re-authenticate → triggers `match_reconnect` which dismisses overlay and restores round 2 state
+3. **`reconnectionAttempts: Infinity`** — client never gives up reconnecting
+4. **Fallback cleared** in `round_start`, `match_reconnect`, and `match_end` handlers to avoid false re-auth
+
+**Result:** Worst case stuck time reduced from ~85s to ≤6s. ✓
+
+---
+
 ## Timers Reference
 
 | Timer | Duration | Purpose | Cleared When |
