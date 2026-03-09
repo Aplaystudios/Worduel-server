@@ -1458,14 +1458,13 @@ body::after {
         }
 
         .result-container {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-            border: 3px solid rgba(255, 168, 0, 0.6);
+            background: linear-gradient(160deg, #1e3a66 0%, #2c5aa0 55%, #1e4080 100%);
+            border: 3px solid rgba(212, 160, 16, 0.7);
             border-radius: 20px;
             padding: 40px;
             max-width: 460px;
             text-align: center;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.06) inset;
         }
 
         .result-icon {
@@ -1499,8 +1498,8 @@ body::after {
         }
 
         .result-stats {
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 14px;
             padding: 20px;
             margin: 20px 0;
@@ -2456,6 +2455,10 @@ h1, h2, h3, h4, h5, h6,
         }
         #blitzEndScreen.active { display: flex; }
         .blitz-end-container {
+            background: linear-gradient(160deg, #1e3a66 0%, #2c5aa0 55%, #1e4080 100%);
+            border: 3px solid rgba(212, 160, 16, 0.7);
+            border-radius: 20px;
+            box-shadow: 0 10px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.06) inset;
             text-align: center;
             padding: 40px 32px;
             max-width: 420px;
@@ -2501,8 +2504,8 @@ h1, h2, h3, h4, h5, h6,
             margin-bottom: 28px;
         }
         .blitz-end-stats {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 14px;
             padding: 16px 20px;
             margin-bottom: 28px;
@@ -4022,7 +4025,7 @@ h1, h2, h3, h4, h5, h6,
     <!-- RESULT MODAL -->
     <div class="result-modal" id="resultModal">
         <div class="result-container">
-            <div class="result-icon" id="resultIcon"><img src="/Images/Victory_Shield_New.png" alt=""></div>
+            <div class="result-icon" id="resultIcon"><img src="/Images/Victory_Shield_New-NOBG.png" alt=""></div>
             <h2 class="result-title" id="resultTitle">VICTORY</h2>
 
             <div class="result-stats" id="resultStats">
@@ -4060,7 +4063,7 @@ h1, h2, h3, h4, h5, h6,
     <!-- BLITZ END SCREEN -->
     <div id="blitzEndScreen">
         <div class="blitz-end-container">
-            <span class="blitz-end-emoji" id="blitzEndIcon"><img src="/Images/Victory_Shield_New.png" alt=""></span>
+            <span class="blitz-end-emoji" id="blitzEndIcon"><img src="/Images/Victory_Shield_New-NOBG.png" alt=""></span>
             <div class="blitz-end-title">WELL DONE!</div>
             <div class="blitz-end-subtitle">TIME'S UP</div>
             <div class="blitz-end-solves" id="blitzEndSolves">0</div>
@@ -4808,7 +4811,7 @@ h1, h2, h3, h4, h5, h6,
             const tied = trainingSubMode === 'blitz' &&
                 trainingBlitzSolves.player === trainingBlitzSolves.ai;
 
-            document.getElementById('resultIcon').innerHTML = won ? '<img src="/Images/Victory_Shield_New.png" alt="">' : '<img src="/Images/Defeat_Shield_New.png" alt="">';
+            document.getElementById('resultIcon').innerHTML = won ? '<img src="/Images/Victory_Shield_New-NOBG.png" alt="">' : '<img src="/Images/Defeat_Shield_New-NOBG.png" alt="">';
             const titleEl = document.getElementById('resultTitle');
             titleEl.textContent = won ? 'VICTORY!' : tied ? 'TIE' : 'DEFEAT';
             titleEl.className = 'result-title ' + (won ? 'win' : 'lose');
@@ -5640,7 +5643,7 @@ h1, h2, h3, h4, h5, h6,
         }
 
         function showResult(data) {
-            document.getElementById('resultIcon').innerHTML = data.won ? '<img src="/Images/Victory_Shield_New.png" alt="">' : '<img src="/Images/Defeat_Shield_New.png" alt="">';
+            document.getElementById('resultIcon').innerHTML = data.won ? '<img src="/Images/Victory_Shield_New-NOBG.png" alt="">' : '<img src="/Images/Defeat_Shield_New-NOBG.png" alt="">';
             const titleEl = document.getElementById('resultTitle');
             titleEl.textContent = data.won ? 'VICTORY!' : 'DEFEAT';
             titleEl.className = 'result-title ' + (data.won ? 'win' : 'lose');
@@ -5725,7 +5728,7 @@ h1, h2, h3, h4, h5, h6,
 
             // Populate screen
             const blitzIcon = document.getElementById('blitzEndIcon');
-            if (blitzIcon) blitzIcon.innerHTML = data.won ? '<img src="/Images/Victory_Shield_New.png" alt="">' : '<img src="/Images/Defeat_Shield_New.png" alt="">';
+            if (blitzIcon) blitzIcon.innerHTML = data.won ? '<img src="/Images/Victory_Shield_New-NOBG.png" alt="">' : '<img src="/Images/Defeat_Shield_New-NOBG.png" alt="">';
             document.getElementById('blitzEndSolves').textContent = data.yourSolves ?? 0;
             document.getElementById('blitzEndWinnings').innerHTML = data.won ? `+${GC}${data.winnings}` : `${GC}0`;
             document.getElementById('blitzEndBalance').innerHTML = `${GC}${data.newBalance}`;
