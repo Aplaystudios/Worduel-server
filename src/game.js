@@ -5,9 +5,13 @@
 
 'use strict';
 
-// ── Word pool used for target words (full tabatkins/wordle-list) ───────────
-const VALID_WORDS = require('./words');
-const WORDS = [...VALID_WORDS];
+// ── Word pool: solutions only (wordle-answers-alphabetical, 2,314 words) ────
+const fs   = require('fs');
+const path = require('path');
+const WORDS = fs.readFileSync(path.join(__dirname, 'solutions.txt'), 'utf8')
+    .split('\n')
+    .map(w => w.trim().toUpperCase())
+    .filter(w => w.length === 5);
 
 // ── Rank thresholds ─────────────────────────────────────────────────────────
 const RANKS = [
