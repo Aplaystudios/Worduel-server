@@ -518,7 +518,12 @@ io.on('connection', (socket) => {
             }
         }
 
-        if (socket.username) activeSockets.delete(socket.username);
+        // Only delete from activeSockets if THIS socket is still the registered one.
+        // If the player reconnected and authenticated a new socket before this disconnect
+        // handler ran, we must NOT delete the new socket (it would orphan the reconnected player).
+        if (socket.username && activeSockets.get(socket.username) === socket) {
+            activeSockets.delete(socket.username);
+        }
     });
 });
 
@@ -721,10 +726,11 @@ function endMatch(matchId, forfeitWinner = null) {
     const match = activeMatches.get(matchId);
     if (!match || match.status === 'ended') return;
 
-    if (match.blitzTimeout)      { clearTimeout(match.blitzTimeout);      match.blitzTimeout      = null; }
-    if (match.roundTimer)        { clearTimeout(match.roundTimer);        match.roundTimer        = null; }
-    if (match.overtimeTimer)     { clearTimeout(match.overtimeTimer);     match.overtimeTimer     = null; }
-    if (match.reconnectTimeout)  { clearTimeout(match.reconnectTimeout);  match.reconnectTimeout  = null; }
+    if (match.blitzTimeout)        { clearTimeout(match.blitzTimeout);        match.blitzTimeout        = null; }
+    if (match.roundTimer)          { clearTimeout(match.roundTimer);          match.roundTimer          = null; }
+    if (match.overtimeTimer)       { clearTimeout(match.overtimeTimer);       match.overtimeTimer       = null; }
+    if (match.reconnectTimeout)    { clearTimeout(match.reconnectTimeout);    match.reconnectTimeout    = null; }
+    if (match.notifyOpponentTimer) { clearTimeout(match.notifyOpponentTimer); match.notifyOpponentTimer = null; }
     match.pausedTimerMs = null;
     match.status = 'ended';
 

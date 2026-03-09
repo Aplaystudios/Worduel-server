@@ -186,6 +186,32 @@ This document maps every scenario that can occur during a live multiplayer match
 
 ---
 
+### Scenario 10: Ghost player — new socket deleted by old disconnect handler
+
+**Trigger:** Player A reconnects (new socket) before the server finishes processing the old socket's `disconnect` event.
+
+| Step | What Happens (OLD) | What Happens (FIXED) |
+|------|-------------------|---------------------|
+| socket1 drops | Disconnect queued | Disconnect queued |
+| socket2 reconnects & authenticates | `activeSockets.set(A, socket2)` | `activeSockets.set(A, socket2)` |
+| socket1 disconnect handler fires | `activeSockets.delete(A)` → **deletes socket2** ✗ | Identity check: `activeSockets.get(A) === socket1`? No → skip delete ✓ |
+| Player A's state | Invisible to server — misses all events | Correctly tracked via socket2 |
+
+**Fix:** `if (socket.username && activeSockets.get(socket.username) === socket) activeSockets.delete(socket.username)`
+
+---
+
+### Scenario 11: "OPPONENT DISCONNECTED" overlay appears after match result
+
+**Trigger:** Player B disconnects near the end of a match while the 3s `notifyOpponentTimer` is counting down. `endMatch` was not clearing this timer.
+
+| Step | What Happens (OLD) | What Happens (FIXED) |
+|------|-------------------|---------------------|
+| Match ends | Both see result modal | Both see result modal |
+| `notifyOpponentTimer` still ticking | Fires 3s later → Player A sees "OPPONENT DISCONNECTED 30s" on top of result ✗ | Cleared in `endMatch` alongside all other timers ✓ |
+
+---
+
 ## Known Limitations
 
 1. **No database** — User accounts reset on every server restart. MongoDB is connected (Atlas cluster) but users Map is in-memory only (see `server.js` TODO).
