@@ -3289,7 +3289,7 @@ h1, h2, h3, h4, h5, h6,
             text-shadow: none !important;
         }
 
-        /* ── Stacked grids: no scroll ── */
+        /* ── Stacked grids: two auto-sized grids centered vertically ── */
         #battleScreen .battle-grids {
             flex: 1 !important;
             width: 100% !important;
@@ -3297,20 +3297,20 @@ h1, h2, h3, h4, h5, h6,
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
-            overflow-y: hidden !important;
+            justify-content: center !important;
+            overflow: hidden !important;
             padding: 6px 8px 4px !important;
             gap: 8px !important;
         }
 
+        /* Wrappers shrink to content — no flex stretch */
         #battleScreen .your-grid-wrap,
         #battleScreen .opp-grid-wrap {
-            flex: 1 !important;
-            min-height: 0 !important;
+            flex: 0 0 auto !important;
             width: 100% !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
-            overflow: hidden !important;
         }
 
         .opp-label {
@@ -3324,13 +3324,10 @@ h1, h2, h3, h4, h5, h6,
             margin-bottom: 4px;
         }
 
-        /* Grids fill all available space between header and keyboard */
+        /* Word-grid: auto height, rows stack naturally */
         #battleScreen .word-grid {
-            flex: 1 !important;
-            min-height: 0 !important;
             width: auto !important;
             gap: 3px !important;
-            justify-content: center !important;
         }
         #battleScreen .word-row {
             flex: 0 0 auto !important;
@@ -3341,10 +3338,11 @@ h1, h2, h3, h4, h5, h6,
         }
         #battleScreen .tile {
             flex: none !important;
-            width: min(46px, calc((100dvh - 230px) / 13)) !important;
-            height: min(46px, calc((100dvh - 230px) / 13)) !important;
+            /* Dual-axis: constrained by height (12 rows) AND width (5 cols) */
+            width:  min(50px, calc((100dvh - 260px) / 12), calc((100vw - 28px) / 5)) !important;
+            height: min(50px, calc((100dvh - 260px) / 12), calc((100vw - 28px) / 5)) !important;
             aspect-ratio: 1 !important;
-            font-size: min(18px, calc((100dvh - 230px) / 13 * 0.42)) !important;
+            font-size: min(20px, calc((100dvh - 260px) / 12 * 0.42)) !important;
             font-weight: 900 !important;
             background: rgba(255,255,255,0.12) !important;
             border: 2px solid rgba(255,255,255,0.22) !important;
@@ -3456,19 +3454,20 @@ h1, h2, h3, h4, h5, h6,
                 padding-bottom: 10px !important;
                 flex-shrink: 0 !important;
             }
-            /* Desktop: word-grid fills wrapper, rows centered at natural size */
-            #battleScreen .word-grid {
-                gap: 4px !important;
+            /* Desktop: same auto-height approach, larger caps */
+            #battleScreen .battle-grids {
                 justify-content: center !important;
             }
-            #battleScreen .word-row {
+            #battleScreen .your-grid-wrap,
+            #battleScreen .opp-grid-wrap {
                 flex: 0 0 auto !important;
-                gap: 4px !important;
             }
+            #battleScreen .word-grid { gap: 4px !important; }
+            #battleScreen .word-row  { gap: 4px !important; }
             #battleScreen .tile {
-                width: min(62px, calc((100dvh - 280px) / 13)) !important;
-                height: min(62px, calc((100dvh - 280px) / 13)) !important;
-                font-size: min(22px, calc((100dvh - 280px) / 13 * 0.42)) !important;
+                width:  min(62px, calc((100dvh - 280px) / 12), calc((100vw - 60px) / 10)) !important;
+                height: min(62px, calc((100dvh - 280px) / 12), calc((100vw - 60px) / 10)) !important;
+                font-size: min(22px, calc((100dvh - 280px) / 12 * 0.42)) !important;
             }
         }
 
