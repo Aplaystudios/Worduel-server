@@ -288,15 +288,18 @@ io.on('connection', (socket) => {
             if (activeMatch) {
                 socket.matchId = activeMatch.id;
 
-                // Cancel both forfeit timer and pending opponent notification — they made it back in time.
-                if (activeMatch.reconnectTimeout) {
-                    clearTimeout(activeMatch.reconnectTimeout);
-                    activeMatch.reconnectTimeout = null;
+                // Cancel only THIS player's timers — not the other player's forfeit timer.
+                if (activeMatch.reconnectTimeouts?.[user.username]) {
+                    clearTimeout(activeMatch.reconnectTimeouts[user.username]);
+                    delete activeMatch.reconnectTimeouts[user.username];
                 }
-                if (activeMatch.notifyOpponentTimer) {
-                    clearTimeout(activeMatch.notifyOpponentTimer);
-                    activeMatch.notifyOpponentTimer = null;
+                if (activeMatch.notifyOpponentTimers?.[user.username]) {
+                    clearTimeout(activeMatch.notifyOpponentTimers[user.username]);
+                    delete activeMatch.notifyOpponentTimers[user.username];
                 }
+                // Legacy single-timer fields (safe no-op if already null)
+                if (activeMatch.reconnectTimeout)    { clearTimeout(activeMatch.reconnectTimeout);    activeMatch.reconnectTimeout    = null; }
+                if (activeMatch.notifyOpponentTimer) { clearTimeout(activeMatch.notifyOpponentTimer); activeMatch.notifyOpponentTimer = null; }
 
                 // Restore the game timer that was paused on disconnect.
                 if (activeMatch.status === 'active' && activeMatch.pausedTimerMs != null) {
@@ -499,16 +502,24 @@ io.on('connection', (socket) => {
                     match.pausedTimerMs = Math.max(0, 5 * 60 * 1000 - elapsed);
                 }
 
+                // Per-player timer maps prevent overwriting when BOTH players disconnect.
+                // Using a shared field caused the second disconnect to orphan the first
+                // player's timer, and reconnect would accidentally cancel the wrong timer.
+                if (!match.reconnectTimeouts)    match.reconnectTimeouts    = {};
+                if (!match.notifyOpponentTimers) match.notifyOpponentTimers = {};
+                if (match.reconnectTimeouts[socket.username])    clearTimeout(match.reconnectTimeouts[socket.username]);
+                if (match.notifyOpponentTimers[socket.username]) clearTimeout(match.notifyOpponentTimers[socket.username]);
+
                 // 3-second grace period before alerting opponent — absorbs micro-blips silently.
-                // If the player reconnects within 3s the timer is cancelled and opponent never sees it.
-                match.notifyOpponentTimer = setTimeout(() => {
-                    match.notifyOpponentTimer = null;
+                match.notifyOpponentTimers[socket.username] = setTimeout(() => {
+                    delete match.notifyOpponentTimers[socket.username];
                     const freshOppSock = opp ? activeSockets.get(opp.username) : null;
                     if (freshOppSock) freshOppSock.emit('opponent_disconnected', { seconds: 30 });
                 }, 3000);
 
                 // Total forfeit window: 33s (3s notification delay + 30s reconnect window)
-                match.reconnectTimeout = setTimeout(() => {
+                match.reconnectTimeouts[socket.username] = setTimeout(() => {
+                    delete match.reconnectTimeouts[socket.username];
                     const newSock = activeSockets.get(socket.username);
                     if (!newSock || newSock.matchId !== match.id) {
                         console.log(`Reconnect timeout: ${socket.username} forfeits to ${opp?.username}`);
@@ -731,6 +742,8 @@ function endMatch(matchId, forfeitWinner = null) {
     if (match.overtimeTimer)       { clearTimeout(match.overtimeTimer);       match.overtimeTimer       = null; }
     if (match.reconnectTimeout)    { clearTimeout(match.reconnectTimeout);    match.reconnectTimeout    = null; }
     if (match.notifyOpponentTimer) { clearTimeout(match.notifyOpponentTimer); match.notifyOpponentTimer = null; }
+    if (match.reconnectTimeouts)    { Object.values(match.reconnectTimeouts).forEach(t => clearTimeout(t));    match.reconnectTimeouts    = {}; }
+    if (match.notifyOpponentTimers) { Object.values(match.notifyOpponentTimers).forEach(t => clearTimeout(t)); match.notifyOpponentTimers = {}; }
     match.pausedTimerMs = null;
     match.status = 'ended';
 
