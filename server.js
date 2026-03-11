@@ -11,7 +11,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const mongoose = require('mongoose');
 const User     = require('./src/models/User');
 
-const { getRank, getRandomWord, evaluateGuess, calculateMMRChange } = require('./src/game');
+const { getRank, getRandomWord, evaluateGuess, calculateMMRChange, WORDS: SOLUTION_WORDS } = require('./src/game');
 const VALID_WORDS = require('./src/words');
 
 // ── Server setup ────────────────────────────────────────────────────────────
@@ -140,6 +140,14 @@ app.post('/api/auth/google', async (req, res) => {
         console.error('Google auth error:', err.message);
         res.json({ success: false, error: 'Google sign-in failed' });
     }
+});
+
+app.get('/api/words', (_req, res) => {
+    res.json([...VALID_WORDS]);
+});
+
+app.get('/api/solutions', (_req, res) => {
+    res.json(SOLUTION_WORDS);
 });
 
 app.get('/health', (_req, res) => {
