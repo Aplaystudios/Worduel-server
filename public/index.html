@@ -1516,6 +1516,44 @@ body::after {
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        .result-score-big {
+            font-size: 44px;
+            font-weight: 900;
+            color: #fff;
+            font-family: 'Lilita One', 'Barlow', sans-serif;
+            text-align: center;
+            line-height: 1;
+            margin: 4px 0 2px;
+        }
+        .result-score-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.55);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .result-word-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            max-height: 130px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding: 4px 0;
+        }
+        .result-word-item {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+        }
+        .result-word-item.solved { background: rgba(74,222,128,0.18); color: #4ade80; border: 1px solid rgba(74,222,128,0.35); }
+        .result-word-item.failed { background: rgba(248,113,113,0.18); color: #f87171; border: 1px solid rgba(248,113,113,0.35); }
+
         .result-label {
             color: rgba(255, 255, 255, 0.7);
             font-size: 11px;
@@ -3154,7 +3192,7 @@ h1, h2, h3, h4, h5, h6,
 
         .mode-pill-icon { font-size: 36px; line-height: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; }
         .mode-icon-img { width: 92%; height: auto; object-fit: contain; display: block; margin: 0 auto; transform: scale(1.6); }
-        #modeCard_blitz .mode-icon-img, .training-mode-card:last-child .mode-icon-img { transform: scale(2.1); }
+        #modeCard_blitz .mode-icon-img, .training-mode-card:last-child .mode-icon-img { transform: scale(1.6); }
         .mode-pill-name { font-size: 13px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
 
         /* Battle button */
@@ -4373,6 +4411,7 @@ h1, h2, h3, h4, h5, h6,
 
             if (subMode === 'blitz') {
                 trainingBlitzSolves = { player: 0, ai: 0 };
+                trainingWordHistory = [];
                 trainingBlitzWordList = Array.from({ length: 60 }, () => getRandomWord());
                 trainingPlayerWordIndex = 0;
                 trainingAiWordIndex = 0;
@@ -4391,6 +4430,7 @@ h1, h2, h3, h4, h5, h6,
                 // best_of_3
                 trainingScores = { player: 0, ai: 0 };
                 trainingRound = 1;
+                trainingWordHistory = [];
                 roundScoreEl.style.display = 'block';
                 blitzScoreEl.style.display = 'none';
                 startTrainingRound();
@@ -4428,6 +4468,7 @@ h1, h2, h3, h4, h5, h6,
             // Guard: prevent double-call if both player and AI solve simultaneously
             if (trainingRoundEnding) return;
             trainingRoundEnding = true;
+            trainingWordHistory.push({ word: game.targetWord, winner });
 
             if (aiInterval) { clearInterval(aiInterval); aiInterval = null; }
             if (trainingRoundTimeout) { clearTimeout(trainingRoundTimeout); trainingRoundTimeout = null; }
@@ -4508,12 +4549,15 @@ h1, h2, h3, h4, h5, h6,
                         aiBlitzInterval = setTimeout(aiGuess, 4000 + Math.random() * 4000);
                     }, 1500);
                 } else if (aiRow >= 6) {
-                    // Failed word — move on
-                    createGrid('opponentGrid');
-                    aiRow = 0;
-                    trainingAiWordIndex++;
-                    aiState = makeAIState();
-                    aiBlitzInterval = setTimeout(aiGuess, 5000 + Math.random() * 3000);
+                    // Failed word — move on (delay so reveal animation finishes first)
+                    setTimeout(() => {
+                        if (!game.isTraining || trainingSubMode !== 'blitz') return;
+                        createGrid('opponentGrid');
+                        aiRow = 0;
+                        trainingAiWordIndex++;
+                        aiState = makeAIState();
+                        aiBlitzInterval = setTimeout(aiGuess, 5000 + Math.random() * 3000);
+                    }, 1500);
                 } else {
                     aiBlitzInterval = setTimeout(aiGuess, 10000 + Math.random() * 5000);
                 }
@@ -4723,6 +4767,7 @@ h1, h2, h3, h4, h5, h6,
         let trainingRound = 1;
         let trainingRoundEnding = false;
         let trainingBlitzSolves = { player: 0, ai: 0 };
+        let trainingWordHistory = [];
         let aiBlitzInterval = null;
         let trainingRoundTimeout = null;
         let trainingBlitzWordList = [];
@@ -4829,25 +4874,25 @@ h1, h2, h3, h4, h5, h6,
 
             let statsHtml;
             if (trainingSubMode === 'blitz') {
+                const wordListHtml = trainingWordHistory.length
+                    ? trainingWordHistory.map(e =>
+                        `<span class="result-word-item ${e.solved ? 'solved' : 'failed'}">${e.word}</span>`
+                      ).join('')
+                    : '';
                 statsHtml = `
-                    <div class="result-stat">
-                        <span class="result-label">YOUR SOLVES</span>
-                        <span class="result-value">${trainingBlitzSolves.player}</span>
-                    </div>
-                    <div class="result-stat">
-                        <span class="result-label">AI SOLVES</span>
-                        <span class="result-value">${trainingBlitzSolves.ai}</span>
-                    </div>`;
+                    <div class="result-score-big">${trainingBlitzSolves.player} – ${trainingBlitzSolves.ai}</div>
+                    <div class="result-score-label">YOUR SOLVES vs AI SOLVES</div>
+                    ${wordListHtml ? `<div class="result-word-list">${wordListHtml}</div>` : ''}`;
             } else {
+                const wordListHtml = trainingWordHistory.length
+                    ? trainingWordHistory.map((e, i) =>
+                        `<span class="result-word-item ${e.winner === 'player' ? 'solved' : 'failed'}">R${i+1}: ${e.word}</span>`
+                      ).join('')
+                    : '';
                 statsHtml = `
-                    <div class="result-stat">
-                        <span class="result-label">FINAL SCORE</span>
-                        <span class="result-value">${trainingScores.player} – ${trainingScores.ai}</span>
-                    </div>
-                    <div class="result-stat">
-                        <span class="result-label">ROUNDS PLAYED</span>
-                        <span class="result-value">${trainingRound}</span>
-                    </div>`;
+                    <div class="result-score-big">${trainingScores.player} – ${trainingScores.ai}</div>
+                    <div class="result-score-label">FINAL SCORE</div>
+                    ${wordListHtml ? `<div class="result-word-list">${wordListHtml}</div>` : ''}`;
             }
             document.getElementById('resultStats').innerHTML = statsHtml;
             document.getElementById('resultAdButtons').style.display = 'none';
@@ -5504,10 +5549,12 @@ h1, h2, h3, h4, h5, h6,
 
                 if (trainingSubMode === 'blitz') {
                     if (solved) {
-                        launchQuickConfetti();
+                        trainingWordHistory.push({ word: game.targetWord, solved: true });
                         trainingBlitzSolves.player++;
                         document.getElementById('blitzScore').textContent =
                             `${trainingBlitzSolves.player} – ${trainingBlitzSolves.ai} SOLVED`;
+                        // Wait for tile reveal (~700ms), then confetti, then next word after 1s
+                        setTimeout(() => launchQuickConfetti(), 700);
                         setTimeout(() => {
                             trainingPlayerWordIndex++;
                             game.targetWord = trainingBlitzWordList[trainingPlayerWordIndex] || getRandomWord();
@@ -5515,8 +5562,9 @@ h1, h2, h3, h4, h5, h6,
                             game.currentGuess = '';
                             createGrid('yourGrid');
                             setupKeyboard();
-                        }, 600);
+                        }, 1700);
                     } else if (lastRow) {
+                        trainingWordHistory.push({ word: game.targetWord, solved: false });
                         // Failed word — brief pause then new word
                         setTimeout(() => {
                             trainingPlayerWordIndex++;
