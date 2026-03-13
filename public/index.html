@@ -3834,7 +3834,9 @@ h1, h2, h3, h4, h5, h6,
                 <div id="g_id_onload"
                      data-client_id="207660675534-mno0bnvqce6lvor91rr11qhimokoraim.apps.googleusercontent.com"
                      data-callback="handleGoogleSignIn"
-                     data-auto_prompt="false">
+                     data-auto_prompt="false"
+                     data-ux_mode="popup"
+                     data-itp_support="true">
                 </div>
                 <div class="g_id_signin"
                      data-type="standard"
@@ -4195,7 +4197,7 @@ h1, h2, h3, h4, h5, h6,
                 // User already logged in
                 token = savedToken;
                 user = JSON.parse(savedUser);
-                connectSocket();
+                if (!socket || !socket.connected) connectSocket();
                 updateHomeScreen();
                 showScreen('homeScreen');
             } else {
@@ -4932,6 +4934,11 @@ h1, h2, h3, h4, h5, h6,
         }
 
         async function handleGoogleSignIn(response) {
+            // Show loading while we verify with the server
+            showScreen('authScreen');
+            const errorEl = document.getElementById('authError');
+            if (errorEl) { errorEl.textContent = 'Signing in with Google…'; errorEl.classList.add('show'); }
+
             try {
                 const res = await fetch(`${SERVER_URL}/api/auth/google`, {
                     method: 'POST',
@@ -4940,17 +4947,20 @@ h1, h2, h3, h4, h5, h6,
                 });
                 const data = await res.json();
                 if (data.success) {
+                    if (errorEl) errorEl.classList.remove('show');
                     token = data.token;
                     user = data.user;
                     localStorage.setItem('worduel_token', token);
                     localStorage.setItem('worduel_user', JSON.stringify(user));
-                    connectSocket();
+                    if (!socket || !socket.connected) connectSocket();
                     showScreen('homeScreen');
                 } else {
+                    showScreen('authScreen');
                     showError(data.error || 'Google sign-in failed. Please try again.');
                 }
             } catch {
-                showError('Connection failed');
+                showScreen('authScreen');
+                showError('Connection failed. Please try again.');
             }
         }
 
