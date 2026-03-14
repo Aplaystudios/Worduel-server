@@ -1385,6 +1385,36 @@ body::after {
             100% { transform: rotateX(0); }
         }
 
+        /* Active cursor tile — shows where next letter will go */
+        .tile.active {
+            border-color: rgba(255, 255, 255, 0.75);
+            border-width: 3px;
+        }
+
+        /* Pop bounce when a letter is typed */
+        @keyframes tilePop {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.13); }
+            100% { transform: scale(1); }
+        }
+        .tile-pop { animation: tilePop 0.1s ease; }
+
+        /* Key press tap-down feedback */
+        @keyframes keyTap {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(0.84); }
+            100% { transform: scale(1); }
+        }
+        .key-tap { animation: keyTap 0.13s ease-out; }
+
+        /* Positive reinforcement toast (overrides red) */
+        #wordToast.positive {
+            background: linear-gradient(135deg, #4ade80, #1ea850);
+            color: #fff;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
         .keyboard {
             background: var(--bg-secondary);
             border: 1px solid var(--border-primary);
@@ -5123,12 +5153,14 @@ h1, h2, h3, h4, h5, h6,
                 updateKeyboard(game.currentGuess, data.guess.evaluation);
 
                 if (data.solved) {
+                    showPositiveReinforcement(game.currentRow);
                     game.currentGuess = ''; // clear so no stale input carries into next round
                 } else if (game.currentRow >= 5) {
                     game.currentGuess = '';
                 } else {
                     game.currentRow++;
                     game.currentGuess = '';
+                    updateCurrentRow();
                 }
             });
 
@@ -5460,19 +5492,24 @@ h1, h2, h3, h4, h5, h6,
         function createGrid(id) {
             const grid = document.getElementById(id);
             grid.innerHTML = '';
-            
+
             for (let i = 0; i < 6; i++) {
                 const row = document.createElement('div');
                 row.className = 'word-row';
-                
+
                 for (let j = 0; j < 5; j++) {
                     const tile = document.createElement('div');
                     tile.className = 'tile';
                     tile.id = `${id}-${i}-${j}`;
                     row.appendChild(tile);
                 }
-                
+
                 grid.appendChild(row);
+            }
+            // Show active cursor on the current row's first tile (player grid only)
+            if (id === 'yourGrid') {
+                const cursorTile = document.getElementById(`${id}-${game.currentRow}-0`);
+                if (cursorTile) cursorTile.classList.add('active');
             }
         }
 
@@ -5495,6 +5532,13 @@ h1, h2, h3, h4, h5, h6,
         }
 
         function handleKey(key) {
+            // Tap animation on the keyboard key
+            const keyEl = document.querySelector(`.key[data-key="${key}"]`);
+            if (keyEl) {
+                keyEl.classList.add('key-tap');
+                keyEl.addEventListener('animationend', () => keyEl.classList.remove('key-tap'), { once: true });
+            }
+
             if (key === 'Enter' && game.currentGuess.length === 5) {
                 submitGuess();
             } else if (key === 'Backspace' && game.currentGuess.length > 0) {
@@ -5502,15 +5546,27 @@ h1, h2, h3, h4, h5, h6,
                 updateCurrentRow();
             } else if (game.currentGuess.length < 5 && /^[A-Z]$/.test(key)) {
                 game.currentGuess += key;
-                updateCurrentRow();
+                updateCurrentRow(true);
             }
         }
 
-        function updateCurrentRow() {
+        function updateCurrentRow(letterAdded) {
             for (let i = 0; i < 5; i++) {
                 const tile = document.getElementById(`yourGrid-${game.currentRow}-${i}`);
+                if (!tile) continue;
                 tile.textContent = i < game.currentGuess.length ? game.currentGuess[i] : '';
-                tile.className = 'tile' + (i < game.currentGuess.length ? ' filled' : '');
+                let cls = 'tile';
+                if (i < game.currentGuess.length) cls += ' filled';
+                else if (i === game.currentGuess.length && game.currentGuess.length < 5) cls += ' active';
+                tile.className = cls;
+            }
+            // Pop bounce on the tile that was just filled
+            if (letterAdded && game.currentGuess.length > 0) {
+                const justFilled = document.getElementById(`yourGrid-${game.currentRow}-${game.currentGuess.length - 1}`);
+                if (justFilled) {
+                    justFilled.classList.add('tile-pop');
+                    justFilled.addEventListener('animationend', () => justFilled.classList.remove('tile-pop'), { once: true });
+                }
             }
         }
 
@@ -5529,8 +5585,28 @@ h1, h2, h3, h4, h5, h6,
             // Show toast
             const toast = document.getElementById('wordToast');
             if (toastTimer) clearTimeout(toastTimer);
+            toast.style.background = '';
+            toast.style.color = '';
+            toast.textContent = 'NOT IN WORD LIST';
+            toast.classList.remove('positive');
             toast.classList.add('show');
             toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+        }
+
+        function showPositiveReinforcement(row) {
+            // row is 0-indexed: 0-1 = WOW!, 2-3 = AWESOME!, 4-5 = GOOD!
+            const msg = row <= 1 ? 'WOW!' : row <= 3 ? 'AWESOME!' : 'GOOD!';
+            const toast = document.getElementById('wordToast');
+            if (toastTimer) clearTimeout(toastTimer);
+            toast.style.background = '';
+            toast.style.color = '';
+            toast.textContent = msg;
+            toast.classList.remove('positive');
+            void toast.offsetWidth; // force reflow so transition re-triggers
+            toast.classList.add('show', 'positive');
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show', 'positive');
+            }, 1500);
         }
 
         function submitGuess() {
@@ -5549,6 +5625,7 @@ h1, h2, h3, h4, h5, h6,
 
                 if (trainingSubMode === 'blitz') {
                     if (solved) {
+                        showPositiveReinforcement(game.currentRow);
                         trainingWordHistory.push({ word: game.targetWord, solved: true });
                         trainingBlitzSolves.player++;
                         document.getElementById('blitzScore').textContent =
@@ -5577,10 +5654,12 @@ h1, h2, h3, h4, h5, h6,
                     } else {
                         game.currentRow++;
                         game.currentGuess = '';
+                        updateCurrentRow();
                     }
                 } else {
                     // best_of_3
                     if (solved) {
+                        showPositiveReinforcement(game.currentRow);
                         stopTrainingAI();
                         if (trainingRoundTimeout) { clearTimeout(trainingRoundTimeout); trainingRoundTimeout = null; }
                         trainingScores.player++;
@@ -5593,6 +5672,7 @@ h1, h2, h3, h4, h5, h6,
                     } else {
                         game.currentRow++;
                         game.currentGuess = '';
+                        updateCurrentRow();
                     }
                 }
             } else {
