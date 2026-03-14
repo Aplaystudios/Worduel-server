@@ -1407,12 +1407,34 @@ body::after {
         }
         .key-tap { animation: keyTap 0.13s ease-out; }
 
-        /* Positive reinforcement toast (overrides red) */
-        #wordToast.positive {
-            background: linear-gradient(135deg, #4ade80, #1ea850);
+        /* Positive reinforcement — floating white text, no background */
+        #reinforcementToast {
+            position: fixed;
+            top: 44%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.4);
+            font-family: 'Lilita One', cursive;
+            font-size: 52px;
             color: #fff;
-            font-size: 16px;
-            letter-spacing: 2px;
+            text-shadow: 0 3px 16px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            opacity: 0;
+            z-index: 99999;
+            white-space: nowrap;
+            letter-spacing: 3px;
+        }
+
+        @keyframes reinforcementPop {
+            0%   { opacity: 0;   transform: translate(-50%, -50%) scale(0.4); }
+            25%  { opacity: 1;   transform: translate(-50%, -50%) scale(1.08); }
+            45%  { transform: translate(-50%, -50%) scale(0.96); }
+            60%  { opacity: 1;   transform: translate(-50%, -50%) scale(1); }
+            80%  { opacity: 1; }
+            100% { opacity: 0;   transform: translate(-50%, -50%) scale(1); }
+        }
+
+        #reinforcementToast.show {
+            animation: reinforcementPop 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
         .keyboard {
@@ -4048,6 +4070,9 @@ h1, h2, h3, h4, h5, h6,
     <!-- Toast for invalid words / solved flash -->
     <div id="wordToast">NOT IN WORD LIST</div>
 
+    <!-- Positive reinforcement floating text -->
+    <div id="reinforcementToast"></div>
+
     <!-- Round end overlay (best-of-3) -->
     <div id="roundOverlay" style="display:none; position:fixed; inset:0; background:rgba(5,15,35,0.92); z-index:9000; flex-direction:column; align-items:center; justify-content:center;">
         <div style="background:linear-gradient(160deg,#1e3a66 0%,#2c5aa0 55%,#1e4080 100%); border:2px solid rgba(212,160,16,0.55); border-radius:24px; padding:36px 40px 30px; text-align:center; min-width:280px; box-shadow:0 12px 48px rgba(0,0,0,0.6);">
@@ -5585,29 +5610,21 @@ h1, h2, h3, h4, h5, h6,
             // Show toast
             const toast = document.getElementById('wordToast');
             if (toastTimer) clearTimeout(toastTimer);
-            toast.style.background = '';
-            toast.style.color = '';
-            toast.textContent = 'NOT IN WORD LIST';
-            toast.classList.remove('positive');
             toast.classList.add('show');
             toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
         }
 
+        let reinforcementTimer = null;
         function showPositiveReinforcement(correctCount) {
             if (correctCount === 0) return;
-            // Tiers based on number of correct (green) tiles in the guess
             const msg = correctCount >= 4 ? 'WOW!' : correctCount >= 2 ? 'AWESOME!' : 'GOOD!';
-            const toast = document.getElementById('wordToast');
-            if (toastTimer) clearTimeout(toastTimer);
-            toast.style.background = '';
-            toast.style.color = '';
-            toast.textContent = msg;
-            toast.classList.remove('positive');
-            void toast.offsetWidth; // force reflow so transition re-triggers
-            toast.classList.add('show', 'positive');
-            toastTimer = setTimeout(() => {
-                toast.classList.remove('show', 'positive');
-            }, 1500);
+            const el = document.getElementById('reinforcementToast');
+            if (reinforcementTimer) clearTimeout(reinforcementTimer);
+            el.classList.remove('show');
+            void el.offsetWidth; // restart animation
+            el.textContent = msg;
+            el.classList.add('show');
+            reinforcementTimer = setTimeout(() => el.classList.remove('show'), 1400);
         }
 
         function submitGuess() {
