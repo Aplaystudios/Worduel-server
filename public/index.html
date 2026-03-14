@@ -5151,9 +5151,9 @@ h1, h2, h3, h4, h5, h6,
                 game.awaitingResult = false;
                 revealGuess(data.guess, game.currentRow, 'yourGrid');
                 updateKeyboard(game.currentGuess, data.guess.evaluation);
+                showPositiveReinforcement(data.guess.evaluation.filter(e => e === 'correct').length);
 
                 if (data.solved) {
-                    showPositiveReinforcement(game.currentRow);
                     game.currentGuess = ''; // clear so no stale input carries into next round
                 } else if (game.currentRow >= 5) {
                     game.currentGuess = '';
@@ -5593,9 +5593,10 @@ h1, h2, h3, h4, h5, h6,
             toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
         }
 
-        function showPositiveReinforcement(row) {
-            // row is 0-indexed: 0-1 = WOW!, 2-3 = AWESOME!, 4-5 = GOOD!
-            const msg = row <= 1 ? 'WOW!' : row <= 3 ? 'AWESOME!' : 'GOOD!';
+        function showPositiveReinforcement(correctCount) {
+            if (correctCount === 0) return;
+            // Tiers based on number of correct (green) tiles in the guess
+            const msg = correctCount >= 4 ? 'WOW!' : correctCount >= 2 ? 'AWESOME!' : 'GOOD!';
             const toast = document.getElementById('wordToast');
             if (toastTimer) clearTimeout(toastTimer);
             toast.style.background = '';
@@ -5622,10 +5623,10 @@ h1, h2, h3, h4, h5, h6,
 
                 const solved = evaluation.every(e => e === 'correct');
                 const lastRow = game.currentRow >= 5;
+                showPositiveReinforcement(evaluation.filter(e => e === 'correct').length);
 
                 if (trainingSubMode === 'blitz') {
                     if (solved) {
-                        showPositiveReinforcement(game.currentRow);
                         trainingWordHistory.push({ word: game.targetWord, solved: true });
                         trainingBlitzSolves.player++;
                         document.getElementById('blitzScore').textContent =
@@ -5659,7 +5660,6 @@ h1, h2, h3, h4, h5, h6,
                 } else {
                     // best_of_3
                     if (solved) {
-                        showPositiveReinforcement(game.currentRow);
                         stopTrainingAI();
                         if (trainingRoundTimeout) { clearTimeout(trainingRoundTimeout); trainingRoundTimeout = null; }
                         trainingScores.player++;
